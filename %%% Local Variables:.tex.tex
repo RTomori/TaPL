@@ -1,0 +1,83 @@
+%%% Local Variables:
+%%% mode: japanese-laTeX
+%%% TeX-engine: xetex
+%%% End;
+\documentclass[9pt]{beamer}
+ \usepackage{zxjatype}
+ \usepackage{xltxtra}
+ \usepackage[ipa]{zxjafont}
+\usepackage{amssymb, amsmath,amsfonts}
+\usepackage{mathtools}
+\usepackage{bussproofs}
+\usepackage{mathcomp}
+\usepackage{tcolorbox}
+\tcbuselibrary{raster,skins}
+\usepackage{varwidth}
+\usetheme{metropolis}
+
+% 色定\textmd{}義
+\definecolor{mstruct}{RGB}{68, 174, 234} 
+% \definecolor{malert}{RGB}{223, 153, 155}
+\definecolor{malert}{RGB}{255, 76, 0}
+\definecolor{mex}{RGB}{57, 149, 82}
+% 見出しカラー
+% block title color
+% alert color
+% 箇条書き
+\useinnertheme{circles}
+% フッダー
+\setbeamertemplate{footline}[frame number]
+%無を出力するコマンド
+\newtcolorbox{tblock}[1]{
+	enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=mstruct, colframe=mstruct\textmd{},
+	interior style={top color=mstruct!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[mstruct] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% Definition Box
+\newtcolorbox{dblock}[1]{enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=malert, colframe=malert,
+	interior style={top color=malert!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[malert] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% subbox
+\newtcolorbox{subbox}[1]{
+	empty,
+	coltitle=mstruct, fonttitle=\bfseries,
+	borderline horizontal={0.5mm}{0pt}{mstruct},
+	title=#1
+	titlerule style={
+		mstruct,
+		arrows={Hooks[arc=270]-Hooks[arc=270]}
+	}
+}
+\everymath{\displaystyle}
+\title{Types and Programming Languages\\ Chapter 9,11,}
+\author{Rei Tomori}
+\begin{document}
+\maketitle
+\end{document}

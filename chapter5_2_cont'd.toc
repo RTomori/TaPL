@@ -1,0 +1,2 @@
+\beamer@sectionintoc {1}{5.3.形式的議論}{2}{0}{1}
+\beamer@sectionintoc {2}{操作的意味論}{5}{0}{2}

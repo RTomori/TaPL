@@ -1,0 +1,2 @@
+\beamer@sectionintoc {1}{\S 6.項の名無し表現}{4}{0}{1}
+\beamer@sectionintoc {2}{\S 8.型付き算術式}{20}{0}{2}

@@ -1,0 +1,365 @@
+@require: class-slydifi/theme/arctic-noto
+@require: class-slydifi/overlay
+@require: math
+@require: base/typeset/math-ext
+@require: pervasives
+@require: list
+@require: base/typeset/satysfi-it
+@require: derive/derive
+@require: class-jlreq/theorem
+@require: class-jlreq/proof
+@require: figbox/figbox
+@require: colorbox/colorbox
+
+open Derive
+open FigBox
+open DeriveDSL
+open Colorbox
+open SlydifiOverlay
+let-mutable theorem-number <- 0
+
+let make-theorem ctx header ?:title ?:number ?:tag ?:opts blk = 
+  let number = Option.unwrap-or true number in
+  let () = if number then theorem-number <- !theorem-number + 1 else () in
+  let txt-header = if number then header ^ arabic !theorem-number else header in
+  let () = if number 
+      then match tag with
+            | None -> ()
+            | Some(tag) -> 
+              register-cross-reference tag txt-header
+      else ()
+  in
+  let str-title = embed-string txt-header in
+  let ib-title =
+        match title with
+        | None ->   {#str-title;}
+        | Some(title) -> {#str-title; (#title;)}
+  in
+  let user-opts = match opts with
+        | None -> []
+        | Some(uos) -> uos in
+  let opts = List.append user-opts
+        [ lefttitle 10pt; righttitle 10pt; toptitle 2.5pt; bottomtitle 2.5pt;
+        fonttitle [bold];
+        left 10pt; right 10pt; top 10pt;bottom 10pt;
+        ]
+  in
+
+  read-block ctx '<
+    +colorbox 
+      (opts)
+      ?:(ib-title)
+      <+p{#blk;}>
+  >
+
+let-block ctx +thm = make-theorem ctx `定理` 
+let-block ctx +def = make-theorem ctx `定義`
+let-block ctx +lem = make-theorem ctx `補題`
+let-block ctx +notation = make-theorem ctx `記法`
+let-block ctx +problem = make-theorem ctx `問題`
+let-block  ctx  +remark = make-theorem ctx `注意` 
+let-math \mathscr m = math-char-class MathScript m in
+let-math \Coloneq = math-char MathRel `::=` in
+let-math \blacktriangleright = math-char MathRel `▸` in
+let-math \mathscr m = math-char-class MathScript m in
+let-math \eval =
+  math-pull-in-scripts MathOp MathOp (fun moptS moptT -> (
+    match (moptS, moptT) with
+      |(None, None) -> ${\to}
+      |(Some(mS), None) -> math-lower ${\to} mS
+      |(None, Some(mT)) -> math-upper ${\to} mT
+      |(Some(mS), Some(mT)) -> math-upper (math-lower ${\to} mS) mT
+  )) in
+
+document  '<
+  +make-title(|title = {|第2回|}; author = {|Rei Tomori|}; date = {|4/21/2025.|}|);
+  +frame{Overview}<
+    +p{今回は以下について扱う:}
+    +listing{
+      * Section3.5: 評価
+      * Chapter5: 型無し${\lambda}計算\listing{
+        * Section5.1. 基礎
+        * (以下，時間が許せば)
+        * Section5.2.${\lambda}計算でのプログラミング
+        * Section5.3.形式的議論
+      }
+    }
+  >
+
+  +section{|3.5. 評価|}<
+    +frame{3.5. ブール式の操作的意味論}<
+      +def?:({3.1:型無しブール式の構文と評価規則})?:(false){
+        ブール式の項と値の構文，および評価関係を次に定める: \listing{
+          * \fig-center(hconcat[textbox{(項の構文)};gap 10pt;textbox{${t \Coloneq \mathbf{true}\|\mathbf{false}\|\mathbf{if}\ t\ \mathbf{then}\ t\ \mathbf{else}\ t}}]);
+          * \fig-center(hconcat[textbox{(値の構文)};gap 10pt;textbox{${v \Coloneq \mathbf{true}\|\mathbf{false}}}]);
+          * \fig-center(vconcat[hconcat[textbox{(E-IFTRUE)}; gap 10pt; textbox{${\mathbf{if}\ \mathbf{true}\ \mathbf{then}\ t_{1}\ \mathbf{else}\ t_{2} \to t_{1}}}]; gap 10pt;hconcat[textbox{(E-IFFALSE)}; gap 10pt; textbox{${\mathbf{if}\ \mathbf{false}\ \mathbf{then}\ t_{1}\ \mathbf{else}\ t_{2}\to t_{2}}}]; hconcat[textbox{${\proven!(derive ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\to \mathbf{if}\ t'_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}} |> DeriveDSL.from[assume ${t_{1}\to t'_{1}}] |> by {(E-IF)} )}}]]);
+        }
+      }
+    >
+    +frame{3.5評価規則}<
+          +p{評価関係${t \to t'}は，"項${t}が1ステップで${t'}に簡約される"ことを表わす．}
+          +p{評価規則は\emph{計算規則}と\emph{合同規則}に分けられる．}
+          +listing{
+            * 計算規則は状態遷移を定める．\listing{ *規則E-IFTRUEは状態${\mathbf{if}\ \mathbf{true}\ \mathbf{then}\ t_{1}\ \mathbf{else}\ t_{2}}を${t_{1}}に遷移させる．}
+            * 合同規則は項が条件部から評価されることを定める．\listing{
+              * つまり，項${t}が別の項${t'}に1stepで簡約されるとき，条件部として${t}を含む項は条件部として${t'}を含む項に1stepで評価される．
+              *  これ以外の合同規則はないので，例えば項が${\mathbf{then}}節から評価されることはない．
+            }
+            }
+    >
+    +frame{3.5．評価規則(cont'd)}<
+      +def?:({3.5.1: 規則のインスタンス})?:(false){規則の\emph{インスタンス}は，各メタ変数を一貫してある項で置き換えたものである．}
+      +p{たとえば，${\mathbf{if}\ \mathbf{true}\ \mathbf{true}\ \mathbf{else}\ \mathbf{false}\to \mathbf{true}}は規則${\mathrm{E}}-${\mathrm{IFTRUE}}のインスタンス．}
+      +p{各評価規則はsequentとみなせるので，次の定義を得る．}
+      +def?:({3.5.2:規則がある関係によって満たされること})?:(false){
+        規則がある関係によって\emph{満たされる}とは，規則の各インスタンスに対し，結論が関係を満たす，またはある前提が仮定を満たさないことである．
+      }
+    >
+    +frame{3.5: 規則上の関係の例: 1ステップの評価関係}<
+      +def ?:({3.5.3: 1ステップの評価関係})?:(false){
+        \emph{1ステップの評価関係}${\to}は，定義1の3つの規則を満たす最小の二項関係である．組${\paren{t, t'}}がこの評価関係の元であるとき，評価文${t\to t'}が\emph{導出可能}であるという．}
+    >
+    +listing{
+        * "規則を満たす最小の二項関係"とすることで，評価関係式${t\to t'}が導出可能であることが組${\paren{t, t'}}が評価関係を満たすことの必要十分条件であることが保証される．\listing{* ${\Leftrightarrow} 評価関係式${t\to t'}が導出可能であることを示すには，葉が計算規則のインスタンスで内部ノードが評価規則のインスタンスである導出木を構成すればよい．}
+    }
+  
+  +frame{3.5: 1ステップ評価の決定性}<
+    +thm ?:({3.5.4: 1ステップ評価の決定性})?:(false){${t \to t'}かつ${t\to t''}ならば，${t' = t''}．}
+    +p{${\mathrel{Proof}}. ${t \to t'}の導出に関するinductionで示す．以下${t\to t'}に至る導出で最後に使われた規則で分ける．}
+    +listing{
+      * E-IFTRUEが使われた場合．\listing{
+        * ${t \to t'}より小さな全ての導出で評価の決定性を仮定．
+        * いま，項${t}の形は${t = \mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}}，ただし${t_{1} = \mathbf{true}}．
+        * 項${t}に他の規則は適用できない．たとえばE-IFFALSEが適用できるとすると，${t_{1} = \mathbf{false}}となり矛盾．E-IFも同様．
+      }
+    }
+  >
+  +frame{3.5: 1ステップ評価の決定性(cont'd)}<
+    +p{${t\to t'}に至る導出で最後に適用された規則がE-IFFALSEの場合も全く同様．}
+    +listing{
+      * E-IFの場合．
+    \listing{
+      * ${t\to t'}より小さな全ての導出が一意的であることを仮定する．
+      * いま，${t_{1}\to t'_{1}}かつ${t = \mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}}かつ${t' = \mathbf{if}\ t'_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}}なる項${t_{1}, t'_{1}, t_{2},t_{3}}を取れる．
+      * ${t}に対して他の規則を適用できるとすると${t_{1}}は正規形でなければならない．${t_{1}\to t'_{1}}なる項${t'_{1}}の存在に反するので${t}に適用できる規則はE-IFに限られる．
+      * 更に，${t}を1ステップで簡約した${t'}は仮定により決定的．}}
+      +p{以上よりinductionが完結し，題意が示された．${\QED}\footnote{以上の形の帰納法は証明図の深さに関する帰納法と全く同一である．}}
+  >
+  +frame{3.5:正規形}<
+    +p{われわれは特に項の最終的な評価結果に興味があるので，"評価規則をこれ以上適用できない項"を定式化しよう．}
+    +def ?:({3.5.6: 正規形})?:(false){いかなる評価規則も適用できない項を\emph{正規形}という．
+    すなわち，${t}が正規形であるとは，${\forall t', \lnot(t \to t')}なることである．}
+    +thm ?:({3.5.7})?:(false){任意の値は正規形である．}
+    +p{${\mathrel{Proof}}. 評価関係より，値に適用できる規則が存在しないことから直ちに従う．${\QED}}
+  >
+  +frame{3.5: 正規形(cont'd)}<
+    +p{今回の体系においてはThm.3.5.7の逆も成立することに注意する．すなわち，以下が成り立つ．}
+    +thm ?:({3.5.8: Thm.3.5.7の逆})?:(false){${t}が正規形ならば${t}は値である．}
+    +p{${\mathrel{Proof}}. 対偶を示す．${t}が値でないことを仮定し，${t}に関する構造的帰納法により${t}が正規形でないことを示す．仮定より，${t = \mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}}なる項${t_{1}, t_{2}, t_{3}}が存在する．以下，${t_{1}}について場合を分ける．}
+    +p{いま，${t}の任意の部分項${t'}に対して，${t'}が値でないならば${t'}が正規形でないことを仮定する．}
+  >
+  +frame{3.5: 正規形(cont'd)}<
+    +listing{
+      * ${t_{1}}が値のとき．${t}に対して計算規則を適用できるので${t}は正規形でない．
+      * それ以外のとき．帰納法の仮定から，項${t'_{1}}が存在して${t_{1} \to t'_{1}}．よって，合同規則E-IFから${t\to \mathbf{if}\ t'_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}}が導出でき，${t}は正規形でないことが従う．${\QED}
+    }
+  >
+  +frame{3.5: 多ステップ評価の関係}
+  <
+    +def ?:({3.5.9:多ステップ評価関係})?:(false)
+    {
+      \emph{多ステップ評価関係} ${(\to^{*})}は，1ステップの評価関係${(\to)}の反射推移閉包である．
+    }
+    +p{すなわち，${(\to^{*})}とは，(1)${\forall t, \forall t',t \to t' \Rightarrow t \to^{*} t'}，(2)${\forall t, t \to^{*} t}，および(3)${\forall t\forall t'\forall t'',t \to^{*} t'\land t' \to^{*} t''\Rightarrow t\to t''}を満たす最小の二項関係である．これは次の推論規則と等価である: }
+    +fig-center(hconcat[textbox{${\proven!(derive ${t \to^{*} t'} |> DeriveDSL.from [assume ${t \to t'}])}}; gap 20pt; textbox{${\proven!(derive ${t \to^{*} t})}}; gap 20pt; textbox{${\proven!(derive ${t \to^{*} t''} |> DeriveDSL.from [assume ${t \to t'}; assume ${t' \to^{*} t''}])}}]);
+  >
+  
+  +frame{3.5: 多ステップの評価規則(cont'd)}<
+    +p{次の主張は1ステップの評価関係が決定的であることから従う:}
+    +thm ?:({3.5.11.正規形の一意性})?:(false){
+      項${u, u'}が正規形であり，${t \to^{*} u}かつ${t \to^{*} u'}ならば，${u = u'}．
+    }
+    +p{${\mathrel{Proof}}. 項${t, u, u'}に対し，${u, u'}が正規形かつ${t \to^{*} u}かつ${t \to^{*} u'}なることを仮定する．関係${t \to^{*} u}に関するinductionで示す．}
+    +listing{ *${t \to u}なるとき．仮定とThm.3.5.4より${u = u'}が従う．
+      * ${t = u}，すなわち${t}が値のとき．${t}に適用可能な規則はないので${u = u'}．
+      * ${t \to^{*} t' \land t' \to^{*} u}なる${t'}が存在するとき．Thm.3.5.4を繰返し適用することで${t'}は特に一意的である．更に${t' \to u}に対して帰納法の仮定を適用すれば，正規形${u}が一意的であることが従う．${\QED}
+    }
+  >
+  +frame{3.5: 評価の停止性}<
+    +p{最後に，${\mathbb{B}}の全ての項が正規形に評価できる，すなわち評価は有限ステップで停止することを示そう．証明の方針としては次のようになる．\footnote{この性質を満たさない言語も存在する．例えば，評価戦略として値呼びを取った場合の型無し${\lambda}計算では，後に見るように${\Omega}コンビネータ${(\lambda x. x\ x) (\lambda x. x\ x)}は正規形に簡約されえない．}}
+    +listing{
+      * 整礎集合${S = (S, <_{S})}と，項の集合から${S}への函数${f}を用意する．
+      * 抽象機械の状態が${t}のとき，${t'}に遷移できるならば${f(t') <_{S} f(t)}なることを示す．
+      * ${f(t)}を初項とする無限降下列が存在したとしよう．このとき，${S}のwell-foundednessからこのような無限降下列は存在しえず矛盾．ここから任意の評価列が有限であることが従う．
+    }
+    +p{函数${f}は評価関係の\emph{停止尺度}と呼ばれる．}
+  >
+  +frame{3.5: 評価の停止性(cont'd)}<
+    +thm ?:({3.5.12.評価の停止性})?:(false){
+      言語${\mathbb{B}}の任意の項${t}に対して，正規形${t'}が存在して${t\to t'}．
+    }
+    +p{${\mathrel{Proof}}．停止尺度を項のサイズとし，その定義域を${\mathbb{N}}に制限する．}+p{いま，任意の項${t}に対し，評価規則を適用するごとに項のサイズは減少することに注意する．${\mathbb{N}}は整礎集合であり，任意の評価列は有限なので題意が従う．${\QED}}
+  >
+  +frame{演習3.5.15: ${\mathbb{B}}}<
+    +problem ?:({演習3.5.13}) ?:(false){\enumerate{ *規則${\mathbf{if\ true\ then}\ t_{2}\ \mathbf{else}\ t_{3}\to t_{3}}を追加したとき，Thm.3.5.4,3.5.7,
+      3.5.8, 3.5.11, 3.5.12のうち成立するもの．
+    * 規則${t_{2}\to t'_{2}\vdash \mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\to \mathbf{if}\ t_{1}\ \mathbf{then}\ t'_{2}\ \mathbf{else}\ t_{3}}}を追加したとき，以上のうち成立するもの．}
+    +p{${\mathrel{Proof}}．1. 条件部が${\mathbf{true}}のとき，とくに${t_{2}, t_{3}}の評価先が一致しなければ評価が非決定的になることに注意．定理3.5.7, 3.5.8，3.5.12のみが成立．}
+    +p{2. Thm.3.5.4以外は成り立つが\footnote{条件節と${\mathbf{then}}節が正規形で，それらの評価先が一致しない場合を考えればよい．}Thm.3.5.8, 3.5.11は証明の修正が必要．}
+  >
+  +frame{演習3.5.15(cont'd)}<
+    +p{以下の補題を示そう:}
+    +lem ?:({ダイヤモンド性})?:(false){項${r, s, t(s\neq t)}に対し，${r \eval s}かつ${r\to t}ならば，項${u}が存在して${s \to u}かつ${t\to u}}
+    +p{${\mathrel{Proof}}. ${r = \mathbf{if\ true}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}}の形で，${t_{2}(t_{3})}が正規形でない場合のみ示す\footnote{条件節が他の形の場合も，${\mathrm{E}}-${\mathrm{FALSE}}や${\mathrm{E}}-${\mathrm{IF}}などで評価すれば同様}．仮定より，${t_{2}\eval t'_{2}}なる項${t'_{2}}が取れる．このとき，${r}は\listing{*${\mathrm{E}}-${\mathrm{IFTRUE}}の適用後${t_{2}}を評価 *${\mathrm{E}}-${\mathrm{FUNNY}_{2}}の適用後${\mathrm{E}}-${\mathrm{IFTRUE}}を適用}の二通りの評価ができ，評価先は共に${t'_{2}}となることから従う．}
+  >
+  +frame{演習3.5.15(cont'd)}<
+    +p{補題の内容を踏まえると，Thm.3.5.8~3.5.12の証明はそれぞれ次のように修正される:\listing{* Thm.3.5.8: 帰納部で，${t_{2}}が正規形でない場合を足せばよい．
+    * Thm.3.5.11(概略): ．${r \to^{*} s\land r\to^{*}t}としよう．このとき，補題を繰返し適用することで${s\to^{*}u, t\to^{*}u}，ひいては${r \to^{*}u, s\to^{*} u}なる正規形${u}の存在が示せ，しかもそれは一意的．
+  
+    }}
+  >
+  +frame{3.5: 算術式への拡張}<
+    +p{値の定義に数値を表わす構文要素を足し，評価の定義を算術式に拡張しよう．ブール式と共通した構文要素は(${\ldots})と略記する．}
+    +def?:({3.2: 型無し算術式の構文})?:(false){
+      \listing{
+          * (項の構文)\fig-center(hconcat[gap 10pt;textbox{${t \Coloneq \ldots\|\mathbf{0}\|\mathbf{succ}\ t\|\mathbf{pred}\ t\|\mathbf{iszero}\ t}}]);
+          * (値の構文)\fig-center(vconcat[hconcat[gap 30pt; textbox{${v\Coloneq \ldots nv}}];gap 5pt; hconcat[gap 16pt; textbox{${nv\Coloneq \mathbf{0}\|\mathbf{succ}\ nv}}]]);}}
+
+  >
+  +frame{3.5: 算術式への拡張(cont'd)}<
+    +def?:({3.2: 型無し算術式の評価規則})?:(false){
+      \listing{
+        *型無し算術式の評価規則は，以下を満たす最小の二項関係である．\fig-center(vconcat[hconcat[textbox{(E-SUCC)}; gap 5pt;textbox{${t_{1}\to t'_{1}\vdash \mathbf{succ}\ t_{1}\to \mathbf{succ}\ t'_{1}}}]; gap 5pt; hconcat[textbox{(E-PREDZERO)}; gap 5pt; textbox{${\mathbf{pred\ 0}\vdash \mathbf{0}}}]; gap 5pt; hconcat[textbox{(E-PREDSUCC)}; gap 5pt; textbox{${\mathbf{pred}(\mathbf{succ}\ nv_{1})\vdash nv_{1}}}]; gap 5pt; hconcat[textbox{(E-PRED)}; gap 5pt; textbox{${t_{1}\to t'_{1}\vdash \mathbf{pred}\ t_{1}\to \mathbf{pred}\ t'_{1}}}]; gap 5pt; hconcat[textbox{(E-ISZEROZERO)}; gap 5pt; textbox{${\mathbf{iszero\ 0}\vdash \mathbf{true}}}]; gap 5pt; hconcat[textbox{(E-ISZEROSUCC)}; gap 5pt; textbox{${\mathbf{iszero}\ (\mathbf{succ}\ nv_{1})\vdash \mathbf{false}}}]; gap 5pt; hconcat[textbox{(E-ISZERO)}; gap 5pt; textbox{${t_{1}\to t'_{1}\vdash \mathbf{iszero}\ t_{1}\to \mathbf{iszero}\ t'_{1}}}]]);
+      }
+    }
+  >
+  +frame{3.5: 行き詰まり状態とその扱い}<
+    +p{p.19の例のように，この言語には評価規則が適用できず，値でもない項が存在する．これらは実行時エラーの特徴付けに用いられる．}
+    +def?:({3.5.15: 行き詰まり状態})?:(false){項が正規形であるが値ではないとき，その項は\emph{行き詰まり状態}であるという．}
+    +p{実行時エラーを特徴付ける方法はこれだけではない．例えばDef.3.2で定めた構文を拡張し，全ての行き詰まり先の評価先となる項${\mathbf{wrong}}を導入することを考える．(次頁)}
+  >
+  +frame{3.5: 行き詰まり状態とその扱い(cont'd)}<
+    +problem?:({Def.3.2の拡張})?:(false){
+    \listing{
+      * 構文要素\listing{
+        * ${\mathbf{badnat}\Coloneq\mathbf{wrong}\|\mathbf{true}\|\mathbf{false}}
+        * ${\mathbf{badbool}\Coloneq\mathbf{wrong}\|\mathbf{nv}}
+      }
+      *評価関係\listing{
+        * ${\mathbf{if\ badbool\ then}\ t_{1}\ \mathbf{else}\ t_{2}\to \mathbf{wrong}}
+        * ${\mathbf{succ\ badnat}\to\mathbf{wrong}}
+        * ${\mathbf{pred\ badnat}\to\mathbf{wrong}}
+        * ${\mathbf{iszero\ badnat}\to \mathbf{wrong}}
+      }
+    }}
+  >
+  +frame{3.5: 行き詰まり状態とその扱い(cont'd)}<
+    +problem?:({演習3.5.16})?:(false){
+      実行時エラーの2つの取り扱いが一致することを示せ．
+    }
+    +p{${\mathrel{Proof.}}Def.3.2の言語を${\mathscr{L}}，${\mathscr{L}}を${\mathbf{wrong}}項で拡張した言語を${\mathscr{L}_{w}}とかき，${\mathscr{L}}上の1ステップ評価関係を${(\eval^{o})}，${\mathscr{L}_{w}}上の評価関係を${(\eval^{w})}で定める．}
+    +p{項${g}が行き詰まり状態に評価されることと，${g}が${\mathscr{L}_{w}}上で${\mathbf{wrong}}に評価されることが同値であることを示す:\eqn(${\forall g, (g\eval^{o*}g' \land \forall w, \lnot (g'\eval^{o} w))\Leftrightarrow g\eval^{w*}\mathbf{wrong}});}
+  >
+  +frame{演習3.5.16(cont'd)}<
+    +p{まず，${\mathscr{L}}上で行き詰まる項は${\mathscr{L}_{w}}で正規形に評価されない事を確認する．実際，評価規則の形より${(\eval^{w})}が決定的であることから従う．あとは必要性と十分性に分けて示せばよい．}
+    +lem ?:({${\Rightarrow}})?:(false){任意の${\mathscr{L}}の項${g}について，${g}が行き詰まり状態${\Rightarrow g\eval^{w*}\mathbf{wrong}}．}
+    +p{略証．${g}の構造帰納法による．}
+    +listing{
+      * ${g}がブール値または${\mathbf{0}}のとき．${g}は行き詰まりでなく${g\eval^{w*}\mathbf{wrong}}が従う．
+      * ${g = \mathbf{if}\ g_{1}\ \mathbf{then}\ g_{2}\ \mathbf{else}\ t_{3}}のとき．${g}は行き詰まるので，${g_{1}}は行き詰まるか数値に評価される．}
+  
+  >
+  +frame{演習3.5.16(cont'd)}<
+    +listing{
+      * ${g = \mathbf{if}\ g_{1}\ \mathbf{then}\ g_{2}\ \mathbf{else}\ g_{3}}のとき(cont'd)\listing{
+        * ${g_{1}}が行き詰まるとき．帰納法の仮定より${g_{1}\eval^{w*}\mathbf{wrong}}，ひいては評価関係から${g \eval^{w*}\mathbf{wrong}}．
+        * ${g_{1}}が数値のとき．${g_{1}}は定義より${\mathbf{badbool}}に属するから${g\to^{*}\mathbf{wrong}}．
+      }
+      * ${g = \mathbf{succ}\ g_{1}}のとき．${g}は行き詰まるので${g_{1}}は行き詰まる．帰納法の仮定より${g_{1}\eval^{*}\mathbf{wrong}}．ゆえに評価関係より${g' \eval^{w*}\mathbf{succ\ wrong}\eval^{w}\mathbf{wrong}}．\listing{
+        * ${g =\mathbf{pred}\ g_{1}, g= \mathbf{iszero}\ g_{1}}が行き詰まる場合も同様．
+      }
+    }
+    +p{以上よりinductionが完結し，${\mathscr{L}_{w}}上の項の評価の決定性と合わせることで主張が示される．}
+  >
+  +frame{演習3.5.16(cont'd)}<
+    +p{逆を示す．}
+    +lem ?:({${\Leftarrow}})?:(false){${\mathscr{L}_{w}}において${g\eval^{w*} t}かつ${t}が${\mathbf{wrong}}を部分項として含むならば，${g}は${\mathscr{L}}において行き詰まり状態である．}
+    +p{${\mathrel{Proof.}}導出に関する帰納法に依る．${t}を部分項に${\mathbf{wrong}}を含む項としよう．このとき，${g \eval^{w*}t}に至る導出で最後に使われた規則で分ける．このような${t}を導出しうる評価規則は${\mathrm{E}}-${\mathrm{SUCC}}，${\mathrm{E}}-${\mathrm{PRED}}，${\mathrm{E}}-${\mathrm{ISZERO}}，および${\mathscr{L}_{w}}で追加された評価規則に限られるから，これらについてのみ示せばよい．}
+    +p{規則${\mathbf{iszero\ badnat}\eval^{w*} \mathbf{wrong}}の場合のみ示すことにする．}
+  >
+
+  +frame{演習3.5.16(cont'd)}<
+    +p{${g\eval^{w*}t}より小さな任意の導出${\proven!(derive ${g' \eval^{w*} t'} |> DeriveDSL.from[assume ${\vdots}])}(但し${t'}はsubtermに${\mathbf{wrong}}を含むとする) おいて題意が成立することを仮定し，${g= \mathbf{iszero}\ u}(${u}は${u\eval^{w*}\mathbf{badnat}}を満たす)とする．このとき，${u'}を${u\eval^{w*} u'\eval^{w*} \mathbf{badnat}}なる項として，導出図は次の形に限られる: \eqn(${\proven!(derive ${\mathbf{iszero}\ u\eval^{w*}\mathbf{wrong}}|> DeriveDSL.from[derive ${\mathbf{iszero}\ u\eval^{w*}\mathbf{iszero}\ u'} |>DeriveDSL.from [derive ${u'\eval^{w*}u'} |> DeriveDSL.from[assume ${\vdots}]]; derive ${\mathbf{iszero\ u'}\eval^{w*}\mathbf{wrong}}|> DeriveDSL.from [derive ${\mathbf{iszero}\ u'\eval^{w*} \mathbf{iszero\ badnat}}|> DeriveDSL.from [assume ${\vdots}];derive ${\mathbf{iszero\ badnat}\eval^{w*}\mathbf{wrong}}|> DeriveDSL.from [assume ${\mathbf{iszero\ badnat}\eval^{w}\mathbf{wrong}}]]])});．
+    }
+  >
+  +frame{演習3.5.16(cont'd)}<
+    +p{あとは${\mathbf{badnat}}が${\mathbf{wrong}}か否かについて分ける．\enumerate{
+      * ${\mathbf{badnat}}が${\mathbf{wrong}}のとき．帰納法の仮定を導出図の右から2番目の孫に適用し，${\mathbf{iszero}\ u'}は${\mathscr{L}}において行き詰まり状態である．ひいては，${g}が行き詰まり状態であることが従う．
+      * それ以外のとき．${\mathbf{badnat}}の定義より${u'}は${\mathbf{true}}か${\mathbf{false}}である．帰納法の仮定を導出図の右側の子に適用し，${\mathbf{iszero}\ u'}は${\mathscr{L}}において行き詰まり状態であるから，1同様にして${g}が行き詰まり状態であることが従う．
+    }}
+    +p{いずれの場合も${g}は行き詰まるから，この規則に対しては帰納法が完結する．他の場合も同様である．}
+  >
+  +frame{演習3.5.17: 自然意味論と多ステップ評価関係の等価性}<
+    +problem?:({演習3.5.17})?:(false){${t\Downarrow v\Leftrightarrow t \to^{*} v}．ただし，項${t}と値${v}に対し，${t\Downarrow v}はp.32の規則に従い，${t}が${v}に最終的に評価されることを表わす．}
+    +p{${\mathrel{Proof.}}まず，${t\Downarrow v \Rightarrow t \to^{*} v}を，${t\Downarrow v}の導出に関するinductionで示す．最後に使われる規則について分ければよい:}
+    +listing{
+      * ${\mathrm{B}}-${\mathrm{VALUE}}の場合．このとき${t = v}で，${(\to^{*})}の反射性から従う．
+      * ${t}の任意の部分式${t'}に対し${t'\Downarrow v'\Rightarrow t' \to^{*}v'}を仮定し，${t}について場合分けする．
+      \listing{
+      * ${\mathrm{B}}-${\mathrm{IFTRUE}}の場合．${t_{1}\Downarrow \mathbf{true}}かつ${t_{2}\Downarrow v_{2}}とする．帰納法の仮定から，${t_{1}\to^{*} \mathbf{false}}かつ${t_{2}\to^{*} v_{2}}．}
+    }
+  >
+  +frame{演習3.5.17(cont'd)}<
+    +listing{
+      * inductive case\listing{
+        *${\mathrm{B}}-${\mathrm{IFTRUE}}, ${\mathrm{B}}-${\mathrm{IFFALSE}}の場合．(cont'd)\listing{
+          * ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\Downarrow v_{2}}を仮定．推移性と合同規則から，
+      \eqn(${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\to^{*} \mathbf{if\ true}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\to t_{2}\to^{*}v_{2} });
+      ゆえに${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\Downarrow v_{2} \Rightarrow \mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\to^{*}v_{2}}．${\mathrm{B}}-${\mathrm{IFFALSE}}も全く同様．}
+      * ${\mathrm{B}}-${\mathrm{SUCC}}の場合．${t_{1}\Downarrow nv_{1}}とすると，帰納法の仮定から${t_{1}\to^{*} nv_{1}}．いま，${\mathbf{succ}\ t_{1}\Downarrow \mathbf{succ}\ nv_{1}}なることを仮定して${\mathbf{succ}\ t_{1}\to^{*}\mathbf{succ}\ nv_{1}}を示そう．規則${\mathrm{E}}-${\mathrm{SUCC}}を${t_{1}\to^{*}nv_{1}}の各ステップに適用し，${\mathbf{succ}\ t_{1}\to^{*}\mathbf{succ}\ nv_{1}}．ゆえに${\mathbf{succ}\ t_{1}\Downarrow \mathbf{succ}\ nv_{1}\Rightarrow \mathbf{succ}\ t_{1}\to^{*}\mathbf{succ}\ nv_{1}}が従う．
+      }
+      }
+  >
+  +frame{演習3.5.17(cont'd)}<
+    +listing{
+      * inductive case\listing{
+        * ${\mathrm{B}}-${\mathrm{PREDZERO}}，${\mathrm{B}}-${\mathrm{PREDSUCC}}の場合．${\mathrm{B}}-${\mathrm{PREDSUCC}}についてのみ示す．
+        \listing{
+          * ${t_{1}\Downarrow \mathbf{succ}\ nv_{1}}を仮定すると，帰納法の仮定から${t_{1}\to^{*}\mathbf{succ}\ nv_{1}}．${\mathbf{pred}\ t_{1}\Downarrow nv_{1}}とすると，仮定，E-PREDとE-PREDSUCCより${\mathbf{pred}\ t_{1}\to^{*}\mathbf{pred}(\mathbf{succ}\ nv_{1})\to nv_{1}}．
+        }
+        * ${\mathrm{B}}-${\mathrm{ISZEROZERO}}，${\mathrm{B}}-${\mathrm{ISZEROSUCC}}の場合．${\mathrm{B}}-${\mathrm{ISZEROSUCC}}についてのみ示す．
+        \listing{
+          * ${t_{1}\Downarrow \mathbf{succ}\ nv_{1}}を仮定する．帰納法の仮定より${t_{1}\to^{*}\mathbf{succ}\ nv_{1}}．
+          * ${\mathbf{iszero}\ t_{1}\Downarrow \mathbf{false}}とする．仮定，${\mathrm{E}}-${\mathrm{ISZERO}}および${\mathrm{E}}-${\mathrm{ISZEROSUCC}}より\eqn(${\mathbf{iszero}\ t_{1}\to^{*}\mathbf{iszero}(\mathbf{succ}\ nv_{1})\to \mathbf{false}});となるから，${\mathbf{iszero}\ t_{1}\Downarrow \mathbf{false}\Rightarrow \mathbf{iszero}\ t_{1}\to^{*}\mathbf{false}}が従う．
+        }
+      }
+    }
+  >
+  +frame{演習3.5.17(cont'd)}<
+    +p{逆，すなわち${t\to^{*}v \Rightarrow t\Downarrow v}を示そう．}
+    +p{${t\to^{*}v}の導出におけるsmall-stepの評価のステップ数${n}に関するinductionで示す．\listing{
+      * ${n = 0}の場合．${t = v}であり，B-VALUEから従う．
+      * ${t \to^{*} v}が${n}ステップの評価で得られたとする．${n}未満の評価列に於いて主張を仮定する．${t}の形について場合を分けて示す．\listing{
+        * ${t = \mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}}の場合．${t_{1}}の最終的な評価先で分ける．\listing{*${t_{1}\to^{*}\mathbf{true}}のとき．${t \to^{*} v}より${t_{2}\to^{*} v}で，これらを得る評価列の長さは${n}未満．帰納法の仮定から${t_{1}\Downarrow \mathbf{true}\land t_{2}\Downarrow v}．故に${\mathrm{B}}-${\mathrm{IFTRUE}}から${t \Downarrow v}．}
+        
+        }
+        * ${\mathrm{B}}-${\mathrm{IFFALSE}}や他の規則でも同様．ゆえに帰納法が完結する．
+    }}
+  >
+  +frame{演習3.5.18: 評価規則の変更}<
+    +problem?:({演習3.5.18})?:(false){
+      評価戦略を変えて，${\mathbf{if}}式の${\mathbf{then}}節と${\mathbf{else}}節が(この順序で)条件部より先に評価されるようにしたいとする．この効果を達成するために評価規則をどのように変えればよいか．
+    }
+    +p{\emph{(解)}big-step semanticsを与えれば十分である．${\mathbf{then}}節の後に${\mathbf{else}}節を値に評価し，最後に条件節を評価して式全体を値に評価すればよい．}+p{そこで，${\mathrm{E}}-${\mathrm{IFTRUE}}，${\mathrm{E}}-${\mathrm{IFFALSE}}を削除し，以下の規則を追加する(次ページ):}
+  >
+  +frame{演習3.5.18: 評価規則の変更}<
+    +enumerate{
+      * ${\proven!(derive ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\Downarrow \mathbf{if}\ t_{1}\ \mathbf{then}\ v_{2}\ \mathbf{else}\ t_{3}} |> DeriveDSL.from [assume ${t_{2}\Downarrow v_{2}}])}
+      * ${\proven!(derive ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\Downarrow \mathbf{if}\ t_{1}\ \mathbf{then}\ v_{2}\ \mathbf{else}\ v_{3}} |> DeriveDSL.from [assume ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\Downarrow \mathbf{if}\ t_{1}\ \mathbf{then}\ v_{2}\ \mathbf{else}\ t_{3}}; assume ${t_{3}\Downarrow v_{3}}])}
+      * ${\proven!(derive ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\Downarrow v_{2}} |> DeriveDSL.from [assume ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3} \Downarrow \mathbf{if}\ t_{1}\ \mathbf{then}\ v_{2}\ \mathbf{else}\ v_{3}}; assume ${t_{1}\Downarrow \mathbf{true}}])}
+      * ${\proven!(derive ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\Downarrow v_{3}} |> DeriveDSL.from [assume ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3} \Downarrow \mathbf{if}\ t_{1}\ \mathbf{then}\ v_{2}\ \mathbf{else}\ v_{3}}; assume ${t_{1}\Downarrow \mathbf{false}}])}
+
+    }
+    >
+  >
+>

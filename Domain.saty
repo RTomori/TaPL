@@ -1,0 +1,81 @@
+@require: class-jlreq/jlreq
+@require: pervasives
+@require: list
+@require: base/typeset/satysfi-it
+@require: derive/derive
+@require: class-jlreq/theorem
+@require: class-jlreq/proof
+@require: figbox/figbox
+@require: colorbox/colorbox
+@require: enumitem/enumitem
+open Derive
+open FigBox
+open DeriveDSL
+open Colorbox
+let-mutable theorem-number <- 0
+
+let make-theorem ctx header ?:title ?:number ?:tag ?:opts blk = 
+  let number = Option.unwrap-or true number in
+  let () = if number then theorem-number <- !theorem-number + 1 else () in
+  let txt-header = if number then header ^ arabic !theorem-number else header in
+  let () = if number 
+      then match tag with
+            | None -> ()
+            | Some(tag) -> 
+              register-cross-reference tag txt-header
+      else ()
+  in
+  let str-title = embed-string txt-header in
+  let ib-title =
+        match title with
+        | None ->   {#str-title;}
+        | Some(title) -> {#str-title; (#title;)}
+  in
+  let user-opts = match opts with
+        | None -> []
+        | Some(uos) -> uos in
+  let opts = List.append user-opts
+        [ lefttitle 10pt; righttitle 10pt; toptitle 2.5pt; bottomtitle 2.5pt;
+        fonttitle [bold];
+        left 10pt; right 10pt; top 10pt;bottom 10pt;
+        ]
+  in
+  read-block ctx '<
+    +colorbox 
+      (opts)
+      ?:(ib-title)
+      <+p{#blk;}>
+  >
+
+let-block ctx +thm = make-theorem ctx `定理` 
+let-block ctx +def = make-theorem ctx `定義`
+let-block ctx +notation = make-theorem ctx `記法`
+let-math \mathscr m = math-char-class MathScript m in
+let-math \Coloneq = math-char MathRel `::=` in
+let-math \blacktriangleright = math-char MathRel `▸` in
+let-math \mathscr m = math-char-class MathScript m in
+
+document (|
+  title = {横内「プログラム意味論」};
+  author = {};
+  date = {};
+  show-title = true;
+  show-toc = false;
+|) '<
+  +section{ラムダ計算の基礎}<
+    +subsection{${\lambda}式と${\beta}変換}<
+      +def?:({${\lambda}項の構文}){
+        ラムダ計算の定める式を${\lambda}式(${\lambda}-term)と呼び，次のように再帰的に定義する．
+        \listing{
+            * 変数${v, v', v'',\ldots}は${\lambda}式である．
+            * ${M, N}が${\lambda}式のとき，${MN}は${\lambda}式である．
+            * ${M}が${\lambda}式で${x}が変数のとき，${\lambda x. M}は${\lambda}式である．
+        }
+        あるいは，これをBNFで表わせば，次のようになる．\listing{
+          * ${\angle-bracket{Ident} \Coloneq v\|\angle-bracket{Ident}'}
+          * ${t\Coloneq }
+        }
+      }
+    >
+  >
+>

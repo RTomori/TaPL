@@ -1,0 +1,242 @@
+@require: class-slydifi/theme/arctic-noto
+@require: class-slydifi/overlay
+@require: math
+@require: azmath/azmath
+@require: base/typeset/math-ext
+@require: pervasives
+@require: list
+@require: base/typeset/satysfi-it
+@require: derive/derive
+@require: class-jlreq/theorem
+@require: class-jlreq/proof
+@require: figbox/figbox
+@require: colorbox/colorbox
+
+open Derive
+open FigBox
+open DeriveDSL
+open Colorbox
+open SlydifiOverlay
+let-mutable theorem-number <- 0
+
+let make-theorem ctx header ?:title ?:number ?:tag ?:opts blk = 
+  let number = Option.unwrap-or true number in
+  let () = if number then theorem-number <- !theorem-number + 1 else () in
+  let txt-header = if number then header ^ arabic !theorem-number else header in
+  let () = if number 
+      then match tag with
+            | None -> ()
+            | Some(tag) -> 
+              register-cross-reference tag txt-header
+      else ()
+  in
+  let str-title = embed-string txt-header in
+  let ib-title =
+        match title with
+        | None ->   {#str-title;}
+        | Some(title) -> {#str-title; (#title;)}
+  in
+  let user-opts = match opts with
+        | None -> []
+        | Some(uos) -> uos in
+  let opts = List.append user-opts
+        [ lefttitle 10pt; righttitle 10pt; toptitle 2.5pt; bottomtitle 2.5pt;
+        fonttitle [bold];
+        left 10pt; right 10pt; top 10pt;bottom 10pt;
+        ]
+  in
+
+  read-block ctx '<
+    +colorbox 
+      (opts)
+      ?:(ib-title)
+      <+p{#blk;}>
+  >
+
+let-block ctx +thm = make-theorem ctx `定理` 
+let-block ctx +def = make-theorem ctx `定義`
+let-block ctx +lem = make-theorem ctx `補題`
+let-block ctx +notation = make-theorem ctx `記法`
+let-block ctx +problem = make-theorem ctx `問題`
+let-block  ctx  +remark = make-theorem ctx `注意` 
+let-block ctx +example = make-theorem ctx `例`
+let-math \mathscr m = math-char-class MathScript m in
+let-math \Coloneq = math-char MathRel `::=` in
+let-math \blacktriangleright = math-char MathRel `▸` in
+let-math \mathscr m = math-char-class MathScript m in
+let-math \eval =
+  math-pull-in-scripts MathOp MathOp (fun moptS moptT -> (
+    match (moptS, moptT) with
+      |(None, None) -> ${\to}
+      |(Some(mS), None) -> math-lower ${\to} mS
+      |(None, Some(mT)) -> math-upper ${\to} mT
+      |(Some(mS), Some(mT)) -> math-upper (math-lower ${\to} mS) mT
+  )) in
+
+document  '<
+  +make-title(|title = {|第2回|}; author = {|Rei Tomori|}; date = {|5/15/2025.|}|);
+  +section{|5.型無しラムダ計算|}<
+  +section{|5.1.基礎|}<
+    +frame{5.1. 関数による抽象化}<
+      +listing{
+      *プログラム中に繰返し出現する計算を，手続き(関数)により抽象化することを考えよう．
+      \listing{
+        * 関数は一つ以上の名前付き引数を取り，引数に値を渡すことで具体化される．\listing{
+          * e.g.)式${\mathrm{(5 * 4 * 3 * 2 * 1) + (7 * 6 * 5 * 4 * 3 * 2 * 1) - (3 * 2 * 1)}}は関数${\mathbf{factorial}}により，\eqn(${\mathbf{factorial}(5) +\mathbf{factorial}(7) - \mathbf{factorial}(3)});のようにかける．
+          * ただし，各${n > 0}に対し，\eqn(${\mathbf{factorial}(n)\Coloneq \mathbf{if}\ n =0\ \mathbf{then}\ 1\ \mathbf{else}\ n\ *\ \mathbf{factorial}(n - 1)});}
+        }
+      }>
+      +frame?:(2){5.1. 関数による抽象化(cont'd)}<
+        +listing{
+          * 関数による抽象化\listing{
+            * 関数が各${n}に対して値を返すことを${\lambda n.\ \ldots}と書くことにすると，${\mathbf{factorial}}は\eqn(${\mathbf{factorial}=\lambda n. \mathbf{if}\ n = 0\ \mathbf{then}\ 1\ \mathbf{else}\ n\ *\ \mathbf{factorial}(n - 1)});のように定義し直せる．\listing{
+              * すると，${\mathbf{factorial}(0)}は，${\mathbf{factorial}}の本体${\mathbf{if}\ n = 0\ldots}の引数の変数${n}を${0}で置き換えて評価した結果として得られる値を指す．(i.e. 1)
+            }
+          }}
+          +p?:(only 2){以上より，関数の引数指定と関数適用をもつ言語で計算を表現しうることがわかった．そこで，これらを備えた小さな言語である\emph{(型無し)${\lambda}計算}を導入し，その性質を考える．}
+      >
+      +frame{5.1. 型無し${\lambda}計算の構文}<
+        +p{${\lambda}計算の構文を定義しよう．}
+      +def ?:({${\lambda}計算の構文}) ?:(false){
+        ${\lambda}計算の構文を次に定める．ただし${x}は変数を，${t}は項をそれぞれ表わすメタ変数とする．\eqn(${t\Coloneq x\|\lambda x. t\|t\ t\notag});
+      }
+      +p{構文に括弧が含まれていないのは，この定義が\emph{抽象構文木}を定めていることに因る．}
+      >
+      +frame{5.1. 抽象構文と具象構文}<
+        +p{プログラミング言語には\emph{具象構文}と\emph{抽象構文}の2つの構文的レベルがある．\footnote{他にも，言語を核となる機能だけからなる制限された\emph{中核言語}と，中核言語の機能から構成される派生形式を含む完全な\emph{外部言語}に分けることもあるが，ここでは説明を割愛する．}}
+        +listing{
+          * 具象構文: 具体的な文字列．生成文法で定義
+          * 抽象構文: より単純な内部表現．抽象構文木(AST)で表現
+        }
+        +p{具象構文からASTへの変換は，字句解析器によるトークン化を経て構文解析器でパースされることで行なわれる．}
+        +listing{
+          * 演算子の優先順位や結合規則を適切に定めることで，プログラムで括弧を多用せずともASTを一意に定められる．
+          \listing{
+            * e.g.)式${1+2*3}は一意に${1 + (2 * 3)}のように解釈される．
+          }
+        }
+      >
+      +frame{5.1. 抽象構文と具象構文(cont'd)}<
+        +remark?:({関数適用と抽象の結合性})?:(false){関数適用は左結合，抽象は右結合とする．}
+        +p{したがって，たとえば式${\lambda x. \lambda y. x\ y\ x}のASTは${\lambda x. (\lambda y. (x\ y)\ x)}と同じである．}
+      >
+      +frame{5.1. 変数とメタ変数}<
+        +remark?:({メタ変数の使用について})?:(false){
+            メタ変数${t}および${s, u}を(添字付きおよび添字無しで)は任意の項を，メタ変数${x}(および${y, z})は任意の変数を表わすとする．
+        }
+        +p{メタ言語と対象言語において同じ変数を使う場合は文脈から判断する．}+listing{
+            * 例えば，「項${\lambda x. \lambda y.x\ y}は${z = x}と${s = \lambda y.x\ y}の下で${\lambda z. y}の形」という場合には，${x, y}は対象言語の変数，${z, s}はメタ変数．
+        }
+      >
+      +frame{5.1.スコープ}<
+        +def?:({自由出現・束縛出現})?:(false){
+抽象${\lambda x.t}の本体${t}の中に${x}が出現するとき，その${x}の出現は\emph{束縛}されているといい，そうでない場合は\emph{自由}であるという．
+        }
+        +p{たとえば，${(\lambda x.x)x}において，1つめの出現は束縛されており，2つめの出現は束縛されていない，つまり自由出現である．}
+        +def?:({閉じた項})?:(false){
+          自由変数のない項は\emph{閉じている}といい，これらの項(閉じた項)を\emph{コンビネータ}という．
+        }
+      >
+      +frame{5.1. 操作的意味論}<
+        +p{純粋な，i.e.組込みの定数や演算子を持たない${\lambda}計算において，"計算"とは引数の関数への適用である．\listing{* i.e. 左側が${\lambda}抽象であるような関数適用(\emph{簡約基}\;redex)を，抽象本体の束縛変数の各自由出現を右側の項で置き換えた項に書き換える:\eqn(${(\lambda x. t_{12})t_{2}\to \pB{x\mapsto t_{2}}t_{12}});}}
+        +p{この書き換え操作を\emph{ベータ簡約}という．各ステップで評価できるredexは，評価戦略によって定められる．}
+      >
+      +frame{5.1. 操作的意味論(2)}<
+        +def?:({完全${\beta}簡約})?:(false){任意の簡約基がいつでも簡約できるような評価戦略を\emph{完全ベータ簡約}という．}
+        +def?:({正規順序戦略})?:(false){最左・最外簡約基が最初に簡約されるような評価戦略を\emph{正規順序戦略}という．}
+        +p{条件を満たす簡約基は高々一つなので，各項${t}は高々一つの項${t'}に簡約される．}
+      >
+      +frame{5.1. 操作的意味論(cont'd)}<
+        +p{正規順序戦略を強め，抽象内部の簡約を禁じよう．\footnote{Haskellなどでは必要呼び，つまり一度評価された引数をメモ化する名前呼び戦略を採用している．}}
+        +def?:({名前呼び戦略})?:(false){
+          最左・最外簡約基から最初に簡約し，抽象内部での簡約を許さない評価戦略を\emph{名前呼び戦略}という．
+        }
+        +example?:({call-by-nameの簡約列の例})?:(false){
+          次は名前呼びで項${\mathbf{id}(\mathbf{id}(\lambda z. \mathbf{id}\ z)}を評価したときの簡約列である．ただし${\mathbf{id}=\lambda z. z}．
+          \eqn(${\mathbf{id}(\mathbf{id}(\mathbf{id}(\lambda z. \mathbf{id}\ z)))\eval \mathbf{id}(\lambda z.\mathbf{id}\ z)\to \lambda z.\mathbf{id}\ z\notag});
+          }
+      >
+      +frame{5.1.操作的意味論(cont'd)}<
+        +p{名前呼び戦略では未評価の値を関数に渡す，つまり\emph{非正格}(あるいは遅延評価)である．対照的に，以下の必要呼び戦略では，値は関数に適用される前に必ず評価される(i.e.正格である)．}
+        +def?:({値呼び戦略})?:(false){
+          最も外側の簡約基で，右側が値(i.e.これ以上簡約できない閉じた項)に簡約されている簡約基のみを簡約する戦略を，\emph{必要呼び戦略}という．
+        }
+        +example?:({call-by-valueの簡約列の例})?:(false){
+          以下は，値呼びで項${\mathbf{id}(\mathbf{id})(\lambda z. \mathbf{id} z)}を評価したときの簡約列である．
+          \eqn(${\mathbf{id}(\mathbf{id}(\lambda z. \mathbf{id}\ z))\eval \mathbf{id}(\lambda z. \mathbf{id} z)\eval \lambda z.\mathbf{id}\ z\notag});
+        }
+      >
+      +section{|5.2.ラムダ計算でのプログラミング|}<
+        +frame{5.2.複数の引数}<
+          +p{${\lambda}計算で複数の引数を持つ関数を表わす方法を考える．
+            組のコンストラクタと射影を定義してもよいが，高階関数を用いる方が容易である．
+            }+example?:({カリー化の例})?:(false){
+            自由変数${x, y}を持つ項${s}に対し，全ての引数の組${(v, w)}に対して\eqn(${f\:(v, w)\mapsto \pB{y\mapsto w}\pB{x\mapsto v}s\notag});なる関数${f}は，${\lambda x. \lambda y. s = \lambda x.(\lambda y. s)}で与えられる．
+            }
+            +p{}
+      
+        >
+      >
+      +frame{5.2.Churchブール値}<
+        +def?:({ブール値と条件式})?:(false){
+          ブール値${\mathbf{tru}, \mathbf{fls}}(それぞれ${\mathbf{true}}, ${\mathbf{false}}に対応)と条件式${\mathbf{test}}は次のように定義される．
+          \align(${|\mathbf{tru}|= \lambda t.\lambda f. t\notag
+                           |\mathbf{fls} |= \lambda t. \lambda f. f\notag
+                           |\mathbf{test}|= \lambda l.\lambda m.\lambda n.l\ m\ n\notag|});
+        }
+        +p{項${\mathbf{test}\ b\ v\ w\eval b\ v\ w}であり，${\mathbf{tru}}(${\mathbf{fls}})が第二引数(第一引数)を捨てることを用いている．}
+      >
+      +frame{5.2.Churchブール値(cont'd)}<
+        +example?:({${\mathbf{test}}関数の簡約例})?:(false){
+          項${\mathbf{test}\ \mathbf{tru}\ v\ w}は次のように簡約される:
+          \align(${|\mathbf{test\ tru}\ v\ w|= (\lambda l.\lambda m.\lambda n.l\ m\ n) \mathbf{tru}\ v\ w\notag
+                            ||\eval (\lambda m.\lambda n. \mathbf{tru}\ m\ n)\eval (\lambda n. \mathbf{tru}\ v\ n) w\notag
+                            ||= \mathbf{tru}\ v\ w\eval (\lambda t.\lambda f. t)v\ w \eval (\lambda f. v) w \eval w\notag
+          |});          
+        }
+        +p{論理積等のブール演算子も関数として定義できる．\listing{
+          * e.g.)論理積を表わす${\mathbf{and}}は${\mathbf{and} = \lambda b. \lambda c. b\ c\ \mathbf{fls}}と書ける．${\mathbf{and}\ b\ c}の値を第一引数${b}について場合分けすれば得られる．
+        }}
+      >
+      +frame{5.2.二つ組}<
+        +p{ブール値を用いることで，二つの値の組(タプル)を項として表現できる．}
+        +def?:({2つ組})?:(false){
+          二つ組のコンストラクタ${\mathbf{pair}}と射影関数${\mathbf{fst},\mathbf{snd}}を次のように定義する．
+          \align(${|\mathbf{pair}| =\lambda f. \lambda s. \lambda b. b\ f\ s\notag
+          |\mathbf{fst}|= \lambda p. p\ \mathbf{tru}\notag
+          |\mathbf{snd}|= \lambda p. p\ \mathbf{fls}\notag|});
+        }
+      >
+      +frame{5.2.Church数}<
+        +p{ラムダ項における数(\emph{Church数})は，Peanoの自然数同様，定数${\mathbf{0}}と，${\mathbf{0}}に有限回後者関数を適用した項全体として定義される．}
+        +def?:({Church数})?:(false){
+          Church数${c_{0}, c_{1}, c_{2}\ldots }を，\align(${|c_{0}|= \lambda s. \lambda z. z\notag
+          |c_{1}|=\lambda s. \lambda z. s\ z\notag
+          |\vdots|\notag
+          |c_{n}|= \lambda s. \lambda z. s^{n}z\notag|});と定める．ただし．項${s, z}および${n\in\mathbb{N}}に対して，${s^{n}z}は${z}に${s}を${n}回適用して得られる項とする．
+        }
+      >
+      +frame{5.2.Church数(cont'd)}<
+        +p{後者関数${\mathbf{scc}}を定める．}
+        +def?:({後者関数})?:(false){
+          ${\mathbf{scc}=\lambda n.\lambda s. \lambda z. s (n\ s\ z)}
+        }
+        +p{各${m, n}および項${s, z}に対して，項${c_{m}\ s\ (c_{n}\ s\ z)}は${s^{m}(s^{n}\ z) = s^{m + n}z}に評価される．この観察より，Church数の加算関数${\mathbf{plus}}を定義できる．}
+        +def?:({加算関数})?:(false){
+          ${\mathbf{plus} = \lambda m.\lambda n. \lambda s. \lambda z. m\ s (n\ s\ z).\notag}
+        }
+      >
+      +frame{5.2.Church数(cont'd)}<
+      +p{乗算関数は次のように定義できる．}
+        +def?:({乗算関数})?:(false){
+          ${\mathbf{times}= \lambda m. \lambda n. m\ (\mathbf{plus}\ n)\ c_{0}\;}
+        }
+        +p{全く同様に，冪乗関数${\mathbf{expn}}も定義できる．}
+        +def?:({冪乗関数})?:(false){
+          ${\mathbf{expn} = \lambda m. \lambda n. m\ (\mathbf{times}\ n)\ c_{1}\;}
+        }
+        +p{あるいは，${\lambda m.\lambda n. m\ n\;}．}
+      >
+  >
+
+>>

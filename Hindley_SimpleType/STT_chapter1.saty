@@ -1,0 +1,109 @@
+@require: class-jlreq/jlreq
+@require: math
+@require: base/typeset/math-ext
+@require: pervasives
+@require: itemize
+@require: base/typeset/satysfi-it
+@require: derive/derive
+@require: class-jlreq/theorem
+@require: class-jlreq/proof
+@require: figbox/figbox
+@require: colorbox/colorbox
+
+open Derive
+open FigBox
+open DeriveDSL
+open Colorbox
+let-mutable theorem-number <- 0
+
+let make-theorem ctx header ?:title ?:number ?:tag ?:opts blk = 
+  let number = Option.unwrap-or true number in
+  let () = if number then theorem-number <- !theorem-number + 1 else () in
+  let txt-header = if number then header ^ arabic !theorem-number else header in
+  let () = if number 
+      then match tag with
+            | None -> ()
+            | Some(tag) -> 
+              register-cross-reference tag txt-header
+      else ()
+  in
+  let str-title = embed-string txt-header in
+  let ib-title =
+        match title with
+        | None ->   {#str-title;}
+        | Some(title) -> {#str-title; (#title;)}
+  in
+  let user-opts = match opts with
+        | None -> []
+        | Some(uos) -> uos in
+  let opts = List.append user-opts
+        [ lefttitle 10pt; righttitle 10pt; toptitle 2.5pt; bottomtitle 2.5pt;
+        fonttitle [bold];
+        left 10pt; right 10pt; top 10pt;bottom 10pt;
+        ]
+  in
+
+  read-block ctx '<
+    +colorbox 
+      (opts)
+      ?:(ib-title)
+      <+p{#blk;}>
+  >
+
+let-block ctx +thm = make-theorem ctx `定理` 
+let-block ctx +def = make-theorem ctx `定義`
+let-block ctx +lem = make-theorem ctx `補題`
+let-block ctx +notation = make-theorem ctx `記法`
+let-block ctx +problem = make-theorem ctx `問題`
+let-block  ctx  +remark = make-theorem ctx `注意` 
+let-math \mathscr m = math-char-class MathScript m in
+let-math \Coloneq = math-char MathRel `::=` in
+let-math \blacktriangleright = math-char MathRel `▸` in
+let-math \mathscr m = math-char-class MathScript m in
+let-math \eval =
+  math-pull-in-scripts MathOp MathOp (fun moptS moptT -> (
+    match (moptS, moptT) with
+      |(None, None) -> ${\to}
+      |(Some(mS), None) -> math-lower ${\to} mS
+      |(None, Some(mT)) -> math-upper ${\to} mT
+      |(Some(mS), Some(mT)) -> math-upper (math-lower ${\to} mS) mT
+  )) in
+
+document  (|
+title = {Basic Simple Type Theory};
+  author = {Rei Tomori};
+  date = {2025/6/10};
+  show-title = true;
+  show-toc = false;
+|)'<
+    +section{Type-free ${\lambda}-calculus}<
+        +def?:({${\lambda}-terms})?:(false){項変数の無限列が与えられているとする．${\lambda}項の構文要素は，\listing{
+            * 各項変数:アトムもしくは原子項とよばれる．
+            * ${M, N}が${\lambda}項のとき，${(M\ N)}は${\lambda}項:適用
+            * 項変数${x}と${\lambda}項${M}に対し，${\lambda x. M}は${\lambda}項: ${(\lambda)}抽象．
+        }
+        アトムでない${\lambda}項は合成${\lambda}項という．
+        }
+    >
+    +notation?:({表記})?:(false){\listing{*項変数は添字を付けることを許して，メタ変数${u,v,w,x,y,z,\ldots}で表わされる．明示されない限り，異なるメタ変数は異なる項を表わす．
+    * 任意の${\lambda}項はメタ変数${L, M, N,P,Q,S,T,\ldots}で表わす．
+    * 項${M, N}に対して${M \equiv N}なることを，${M}が${N}と構文的に等しいことと定義する．
+    * 抽象は右結合，適用は左結合とする．
+    }
+    }
+    +subsection{代入}<
+      +def?:({置換})?:(false){
+        ${\sqbracket{N/x} M}を，${N}の自由変数が捕獲されないようにしながら，${M}における${x}の各自由出現を${N}に置き換える操作とする．つまり，全ての${N, x, P, Q, y\neq x}に対し，
+        \listing{
+            * ${\sqbracket{N / x} x = N}
+            * ${\sqbracket{N/x} y = y}
+            * ${\sqbracket{N /x}(P, Q) = (\sqbracket{N/ x}P)(\sqbracket{N/x}Q)}
+            * ${\sqbracket{N/x}(\lambda x\cdot P) = \lambda x\cdot P}
+            * ${\sqbracket{N/x}(\lambda y\cdot P) = \lambda y\cdot P\ \ \ ( x\nin \mathrm{FV}(P))}
+            * ${\sqbracket{N/x}(\lambda y\cdot P) = \lambda y\cdot \sqbracket{N/x}P (x \in\mathrm{FV}(P)\land y \nin \mathrm{FV}(N))}
+            * ${\sqbracket{N/x}(\lambda y\cdot P) = \lambda z\cdot \sqbracket{N/x}\sqbracket{z/y} P(x \in\mathrm{FV}(P)\land y\in\mathrm{FV}(N))}
+        }
+        ただし，${z}は項変数の列の要素のうち，${N}に自由出現を持たない最小の項変数とする． }
+        +p{同時代入}
+    >
+>

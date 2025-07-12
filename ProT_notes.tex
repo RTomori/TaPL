@@ -1,0 +1,122 @@
+%%% Local Variables:
+%%% mode: japanese-laTeX
+%%% TeX-engine: xetex
+%%% End;
+\documentclass[a4paper,10pt,platex]{jsarticle}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+%\usepackage[scaled]{beramono}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{manfnt}
+\usepackage{amsmath,amsfonts, amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{mathcomp}
+\usepackage{mathrsfs}
+\usepackage{listings}
+\usepackage{siunitx}
+\newtheorem{thm}{Thm}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\lstset{language = Haskell,
+basicstyle={\ttfamily},
+ identifierstyle={\small},
+ commentstyle={\smallitshape},
+ keywordstyle={\small\bfseries},
+ ndkeywordstyle={\small},
+ stringstyle={\small\ttfamily},
+ frame={tb},
+ breaklines=true,
+ columns=[l]{fullflexible},
+ numbers=left,
+ xrightmargin=0zw,
+ xleftmargin=3zw,
+ numberstyle={\scriptsize},
+ stepnumber=1,
+ numbersep=1zw,
+ lineskip=-0.5ex,
+literate={'"'}{\textquotesingle "\textquotesingle}3}
+\everymath{\displaystyle}
+\title{''Proofs and Types'' ノート}
+\author{Rei Tomori}
+\begin{document}
+\maketitle
+\section{Curry-Howard同型}
+\subsection{操作的な意義}
+等式規則により，$\lambda$項の表示的意味が定められた．次に，$\lambda$項の操作的意味について考察しよう．
+
+一般に，$\lambda$項はプログラムを表わす．プログラムの目的はその操作的意味を計算することである．(たとえば，$(\lambda x. x + 1) 2$を計算することで，その表示的意味である5を得る)
+
+対して，型はプログラムの仕様を定める．プログラムの型が与えられたとき，仕様について何が言えるだろうか．
+
+仕様に関する言明として「このプログラムは2つの整数の和を計算する」を例に取り考える．この言明は十分に詳細だろうか．つまり，この計算がどう行なわれるか主張できるだろうか．\footnote{機械語レベルにおいて?}それとも，この言明は詳細すぎるだろうか．たとえば，プログラムが2つの整数値を取り，整数値を返すことはいえるだろうか．\footnote{いえない．2整数が浮動小数点値にキャストされる可能性があるため．}
+
+構文に限っていえば，この答は型システムに依存し，明確でない．たとえば，本書で導入する型システム(System F)でこのプログラムに型を付ける場合，$\mathtt{int\rightarrow int \rightarrow int}$となり，最も明白な情報しか提供しない．対して，Martin-L\"ofの型システムなどの型体系はプログラムが何を計算するかに関する情報を与える．\footnote{Agdaでベクトルの末尾を取る関数$\mathtt{tail}$は，\begin{lstlisting}
+tail : {A:Set}{n:Nat}Vec A (suc n) -> Vec A n
+tail (_::xs) = xs
+\end{lstlisting}}
+つまり，型システムが表示的情報を与える．
+
+より一般的なレベルにおいては，構文的差異を無視することにすると，型は対象を一緒に繋げる命令と見做せる．たとえば，モジュール\footnote{MLにおける?}を用いてプログラムを構成することを考えよう．モジュールはOOPにおけるクラス同様，内部は外から隠蔽されているものとする．モジュールの型は(衝突しないように選ばれた)全ての可能な引数の型によって決定される．したがって，特にモジュールは同じ型シグネチャを持つ他のモジュールに置換できる．しかし，この見方を数学的に定式化することは難しい．
+
+型$U_{1},\ldots,U_{n}$の変数$x_{1},\ldots, x_{n}$に依存する型$T$の項$t$を考えよう．この$t$は，\S3.2における関数型の解釈，つまり型$U\rightarrow V$を持つ項$\lambda x^{U}. v$を型$U$の各項$u$に対して$v\left[u/x\right]$を返す関数と解釈するわけにはいかない．むしろ，パラメタ同士を繋ぎ合わせる命令と見做すべきである．モジュールを表わす項には適切な型の入力を挿入する場所がある．たとえば，モジュールにおけるパラメタ$x_{i}$の各出現は項$u_{i}:U_{i}$が挿入される可能性を指す．$x_{i}$に$u_{i}$が代入される各インスタンスにおいて，$u_{i}$は$x_{i}$に同時代入される．さらに，項$t$も他のモジュールのパラメタとして代入される可能性がある．つまり，モジュールのインスタンスを作るために入力として引数に値が代入され，さらにモジュール自身も他のモジュールの引数として取られうることが分かる．
+
+変数と値を同じ現象の双対的な側面と見做すこの見方によれば，アルゴリズムの実行とは対称的な入出力のプロセスとして理解できる．アルゴリズムはいくつかの引数を取り，更にアルゴリズム自身も(高階関数である)別のアルゴリズムの引数となりうる．
+
+項の振る舞いを操作的に説明するために，表示的意味を定める等式規則から，左辺から右辺への書き換え規則を作ろう．この書き換え規則は項を計算するプログラム(i.e.インタプリタ)を定めるものと見做せる．プログラムの最終的な結果こそがプログラムの意味を与えるので，操作的意味の理解を深めるために以後正規化について考察する．
+
+\subsection{変換}
+これ以上評価規則を適用できない項を正規形と呼ぶ．
+ \begin{definition}
+ 項$t$が正規形であるとは，$t$の任意の部分項が以下の形でないことである:
+ 
+ $\pi^{1}\left<u, v\right>, \pi^{2}\left<u, v\right>, (\lambda x^{U}.v)u$
+ \end{definition}
+
+1ステップの評価を変換という．
+\begin{definition}[変換]
+項$t$が$t'$に変換されるとは，$t$，$t'$が以下の条件を満たすことである:\begin{enumerate}
+\item $\exists u, v. t = \pi^{1}\left<u, v\right>\land t' = u$．
+\item $\exists u, v. t = \pi^{2}\left<u, v\right>\land t' = v$．
+\item $\exists u, v, t = (\lambda x^{U}.v) u \land t' = v\left[u/x\right]$．
+\end{enumerate}
+\end{definition}
+$t$をレデックス(簡約基)，$t'$をコントラクタムという．以下の進行補題により，redexとcontractumの型は常に等しい．
+\begin{lemma}[進行]
+    任意の項$t, t'$に対して，$t: T$かつ$t\rightarrow t'$ならば$t' : T$である．
+\end{lemma}
+\begin{proof}
+$t, t'$を任意に取り，$t:T$とする．$t\rightarrow t'$を仮定し，$t$の形で場合を分ける．
+\begin{itemize}
+    \item $t$が組の射影の形で書けるとき．第一成分の場合を示す．$t$が$\pi^{1}\left<u, v\right>$のとき．$v:T'$とすると，$\pi^{1}: T\times T'\rightarrow T$より，$t : T$である．評価規則より$t' = v : T$なので従う．
+    \item $t$が$\beta$簡約基の形で書けるとき．$u: U, v: T$および$v$に束縛出現を持たない$x^{U}:U$により，$t$は$(\lambda x^{U}. v)u$の形で書ける．評価規則を適用することにより，$t$のコントラクタム$t'$は$t' = v\left[u/x\right]$であり，型は($x^{U}$の各出現を$v$で置き換えているので)$T$のままである．
+\end{itemize}
+\end{proof}
+多ステップの変換を簡約という．
+\begin{definition}[簡約]
+項$u$が項$v$に簡約されるとは，$n\in\mathbb{N}$と列$u = t_{0}, t_{1},\ldots, t_{n- 1}, t_{n} = v$が存在し，$\forall i\in\mathbb{N}, i < n \Rightarrow t_{i}\rightarrow t_{i + 1}$なることであり，$u\rightsquigarrow v$と書く．
+\end{definition}
+\begin{proposition}
+    二項関係$(\rightsquigarrow)$は$(\rightarrow)$の反射推移閉包である．
+\end{proposition}
+\begin{proof}
+    反射性．各項$t$に対して簡約列を$t_{0} = t$とすれば即座に従う．
+    推移性．任意の$t, u, v$に対して$t\rightsquigarrow u, u\rightsquigarrow v$を仮定する．定義より，リダクション列$\left\{t_{i}\right\}_{i = 0}^{m}, \left\{u_{i}\right\}_{i = 0}^{n}$を取れる．
+    そこで，新たなリダクション列$\left\{t'_{i}\right\}_{i = 0}^{m+n}$を，$\forall i \leq m, t'_{i} = t_{i}$，$\forall i \leq n, t'_{m + i} = u_{i}$と定めることができる．以上より，$t\rightsquigarrow v$が従う．
+\end{proof}
+\begin{definition}[正規形]
+    $t$の正規形とは，$t\rightsquigarrow u$なる正規形$u$である．
+\end{definition}
+以後，STLCにおいて正規形が一意的に存在することを示す．その準備として，頭部正規形と正規形の等価性を示そう．
+\begin{lemma}
+項$t$が正規形であることの必要十分条件とは，$t$が\emph{頭部正規形}\begin{equation}
+    \lambda x_{1}.\lambda x_{2}.\ldots \lambda x_{n}. y\ u_{1}\ u_{2}\ \ldots\ u_{m}
+\end{equation}であることである．ただし$y$は$x_{i}$の何れかに一致しうる．また，各$j$に対して$u_{j}$は正規形である．
+\end{lemma}
+\dbend $u_{j}$が全て頭部正規形でない場合に起こる事を考察する．
+\end{document}

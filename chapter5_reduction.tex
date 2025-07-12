@@ -1,0 +1,499 @@
+%%% Local Variables:
+%%% mode: japanese-LaTeX
+%%% TeX-engine: xetex
+%%% End:
+\documentclass[9pt]{beamer}
+ \usepackage{zxjatype}
+ \usepackage{xltxtra}
+ \usepackage[ipa]{zxjafont}
+\usepackage{amssymb, amsmath,amsfonts}
+\usepackage{mathtools}
+\usepackage{bussproofs}
+\usepackage{mathcomp}
+\usepackage{tcolorbox}
+\usepackage{ulem}
+\tcbuselibrary{raster,skins}
+\usepackage{varwidth}
+\usepackage{tikz}
+\usepackage{listings, fontspec}
+\usetheme{metropolis}
+
+% 色定義
+\definecolor{mstruct}{RGB}{68, 174, 234} 
+% \definecolor{malert}{RGB}{223, 153, 155}
+\definecolor{malert}{RGB}{255, 76, 0}
+\definecolor{mex}{RGB}{57, 149, 82}
+% 見出しカラー
+% block title color
+% alert color
+% 箇条書き
+\useinnertheme{circles}
+% フッダー
+\setbeamertemplate{footline}[frame number]
+%無を出力するコマンド
+\newtcolorbox{tblock}[1]{
+	enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=mstruct, colframe=mstruct,
+	interior style={top color=mstruct!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[mstruct] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% Definition Box
+\newtcolorbox{dblock}[1]{enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=malert, colframe=malert,
+	interior style={top color=malert!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[malert] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% subbox
+\newtcolorbox{subbox}[1]{
+	empty,
+	coltitle=mstruct, fonttitle=\bfseries,
+	borderline horizontal={0.5mm}{0pt}{mstruct},
+	title=#1
+	titlerule style={
+		mstruct,
+		arrows={Hooks[arc=270]-Hooks[arc=270]}
+	}
+}
+
+\everymath{\displaystyle}
+\title{第 5 章: 型無し$\lambda$計算}
+\begin{document}
+\maketitle
+\begin{frame}
+\begin{enumerate}
+	\item 前回までの内容
+	\begin{enumerate}
+		\item 型無し$\lambda$計算の抽象構文
+		\item 変数の出現
+		\item 評価戦略(完全$\beta$簡約，正規評価順序)
+	\end{enumerate}
+\end{enumerate}
+今回は 5 章の残りをする．ただし操作的意味論を明確にするため，5.3 章の内容を先に扱う．
+\end{frame}
+
+\begin{frame}{名前呼び}
+    名前呼びは，informal には抽象内部に簡約基を持たない(i.e.弱冠頭正規形)項のみに制限された正規評価順序である．変種が Haskell などで使われている．
+\begin{dblock}{名前呼び}
+    名前呼び戦略とは，最左・最外の簡約基から簡約し，抽象内部の簡約を許さない評価戦略である．
+\end{dblock}
+名前呼び戦略のもとでの簡約列の例．
+\begin{equation*}
+\underline{\mathtt{id(id(\lambda z.\ id\ z))}}\rightarrow \underline{\mathtt{id}(\lambda\mathtt{z. id\ z})}\nrightarrow \mathtt{\lambda z.id\ z}\nrightarrow
+\end{equation*}
+正規評価順序で行なえていた抽象内部の簡約が行なえないので，最後に得られた項が$\lambda \mathtt{z. z}$に簡約されることはない．
+\end{frame}
+
+\begin{frame}{名前呼び}
+具体的に操作的意味論を定める．
+関数部が正規形になった時に，(引数が値か否に関わらず)$\beta$簡約を施すことに注意すると
+\begin{dblock}{名前呼びの操作的意味論}
+	\begin{prooftree}
+		\RightLabel{{\footnotesize \textbf{(E-APP1)}}}
+		\AxiomC{$\mathtt{t_{1}\rightarrow t_{1}'}$}
+		\UnaryInfC{$\mathtt{t_{1}\ t_{2}\rightarrow t_{1}'\ t_{2}}$}
+	\end{prooftree}
+	\begin{prooftree}
+	\RightLabel{\footnotesize \textbf{(E-APPABS)}}
+	\AxiomC{}
+	\UnaryInfC{$\mathtt{(\lambda x. t_{12})t_{2}\rightarrow\left[t_{2}\mapsto x\right]t_{12}}$}
+	\end{prooftree}
+	値は$\lambda$抽象である．次に見る値呼びの評価規則とは異なり，引数に関する評価関係は定められていないことに注意する．
+\end{dblock}
+\end{frame}
+
+\begin{frame}{値呼び}
+\begin{dblock}{値呼び}簡約基の右側がこれ以上簡約できない項，つまり値に評価されているときだけ最外簡約基を簡約する評価戦略を値呼びという．
+\end{dblock}
+$\mathtt{id(id(\lambda z. id\ z))}$の値呼びでの簡約列．
+\begin{equation*}
+\mathtt{id(\underline{id(\lambda z.id\ z)})}\rightarrow \mathtt{\underline{id\ (\lambda z. id\ z)}}\rightarrow \mathtt{\lambda z.id\ z}
+\end{equation*}
+
+値呼びは\textbf{正格}である．つまり，函数本体で使用されるかにかかわらず引数は常に評価される．これは，引数を函数本体で必要なときだけ評価する名前呼びや必要呼び戦略と対照的である．
+\end{frame}
+\begin{frame}[label = callByValue1]{値呼びの操作的意味論}
+まず，値呼びにおける構文要素を定める．
+\begin{dblock}{値呼びにおける構文要素}
+項は以下の BNF で定まる:
+\begin{equation*}
+	\mathtt{t}\Coloneq \mathtt{x}|\mathtt{\lambda x. t}|\mathtt{t\ t}
+\end{equation*}
+値は$\lambda$抽象値である．したがって，以下の BNF で定まる:
+\begin{equation*}
+	\mathtt{v}\Coloneq \mathtt{\lambda x. t}
+\end{equation*}
+\end{dblock}
+次に評価関係を定めよう．値呼びで簡約が許されるのは最も外側の redex である．そうでない項は，はじめ左側，次いで右側の部分項が値となるまで簡約されるまで簡約される．定式化すると次のようになる．
+\end{frame}
+\begin{frame}[label = callByValue2]{値呼びの操作的意味論}
+	\begin{dblock}{値呼びにおける評価関係}
+		\begin{prooftree}
+			\RightLabel{{\footnotesize \textrm{(E-APP1)}}}
+			\AxiomC{$\mathtt{t}_{1}\rightarrow \mathtt{t}_{1}'$}
+			\UnaryInfC{$\mathtt{t}_{1}\ \mathtt{t}_{2}\rightarrow \mathtt{t}_{1}'\ \mathtt{t}_{2}$}
+		\end{prooftree}
+		\begin{prooftree}
+			\RightLabel{{\footnotesize \textrm{(E-APP2)}}}
+			\AxiomC{$\mathtt{t_{2}}\rightarrow \mathtt{t}_{2}'$}
+			\UnaryInfC{$\mathtt{v}_{1}\ \mathtt{t}_{2}\rightarrow \mathtt{v}_{1}\ \mathtt{t}_{2}'$}
+		\end{prooftree}
+		\begin{prooftree}
+			\RightLabel{{\footnotesize \textrm{(E-APPABS)}}}
+			\AxiomC{}
+			\UnaryInfC{$\mathtt{\left(\lambda x.t_{12}\right)v_{2}}\rightarrow \left[\mathtt{x}\mapsto \mathtt{v}_{2}\right]\mathtt{t}_{12}$}
+		\end{prooftree}
+	\end{dblock}
+	{\footnotesize \texttt{E-APP1}}により，関数適用は関数部分が値となるまで評価されたのち，{\footnotesize \texttt{E-APP2}}によって左辺が値となるまで評価が進む．最後に{\footnotesize \texttt{E-APPABS}}により右辺が値となった redex のみ評価される．
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング}
+\begin{enumerate}
+	\item 複数の引数: カリー化\begin{itemize}
+		\item 複数個の引数を取る関数は高階関数をネストして作れる(カリー化)．
+		\item たとえば，項$\mathtt{f = \lambda \left(x, y\right).s}$(ただし$\mathtt{x,y}\in FV(\mathtt{s})$)は$\mathtt{\lambda x. \lambda y. s}$とかける．
+		\begin{itemize}
+			\item $\mathtt{x}$に対して値$\mathtt{v}$が代入されたとき，各$\mathtt{y}$に値$\mathtt{w}$が代入されると$\mathtt{\left[y\mapsto w\right]\left[x \mapsto v\right]s}$を返す関数
+		\end{itemize}
+		\item カリー化された関数の簡約列の例: $\mathtt{(((\lambda x. \lambda y.  s) v) w) \longrightarrow((\lambda y. \left[x \mapsto v\right] s)w)\longrightarrow \left[y \mapsto w\right]\left[x \mapsto v\right]s}$
+	\end{itemize}
+	\item ブール値\begin{itemize}
+	\item 項$\mathtt{tru, fls}$を$\mathtt{tru = \lambda t. \lambda f. t, fls = \lambda t.\lambda f. f}$と定める． 
+		\item $\mathtt{if}$演算子に相当する$\mathtt{test}$コンビネータを $\mathtt{test = \lambda l. \lambda m. \lambda n. l\ m\ n;}$とする．\begin{itemize}
+		\item $\mathtt{tru, fls}$は二引数のうちそれぞれ前者と後者を返すので，$\mathtt{test}$について真理値同様に振る舞う．i.e. 真理値を表現している．
+		\end{itemize}
+		\item 他の論理演算子も$\mathtt{test}$で書ける．たとえば論理和は$\mathtt{and = \lambda b. \lambda c. test\ b\ c\ fls}$．
+	\end{itemize}
+	\item 二つ組\begin{itemize}
+		\item 二つ組のコンストラクタ$\mathtt{pair}$と射影関数$\mathtt{fst, snd}$を次のように定義する:$\mathtt{pair = \lambda f. \lambda s \lambda b. b\ f\ s; fst = \lambda p. p\ tru; snd = \lambda p. p\ fls}$
+		\item これらは順序対として振る舞う．つまり任意の項$\mathtt{v, w}$について$\mathtt{v = fst(pair\ v\ w),w =  snd(pair\ v\ w)}$．
+	\end{itemize}
+\end{enumerate}
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: Church 数}
+	型無し算術式では，数は定数$\mathtt{0}$と後者関数$\mathtt{succ}$で帰納的に定義された．$\mathtt{\lambda}$計算でも同様であり，とくにそれは\textbf{Church 数}と呼ばれる．
+	\begin{dblock}{Church 数}
+		各自然数$n$について，Church 数$\mathtt{c_{n}}$を次のように定義する．\begin{equation*}
+			\mathtt{c_{n} = \lambda s. \lambda z. \overbrace{\mathtt{(s\ldots (s}}^{\text{$n$個}}\ z)\ldots)}
+		\end{equation*}
+		とくに$\mathtt{c_{0} =\lambda s.\lambda z.z}$である．
+	\end{dblock}
+	
+	Church 数$\mathtt{c_{n}}$は，後者関数$\mathtt{s}$とゼロ$\mathtt{z}$を取り$\mathtt{z}$に$\mathtt{s}$を$n$回適用する．
+
+	後者関数$\mathtt{scc}$は，各$\mathtt{c_{n}}$に対して，$\mathtt{c_{n}}$に後者関数とゼロを適用し，更に後者関数を適用する関数としてかける．つまり，\begin{equation*}
+		\mathtt{scc = \lambda n. \lambda s. \lambda z. s (n\ s\ z)}
+	\end{equation*}
+
+	以降のスライドでは，Church 数の加算，減算，乗算およびゼロ値判定を定める．
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: Church 数}
+	\begin{enumerate}
+		\item 加算関数は，各$\mathtt{m, n}$に対して$\mathtt{c_{n}}$に$\mathtt{s}$を$n$回適用する関数として書ける:\begin{equation*}
+		\mathtt{plus = \lambda m. \lambda n. \lambda s. \lambda z. m\ s\ (n\ s\ z)}
+		\end{equation*}
+		\item 乗算関数は，各$\mathtt{m, n}$に対して$\mathtt{plus\ n}$を$m$回だけ$\mathtt{c_{0}}$に適用する関数として書ける．Church 数$\mathtt{c_{n}}$が乗算関数$\mathtt{s}$を項$\mathtt{z}$に$n$回適用することを用いた:\begin{equation*}
+			\mathtt{times = \lambda m. \lambda n.  m\ (plus\ n)\ c_{0} = \lambda m. \lambda n.\lambda z. m(nz)}
+		\end{equation*}
+		\begin{itemize}
+			\item cf. 乗算の単位元は 1 だから，各$\mathtt{m, n}$に対して$\mathtt{c_{m^{n}}}$を返す関数$\mathtt{exp}$は\begin{equation*}
+				\mathtt{exp = \lambda m. \lambda n. m\ (times\ n)\ c_{1}}
+			\end{equation*}
+		\end{itemize}
+		\item ゼロ値判定のための関数は，各$\mathtt{n}$に対して Church 数$\mathtt{c_{n}}$が$\mathtt{c_{0}}$のとき$\mathtt{tru}$，それ以外は常に$\mathtt{fls}$を返す関数として書ける:
+		\begin{equation*}
+			\mathtt{iszro = \lambda m. m (\lambda x. fls)\ tru}
+		\end{equation*}
+	\end{enumerate}
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: Church 数}
+	減算関数を定めるために前者関数$\mathtt{prd}$を用意する．$\mathtt{pred}$はメモ化を使うと書ける:
+	\begin{dblock}{前者関数}
+		$\mathtt{prd = \lambda m . fst(m\ ss\ zz)}$．ただし，\begin{itemize}
+			\item $\mathtt{zz = pair\ c_{0}\ c_{0}}$
+			\item $\mathtt{ss = \lambda p. pair(snd\ p)\ (plus\ c_{1}\ (snd\ p))}$
+		\end{itemize}
+	\end{dblock}
+\begin{itemize}
+	\item $\mathtt{ss}$は二つ組$\mathtt{pair\ c_{i}\ c_{j}}$を取り$\mathtt{pair\ c_{j}\ c_{j + 1}}$を返すから，$m = 0$のとき項$\mathtt{m\ ss\ zz}$は$\mathtt{pair\ c_{0}\ c_{0}}$，それ以外は帰納法により$\mathtt{pair\ c_{m - 1}\ c_{m}}$．
+
+	\item 長さ$n$の引数が与えられた関数$f$の評価回数を$T(f)(n)$と書くと，$T(\mathtt{prd})(n) = \mathcal{O}(n)$．(次スライド)
+	\end{itemize}
+	$\mathtt{prd}$により，減算関数$\mathtt{sub}$は$\mathtt{sub = \lambda m.\lambda n. m\ prd\ n}$と書ける．
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: Church 数}
+	$\mathtt{\mathtt{prd}(c_{n})}$の簡約列を考える．
+			\begin{align*}
+				\mathtt{prd(c_{n})} &= \mathtt{(\lambda m . fst(m\ ss\ zz))(c_{n})}\\
+					&\rightarrow \mathtt{fst(c_{n}\ ss\ zz)} \rightarrow^{2}\mathtt{fst}(\overbrace{\mathtt{ss(\ldots\ (ss}}^{n}\ \mathtt{zz)\ldots)}
+			\end{align*}
+		いま，各$j$に対して，$\mathtt{ss(pair\ c_{j- 1}\ c_{j})}$の簡約列は次のように書けるので，定数オーダーで簡約できることが分かる:
+		\begin{align*}
+			\mathtt{ss(pair\ c_{j - 1}\ c_{j})}&\rightarrow \mathtt{pair(snd(pair\ c_{j - 1}\ c_{j}))(plus\ c_{1}\ snd(pair\ c_{j- 1}\ c_{j}))}\\
+				&\rightarrow^{6}\mathtt{pair(snd(pair\ c_{j - 1}\ c_{j}))(plus\ c_{1}\ c_{j})}\\
+				&\rightarrow^{5}\mathtt{pair(snd(pair\ c_{j - 1}\ c_{j}))(c_{j + 1})}\rightarrow^{6}\mathtt{pair\ c_{j}\ c_{j + 1}}
+		\end{align*}
+		以上より$(\overbrace{\mathtt{ss(\ldots\ (ss}}^{n}\ \mathtt{zz)\ldots)}$は$\mathcal{O}(n)$のオーダーで$\mathtt{pair\ c_{n-1}\ c_{n}}$に簡約できる．二つ組の射影は定数オーダーで評価できるので，題意が示される．$\square$
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: リスト(演習 5.2.8)}
+	$\lambda$計算で cons-list を表現することを考える．
+	\begin{tblock}{演習 5.2.8}
+		$\lambda$計算において，リストはそれ自身の$\mathtt{fold}$関数である．たとえば，リスト$\mathtt{\left[x, y, z\right]}$は$\mathtt{\lambda c.\lambda n. c\ x\ (c\ y\ (c\ n))}$なる関数として書ける．$\mathtt{nil}, \mathtt{cons}, \mathtt{isnil}, \mathtt{head}, \mathtt{tail}$関数を書け．
+	\end{tblock}
+まず$\mathtt{nil}$は定数なので，$\mathtt{nil = \lambda c. \lambda n. n}$．
+
+$\mathtt{cons}$は要素$\mathtt{h}$とリスト$\mathtt{t}$を取り$\mathtt{h :: t}$を返す: $\mathtt{cons = \lambda h. \lambda t. \lambda c. \lambda n. c\ h (t\ c\ n)}$．
+
+$\mathtt{isnil}$をリストに適用したとき，リストに$\mathtt{n}$のみが含まれていれば$\mathtt{tru}$，$\mathtt{c}$および値が一つ以上含まれていれば$\mathtt{fls}$を返す．よって
+$\mathtt{isnil = \lambda t. t\ (\lambda x.\lambda b. fls)\ tru}$．
+
+$\mathtt{head}$関数は，リストのコンストラクタ$\mathtt{c}$を一斉に真理値$\mathtt{tru}$に，定数$\mathtt{n}$を$\mathtt{fls}$に置き換えることで実現できる\footnote{本来は partial である．}．
+よって$\mathtt{head = \lambda t. t\ tru\ fls}$．
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: リスト(演習 5.2.8)}
+	最後に$\mathtt{tail}$を求めよう．$\mathtt{prd}$同様にタプリングを使って書けるのだから，\begin{itemize}
+	\item $\mathtt{nil}$に対しては$\mathtt{pair\ nil\ nil}$を
+	\item $\mathtt{cons\ h\ t}$に対しては$\mathtt{pair\ t\ (cons\ h\ t)}$を
+	\end{itemize}
+	返すように作ればよい．したがって，次のように定義できるとわかる:
+	\begin{tblock}{$\mathtt{tail}$関数}
+		$\mathtt{tail = \lambda t. fst(t\ cc\ nn)}$．ただし\begin{itemize}
+			\item $\mathtt{nn = pair\ nil\ nil}$
+			\item $\mathtt{cc = \lambda h. \lambda p. pair(snd\ p)(cons\ h\ (snd\ p))}$
+		\end{itemize}
+	\end{tblock}
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: 計算体系の拡張}
+純粋な$\lambda$計算の体系$\lambda$を，型無し算術式$\mathbf{NB}$で定義した式や値をプリミティブとして組み込んで拡張したものを$\mathbf{\lambda NB}$と呼ぶ．組み込んだプリミティブと Church ブール値/数を相互変換する関数は次のように定義できる:
+
+\begin{dblock}{$\mathbf{\lambda NB}$でのプリミティブとその表現間の相互変換}
+	\begin{itemize}
+		\item Chuch ブール値からプリミティブ: $\mathtt{realbool = \lambda b. b\ true\ false}$
+		\item プリミティブから Church ブール値: $\mathtt{churchbool = \lambda b. if\ b\ then\ tru\ else\ fls}$
+		\item Church 数からプリミティブ: $\mathtt{realnat = \lambda m. m(\lambda x. succ\ x)\ 0}$
+		\item プリミティブから Church 数;\begin{align*}\mathtt{churchnat} = &\mathtt{\lambda m. if\ (iszero\ m)\ then\ c_{0}}\\
+			&\mathtt{else\ scc(churchnat\ (pred\ m))}\end{align*}
+	\end{itemize}
+	ただし最後の定義において，のちに導入する不動点コンビネータを暗に用いた．
+\end{dblock}
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: 計算体系の拡張}
+	プリミティブを導入することで，Church ブール値/数に関数を適用したものと，その結果そのものが等しいことが容易に分かる．
+
+次の例を考える: $\mathtt{scc\ c_{1}}$．この項は$\mathtt{c_{2}}$に評価されない．なぜなら，\begin{equation*}
+	\mathtt{scc\ c_{1}} = \mathtt{(\lambda m. \lambda s. \lambda z. s (m\ s\ z))c_{1}}\rightarrow \mathtt{\lambda s. \lambda z. s((\lambda s'.\lambda z'. s'\ z')s\ z)}\nrightarrow
+\end{equation*}
+となるから．値呼びで項が簡約できるのは項が$\mathtt{(\lambda x. s_{12})s_{2}}$($\mathtt{s_{2}}$は値)の形であることなので，ここで行き詰まる．
+
+もちろん，任意の項$\mathtt{v, w}$について$\mathtt{(scc\ c_{1})v\ w = c_{2}\ v\ w}$\footnote{つまり$\eta$同値である．}が成りたつ，つまりこれら 2 つの項は\underline{振る舞い等価}である．さらに$\mathtt{equal\ (scc\ c_{1})\ c_{2}}$も成り立つ．
+
+同様のことは，煩雑な過程を経てたとえば$\mathtt{times\ c_{2}\ c_{2}}$と$\mathtt{c_{4}}$に対してもいえる．しかし，前者を$\mathtt{realnat}$によりプリミティブな数に変換する方がより直接的である．
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: 再帰}
+\begin{itemize}
+	\item $\lambda$計算においては，正規形へ評価できない項が存在する．\begin{itemize}
+		\item たとえば，発散コンビネータ$\mathtt{omega = (\lambda x.x\ x)(\lambda x. x\ x)}$について，$\mathtt{omega}\rightarrow\mathtt{omega}$．
+		\item 正規形に評価できない項は，\textit{発散する}という．
+	\end{itemize}
+	\item $\mathtt{omega}$を一般化し，関数の不動点を表わす以下のコンビネータが定義できる．
+\end{itemize}
+\begin{dblock}{不動点コンビネータ}
+	不動点コンビネータ$\mathtt{fix}$を，$\mathtt{fix = \lambda f. (\lambda x.f(\lambda y. x\ x\ y))(\lambda x. f(\lambda y.x\ x\ y))}$と定める．
+\end{dblock}
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: Church 数のリスト}
+	\begin{tblock}{演習 5.2.11}
+		$\mathtt{fix}$とリストの表現，すなわち任意の$\mathtt{x_{1},\ldots, x_{n}}$に対し$\mathtt{\left[x_{1},x_{2},\ldots x_{n}\right] = \lambda c.\lambda n. c\ x_{1}(c\ x_{2}(\ldots (c\ x_{n}\ n)\ldots))}$とを用いて，Church 数のリストの総和を計算する関数を書け．
+	\end{tblock}
+	たとえば Haskell では，整数リストの総和を計算する関数$\mathtt{sum :: \left[Int\right]\rightarrow Int}$は次のように書けた:
+	\begin{align*}
+		\mathtt{sum\ \left[\right]}&= \mathtt{0}\\
+		\mathtt{sum\ (x:xs)} &= \mathtt{x + sum\ xs}
+	\end{align*}
+	これをそのまま$\mathtt{fix}$コンビネータで書き下せばよい．演習 5.2.8 の$\mathtt{isnil, head, tail}$関数を使う．
+	\begin{align*}
+		\mathtt{h} &= \mathtt{\lambda f. \lambda t. test\ (isnil\ t)\ (\lambda x. c_{0})\ (\lambda x.(plus\ (head\ t)\ (f (tail\ t))))\ c_{0}}\\
+		\mathtt{sum} &=\mathtt{fix\ f}
+	\end{align*}
+\end{frame}
+\begin{frame}{$\lambda$計算でのプログラミング: 表現}
+	Church 数が"普通の数"を表わすとはどういうことだろうか．
+\begin{itemize}
+\item 数を，型無し算術式において定めた定数$\mathtt{0}$，数の上の演算$\mathtt{succ}, \mathtt{pred},\mathtt{iszero}$からなるものとして特徴付ける．
+\item すると，今までの観察から，Church 数上の演算$\mathtt{scc},\mathtt{prd},\mathtt{iszro}$は Church 数上における$\mathtt{succ}, \mathtt{pred},\mathtt{iszero}$と同様に振る舞う．
+\end{itemize}
+ひいては，数をブール値に写すプログラムに対し，数を Church 数に，ブール値を Church ブール値に置き換えてプログラムを評価したとしても同じ結果を得る．
+\end{frame}
+
+\begin{frame}{形式的議論:構文}
+	\begin{dblock}{(定義)項}
+		$\mathcal{V}$を変数名の可算集合とする．項の集合は以下を満たす最小の集合$\mathcal{T}$:\begin{enumerate}
+			\item 任意の$\mathtt{x}\in\mathcal{V}$に対して$\mathtt{x}\in\mathcal{V}$．
+			\item $\mathtt{t_{1}}\in\mathcal{T}, \mathtt{x}\in\mathcal{V}$ならば$\mathtt{\lambda x. t_{1}}\in\mathcal{T}$．
+			\item $\mathtt{t_{1}, t_{2}}\in\mathcal{V}$ならば$\mathtt{t_{1}\ t_{2}}\in\mathcal{V}$．
+		\end{enumerate}
+	\end{dblock}
+	\begin{dblock}{(定義)自由変数}
+		項$\mathtt{t}$の自由変数の集合$\mathrm{FV}(\mathtt{t})$を，以下のように定義する:
+		\begin{enumerate}
+			\item $\mathrm{FV}(\mathtt{x}) =\left\{\mathtt{x}\right\}$
+			\item $\mathrm{FV}(\mathtt{\lambda x. t_{1}}) = \mathrm{FV}(\mathtt{t_{1}})\setminus \left\{\mathtt{x}\right\}$
+			\item $\mathrm{FV}(\mathtt{t_{1}\ t_{2}}) = \mathrm{FV}(\mathtt{t_{1}})\cup \mathrm{FV}(\mathtt{t_{2}})$．
+		\end{enumerate}
+	\end{dblock}
+\end{frame}
+\begin{frame}{形式的議論:代入}
+以下の定義では，項は束縛変数名を除いて同一視する，つまり$\mathcal{T}$は$\alpha$同値類で割られているものとする．
+\begin{dblock}{代入}
+	項$\mathtt{s}$の項$\mathtt{t}$の変数$\mathtt{x}$への代入を$\left[\mathtt{x}\mapsto \mathtt{s}\right]\mathtt{t}$とかき，次のように定義する．\begin{align*}
+		\left[\mathtt{x}\mapsto\mathtt{s}\right]\mathtt{x} = \mathtt{s}&&\\
+		\left[\mathtt{x}\mapsto\mathtt{s}\right]\mathtt{y} = \mathtt{y}&\quad&\text{if $\mathtt{x\neq y}$}\\
+		\left[\mathtt{x}\mapsto\mathtt{s}\right]\mathtt{(\lambda y. t_{1})} = \mathtt{\lambda y. \left[x\mapsto s\right]t_{1}}&\quad&\text{if $\mathtt{y\neq x}$ and $\mathtt{y}\notin\mathrm{FV}(s)$}\\
+		\left[\mathtt{x}\mapsto\mathtt{s}\right](\mathtt{t_{1}\ t_{2}}) = (\left[\mathtt{x}\mapsto\mathtt{s}\right]\mathtt{t_{1}})(\left[\mathtt{x}\mapsto\mathtt{s}\right]\mathtt{t_{2}})
+	\end{align*}
+\end{dblock}
+特に抽象への代入で条件を緩めたら何が起こるか観察してみよう．
+\end{frame}
+\begin{frame}{形式的議論:代入}
+\begin{enumerate}
+\item 一切条件を課さないとき．$\alpha$同値な項に対する置換の結果が異なってしまう．\begin{itemize}\item たとえば，$\mathtt{\left[x\mapsto x\right](\lambda x. x)\neq \left[x\mapsto y\right](\lambda y. y)}$\end{itemize}
+\item $\mathtt{y\notin \mathrm{FV}(s)}$を課さないとき．\begin{itemize}
+	\item たとえば，$\mathtt{\left[x\mapsto z\right](\lambda z. x) = \lambda z. z}$のような変換が許されてしまう．つまり，元々自由だったはずの変数が代入後に束縛されてしまう．
+\end{itemize}
+単純にこの定義に基づくと，たとえば$\mathtt{\left[x\mapsto y\ z\right](\lambda y. x\ y)}$は代入が行えないことになる．そこで，以下束縛変数名で項は同一視することにする．
+そうすれば，$\mathtt{\left[x\mapsto y\ z\right](\lambda y. x\ y)\equiv\left[x\mapsto y\ z\right](\lambda w. x\ w)\to \lambda w. y\ z\ w}$となり，代入操作は全域的になる．
+\end{enumerate}
+\end{frame}
+\againframe{callByValue1}
+\againframe{callByValue2}
+\begin{frame}{$\mathbf{\lambda NB}$への行き詰まり項の導入}
+	\begin{tblock}{演習 3.5.7}
+		演習 3.5.16 で導入した操作的意味論では行き詰まり状態がエラー項に評価されるようにした．これを$\mathbf{\lambda NB}$に拡張せよ．
+	\end{tblock}
+
+\end{frame}
+\begin{frame}{演習 5.3.7}
+	\begin{dblock}{ブール式の操作的意味論}
+		ブール値でない正規形の構文要素$\mathtt{badbool}$を\begin{equation*}
+			\mathtt{badbool\Coloneq nv|wrong}
+		\end{equation*}
+		と定める．操作的意味論は
+			\begin{prooftree}
+				\RightLabel{{\footnotesize \textbf{E-IFTRUE}}}
+				\AxiomC{}
+				\UnaryInfC{$\mathtt{if\ true\ then\ t_{1}\ else\ t_{2}}\rightarrow \mathtt{t_{1}}$}
+			\end{prooftree}
+			\begin{prooftree}
+				\RightLabel{{\footnotesize \textbf{E-IFFALSE}}}
+				\AxiomC{}
+				\UnaryInfC{$\mathtt{if\ false\ then\ t_{1}\ else\ t_{2}}\rightarrow \mathtt{t_{2}}$}
+			\end{prooftree}
+			\begin{prooftree}
+				\RightLabel{{\footnotesize \textbf{E-IFTRUE}}}
+				\AxiomC{$\mathtt{t}_{1}\rightarrow\mathtt{t}_{1}'$}
+				\UnaryInfC{$\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}}\rightarrow \mathtt{if\ t_{1}'\ then\ t_{2}\ else\ t_{3}}$}
+			\end{prooftree}
+		\begin{prooftree}
+			\RightLabel{{\footnotesize \textbf{E-IF-WRONG}}}
+			\AxiomC{}
+			\UnaryInfC{$\mathtt{if\ badbool \ then\ t_{1}\ else\ t_{2}}\rightarrow\mathtt{wrong}$}
+		\end{prooftree}
+		\end{dblock}
+\end{frame}
+\begin{frame}{演習 5.3.7}
+	\begin{dblock}{数式の操作的意味論}
+構文要素$\mathtt{badnat}$を$
+			\mathtt{badbool\Coloneq true|false|wrong}
+		$と定める．操作的意味論は
+		\begin{columns}
+			\begin{column}{0.48\textwidth}
+					\begin{prooftree}
+						\RightLabel{{\footnotesize \textbf{E-SUCC}}}
+						\AxiomC{$\mathtt{t_{1}\rightarrow t_{1}'}$}
+						\UnaryInfC{$\mathtt{succ\ t_{1}\rightarrow succ\ t_{1}'}$}
+					\end{prooftree}
+					\begin{prooftree}
+						\RightLabel{{\footnotesize \textbf{E-PRED}}}
+						\AxiomC{$\mathtt{t_{1}\rightarrow t_{1}'}$}
+						\UnaryInfC{$\mathtt{pred\ t_{1}\rightarrow pred\ t_{1}'}$}
+					\end{prooftree}
+					\begin{prooftree}
+						\RightLabel{{\footnotesize \textbf{E-PREDZERO}}}
+						\AxiomC{}
+						\UnaryInfC{$\mathtt{pred\ 0\rightarrow 0}$}
+					\end{prooftree}
+					\begin{prooftree}
+						\AxiomC{}
+						\UnaryInfC{$\mathtt{pred(succ\ nv_{1})\rightarrow nv_{1}}$}
+					\end{prooftree}
+					\begin{prooftree}
+						\RightLabel{{\footnotesize \textbf{E-PRED}}}
+						\AxiomC{$\mathtt{t_{1}\rightarrow t_{1}'}$}
+						\UnaryInfC{$\mathtt{pred\ t_{1}\rightarrow pred\ t_{1}'}$}
+					\end{prooftree}
+			\end{column}
+			\begin{column}{0.02\textwidth}
+				\rule{.1mm}{0.6\textheight}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{prooftree}
+					\AxiomC{$\mathtt{iszero\ 0\rightarrow true}$}
+				\end{prooftree}
+				\begin{prooftree}
+					\AxiomC{$\mathtt{iszero(succ\ nv_{1})\rightarrow false}$}
+				\end{prooftree}
+				\begin{prooftree}
+					\AxiomC{$\mathtt{iszero\ t_{1}\rightarrow iszero\ t_{1}'}$}
+				\end{prooftree}
+				\begin{prooftree}
+					\AxiomC{$\mathtt{pred\ badnat\rightarrow wrong}$}
+				\end{prooftree}
+				\begin{prooftree}
+					\AxiomC{$\mathtt{succ\ badnat\rightarrow wrong}$}
+				\end{prooftree}
+				\begin{prooftree}
+					\AxiomC{$\mathtt{iszero\ badnat\rightarrow wrong}$}
+				\end{prooftree}
+			\end{column}
+		\end{columns}
+	\end{dblock}
+\end{frame}
+\begin{frame}{演習 5.3.7}
+	まず，値呼びにおける行き詰まり項は，(1)抽象でない，(2)値への値でない項の適用，(3)値でない項への項の適用の 3 通り．したがって，これらを含む構文要素$\mathtt{badlam}$を定義すればよい:
+	\begin{align*}
+	\mathtt{badlam}&\Coloneq \mathtt{na|na\ t|v\ na|wrong}\\
+	\mathtt{na}&\Coloneq \mathtt{x|t_{1}\ t_{2}}
+	\end{align*}
+	いま考えているのは$\mathbf{NB}$を含むので，
+	\begin{align*}
+		\mathtt{if\ badlam\ then\ t_{1}\ else\ t_{2}}\rightarrow \mathtt{wrong}&\quad&\mathtt{succ\ badlam}\rightarrow \mathtt{wrong}\\
+		\mathtt{pred\ badlam}\rightarrow \mathtt{wrong}&\quad&\mathtt{iszero\ badlam}\rightarrow \mathtt{wrong}\\
+		\mathtt{badlam}\rightarrow \mathtt{wrong}&\quad&\mathtt{churchbool\ badbool}\rightarrow\mathtt{wrong}\\
+		\mathtt{churchnat\ badnat}\rightarrow\mathtt{wrong}&\quad&\mathtt{realbool\ badlam}\rightarrow\mathtt{wrong}\\
+		\mathtt{realnat\ badlam}\rightarrow\mathtt{wrong}
+	\end{align*}
+\end{frame}
+
+\end{document}

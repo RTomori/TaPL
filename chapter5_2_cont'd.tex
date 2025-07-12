@@ -1,0 +1,314 @@
+%%% Local Variables:
+%%% mode: japanese-laTeX
+%%% TeX-engine: xetex
+%%% End;
+\documentclass[9pt]{beamer}
+ \usepackage{zxjatype}
+ \usepackage{xltxtra}
+ \usepackage[ipa]{zxjafont}
+\usepackage{amssymb, amsmath,amsfonts}
+\usepackage{mathtools}
+\usepackage{bussproofs}
+\usepackage{mathcomp}
+\usepackage{tcolorbox}
+\tcbuselibrary{raster,skins}
+\usepackage{varwidth}
+\usepackage{tikz}
+\usetheme{CambridgeUS}
+
+% 色定\textmd{}義
+\definecolor{mstruct}{RGB}{68, 174, 234} 
+% \definecolor{malert}{RGB}{223, 153, 155}
+\definecolor{malert}{RGB}{255, 76, 0}
+\definecolor{mex}{RGB}{57, 149, 82}
+% 見出しカラー
+% block title color
+% alert color
+% 箇条書き
+\useinnertheme{circles}
+% フッダー
+\setbeamertemplate{footline}[frame number]
+%無を出力するコマンド
+\newtcolorbox{tblock}[1]{
+	enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=mstruct, colframe=mstruct\textmd{},
+	interior style={top color=mstruct!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[mstruct] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% Definition Box
+\newtcolorbox{dblock}[1]{enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=malert, colframe=malert,
+	interior style={top color=malert!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[malert] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% subbox
+\newtcolorbox{subbox}[1]{
+	empty,
+	coltitle=mstruct, fonttitle=\bfseries,
+	borderline horizontal={0.5mm}{0pt}{mstruct},
+	title=#1
+	titlerule style={
+		mstruct,
+		arrows={Hooks[arc=270]-Hooks[arc=270]}
+	}
+}
+\everymath{\displaystyle}
+\title{Types and Programming Languages\\ Chapter 5}
+\author{Rei Tomori}
+\begin{document}
+\maketitle
+\section{5.3.形式的議論}
+\begin{frame}{構文}
+    \begin{block}{定義[項]}
+        $\mathcal{V}$を，変数名の加算集合とする．項の集合は
+    \begin{align*}
+    x\in\mathcal{T} &\text{\ for\ }\forall x \in\mathcal{T}\\
+    t_{1}\in \mathcal{T}, x\in\mathcal{V}&\Rightarrow \lambda x.\mathtt{t}_{1}\in\mathcal{T}
+    t_{1}\in\mathcal{T}, t_{2}\in\mathcal{T}&\Rightarrow t_{1}\ t_{2}\in\mathcal{T}.
+    \end{align*}
+    をみたす最小の集合$\mathcal{T}$である．
+\end{block}
+項$\mathtt{t}$のサイズは，
+\begin{align*}
+    size\ x &= 1\\
+    size\ (\lambda x. t') &= size(\mathtt{t'}) + 1\\
+    size (\mathtt{t}_{1}\ \mathtt{t}_{2}) &= size(\mathtt{t}_{1}) + size(\mathtt{t}_{2}) + 1
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\begin{block}{項の自由変数の集合}
+    項$\mathtt{t}$の自由変数の集合$FV(\mathtt{t})$は，
+    \begin{align*}
+    FV(x) &= \left\{x\right\}\\
+    FV(\lambda x. \mathtt{t}_{1}) &= FV(\mathtt{t}_{1})\setminus \left\{x\right\}\\
+    FV(\mathtt{t}_{1}\ \mathtt{t}_{2}) &= FV(\mathtt{t}_{1})\cup FV(\mathtt{t}_{2})
+    \end{align*}
+\end{block}
+\end{frame}
+\begin{frame}{置換}
+    $\beta$簡約の定義で用いた変数の置換を具体的に定義する．
+\begin{block}{(置換)}
+    項$\mathsf{t}$の自由変数$\mathsf{x}$を項$\mathsf{s}$による置換$\left[\mathsf{x}\mapsto \mathsf{s}\right]\mathsf{t}$を，引数$\mathsf{t}$に関する帰納的定義により次のように定める．
+    \begin{align*}
+    \left[\mathsf{x}\mapsto\mathsf{s}\right]\mathsf{x} &= \mathsf{s}\\
+    \left[\mathsf{x}\mapsto\mathsf{s}\right]\mathsf{y} &= \mathsf{y}\\
+    \left[\mathsf{x}\mapsto \mathsf{s}\right]\left(\lambda \mathsf{y}.\mathsf{t}_{1}\right)&= 
+        \lambda \mathsf{y}. \left[\mathsf{x}\mapsto\mathsf{s}\right]\mathsf{t}_{1}  \text{\ if\ }x \neq y\land y\in FV(\mathsf{s})\\
+        \left[\mathsf{x}\mapsto \mathsf{s}\right]\left(\mathsf{t}_{1}\ \mathsf{t}_{2}\right) &= \left[\mathsf{x}\mapsto \mathsf{s}\right]\mathsf{t}_{1}\ \left[\mathsf{x}\mapsto \mathsf{s}\right]\mathsf{t}_{2}
+    \end{align*}
+\end{block}
+$\mathcal{T}$の$\alpha$同値類で考えているので，束縛変数と置換される変数が等しい場合は考える必要がない(評価されないため)．
+\end{frame}
+\section{操作的意味論}
+\begin{frame}
+$\lambda$項の(値呼びにおける)操作的意味論は次のように定義される．
+\begin{block}{型無し$\lambda$計算}
+    \begin{columns}\begin{column}{0.48\textwidth}
+    構文\begin{align*}
+\mathsf{t}\Coloneq& &\text{項:}\\
+&\mathsf{x} &\text{変数}\\
+&\mathsf{\lambda\mathsf{x}.\mathsf{t}} &\text{抽象}\\
+&\mathsf{t}\ \mathsf{t} &\text{適用}\\
+\mathsf{v}\Coloneq & &\text{値:}\\
+&\lambda\mathsf{x}.\mathsf{t} &\text{抽象}
+\end{align*}\end{column}
+\begin{column}{.02\textwidth}
+    \rule{.1mm}{0.5\textheight}
+\end{column}\begin{column}{0.48\textwidth}評価
+    \begin{prooftree}
+        \AxiomC{$\mathsf{t}_{1}\rightarrow \mathsf{t'}_{1}$}
+        \UnaryInfC{$\mathsf{t}_{1}\ \mathsf{t}_{2}\rightarrow \mathsf{t'}_{1}\ \mathsf{t}_{2}$}
+    \end{prooftree}
+    \begin{prooftree}
+        \AxiomC{$t_{2}\rightarrow \mathsf{t'}_{2}$}
+        \UnaryInfC{$\mathsf{v}_{1}\ \mathsf{t}_{2}\rightarrow \mathsf{v}_{1}\ \mathsf{t'}_{2}$}
+    \end{prooftree}
+    \begin{prooftree}
+        \AxiomC{$\left(\lambda\mathsf{x}.\mathsf{t}_{12}\right)\mathsf{v}_{2}\rightarrow \left[\mathsf{x}\mapsto \mathsf{v}_{2}\right]\mathsf{t}_{12}$}
+    \end{prooftree}\end{column}
+\end{columns}
+\end{block}
+\end{frame}
+\begin{frame}{他の評価規則の操作的意味論}
+\begin{block}{完全$\beta$簡約}
+\begin{columns}
+    \begin{column}{0.48\textwidth}
+        \begin{align*}
+        \mathsf{v}\Coloneq& &\text{値:}\\
+            &\lambda \mathsf{x}.\mathsf{t}&\text{抽象の値}&
+        \end{align*}
+    \end{column}
+    \begin{column}{.02\textwidth}
+        \rule{.1mm}{0.5\textheight}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+        評価
+        \begin{prooftree}
+            \AxiomC{$\mathsf{t}\rightarrow\mathsf{t}'$}
+            \UnaryInfC{$\lambda \mathsf{x}. t \rightarrow \lambda \mathsf{x}. t'$}
+        \end{prooftree}
+        \begin{prooftree}
+            \AxiomC{$\mathsf{t}_{1}\rightarrow\mathsf{t}_{1}'$}
+            \UnaryInfC{$\mathsf{t}_{1}\ \mathsf{t}_{2} \rightarrow \mathsf{t}_{1}'\ \mathsf{t}_{2}$}
+        \end{prooftree}
+        \begin{prooftree}
+            \AxiomC{$\mathsf{t}_{2}\rightarrow\mathsf{t}_{2}'$}
+            \UnaryInfC{$\mathsf{t}_{1}\ \mathsf{t}_{2} \rightarrow \mathsf{t}_{1}\ \mathsf{t}_{2}'$}
+        \end{prooftree}
+        \begin{prooftree}
+            \AxiomC{$\left(\lambda\mathsf{x}.\mathsf{t}_{12}\right)\mathsf{v}_{2}\rightarrow\left[\mathsf{x}\mapsto\mathsf{v}_{2}\right]\mathsf{t}_{12}$}
+        \end{prooftree}
+
+    \end{column}
+\end{columns}
+\end{block}
+\end{frame}
+\begin{frame}{他の評価規則の操作的意味論}
+    \begin{block}{正規評価順序}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{align*}
+            \mathsf{v}\Coloneq& &\text{値:}\\
+                &\lambda \mathsf{x}.\mathsf{t}&\text{抽象の値}&
+            \end{align*}
+        \end{column}
+        \begin{column}{.02\textwidth}
+            \rule{.1mm}{0.5\textheight}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            評価
+            \begin{prooftree}
+                \AxiomC{$\mathsf{t}\rightarrow\mathsf{t}'$}
+                \UnaryInfC{$\lambda \mathsf{x}. t \rightarrow \lambda \mathsf{x}. t'$}
+            \end{prooftree}
+            \begin{prooftree}
+                \AxiomC{$\mathsf{t}_{2}\rightarrow\mathsf{t}_{2}'$}
+                \UnaryInfC{$\mathsf{t}_{1}\ \mathsf{t}_{2} \rightarrow \mathsf{t}_{1}\ \mathsf{t}_{2}'$}
+            \end{prooftree}
+            \begin{prooftree}
+                \AxiomC{$\left(\lambda\mathsf{x}.\mathsf{t}_{12}\right)\mathsf{v}_{2}\rightarrow\left[\mathsf{x}\mapsto\mathsf{v}_{2}\right]\mathsf{t}_{12}$}
+            \end{prooftree}
+        \end{column}
+    \end{columns}
+    \end{block}
+    \end{frame}
+    \begin{frame}{他の評価規則の操作的意味論}
+        \begin{block}{名前呼び}
+        \begin{columns}
+            \begin{column}{0.48\textwidth}
+                \begin{align*}
+                \mathsf{v}\Coloneq& &\text{値:}\\
+                    &\lambda \mathsf{x}.\mathsf{t}&\text{抽象の値}&
+                \end{align*}
+            \end{column}
+            \begin{column}{.02\textwidth}
+                \rule{.1mm}{0.5\textheight}
+            \end{column}
+            \begin{column}{0.48\textwidth}
+                評価
+                \begin{prooftree}
+                    \AxiomC{$\mathsf{t}_{2}\rightarrow\mathsf{t}_{2}'$}
+                    \UnaryInfC{$\mathsf{t}_{1}\ \mathsf{t}_{2} \rightarrow \mathsf{t}_{1}\ \mathsf{t}_{2}'$}
+                \end{prooftree}
+                \begin{prooftree}
+                    \AxiomC{$\left(\lambda\mathsf{x}.\mathsf{t}_{12}\right)\mathsf{v}_{2}\rightarrow\left[\mathsf{x}\mapsto\mathsf{v}_{2}\right]\mathsf{t}_{12}$}
+                \end{prooftree}
+            \end{column}
+        \end{columns}
+        \end{block}
+        \end{frame}
+        \begin{frame}{演習 5.3.7}
+            演習 3.5.16 の$\mathsf{wrong}$で拡張した算術式の構文と意味論は次のようであった:
+            \begin{block}{エラー項で拡張された構文(再掲)}
+                \begin{columns}
+                    \begin{column}{0.48\textwidth}
+                        拡張された構文
+                        \begin{align*}
+                            \mathsf{badnat} &\Coloneq &\text{数でない正規形:}&\\
+                                &\mathsf{wrong}& \text{実行時エラー}&\\
+                                &\mathsf{true}& \text{定数真}&\\
+                                &\mathsf{false}& \text{定数偽}&\\
+                            \mathsf{badbool}&\Coloneq &\text{ブール値でない正規形:}&\\
+                             &\mathsf{wrong}& \text{実行時エラー}&\\
+                             &\mathsf{nv}& \text{数値}
+                        \end{align*}
+                    \end{column}
+                    \begin{column}{.02\textwidth}
+                        \rule{.1mm}{0.6\textheight}
+                    \end{column}
+                    \begin{column}{0.48\textwidth}
+                        元の構文
+                        \begin{align*}
+                            \mathsf{t}\Coloneq&\ldots&\text{項}&\\
+                                &\mathsf{0}&\text{定数ゼロ}&\\
+                                &\mathsf{succ\ t}&\text{後者値}&\\
+                                &\mathsf{pred\ t}&\text{前者値}&\\
+                                &\mathsf{iszero\ t}&\text{ゼロ判定}&\\
+                        \end{align*}
+                        評価関係
+                        \AxiomC{$\mathsf{if\ badbool\ then}\ \mathsf{t}_{1}\ \mathsf{else}\ \mathsf{t}_{2}\rightarrow \mathsf{wrong}$}
+                        \DisplayProof
+                        \AxiomC{$\mathsf{succ\ badnat}\rightarrow\mathsf{wrong}$}
+                        \DisplayProof
+                        \AxiomC{$\mathsf{pred\ badnat}\rightarrow\mathsf{wrong}$}
+                        \DisplayProof
+                        \AxiomC{$\mathsf{iszero\ badnat}\rightarrow\mathsf{wrong}$}
+                        \DisplayProof
+                    \end{column}
+                \end{columns}
+            \end{block}
+        \end{frame}
+        \begin{frame}{演習 5.3.7}
+            \begin{alertblock}{問題}
+               この意味論を$\lambda\mathsf{NB}$に拡張せよ．
+            \end{alertblock}
+            
+        \end{frame}
+        \begin{frame}{演習 5.3.8}
+            \begin{alertblock}{問題}
+               ラムダ項の評価戦略を大ステップスタイルで形式化するにはどうすればよいか示せ．
+            \end{alertblock}
+            
+        \end{frame}
+        \begin{frame}{演習 5.3.8}
+            \begin{columns}
+                \begin{column}{0.48\textwidth}
+                    値は値に評価されるので
+                    \begin{prooftree}
+                        \AxiomC{}
+                        \LeftLabel{\small\rm{B-V}\scriptsize\rm{ALUE:}}
+                        \UnaryInfC{$v\Downarrow v$}
+                        \end{prooftree}
+                        \begin{prooftree}
+                        \AxiomC{$t_{1}\Downarrow v_{1}$}
+                        \UnaryInfC{$v_{1}\ t_{2}\Downarrow v_{1}\ t_{2}$}
+                        \end{prooftree}
+                \end{column}
+            \end{columns}
+        \end{frame}
+\end{document}

@@ -1,0 +1,589 @@
+%%% Local Variables:
+%%% mode: japanese-laTeX
+%%% TeX-engine: xetex
+%%% End;
+\documentclass[9pt]{beamer}
+ \usepackage{zxjatype}
+ \usepackage{xltxtra}
+ \usepackage[ipa]{zxjafont}
+\usepackage{amssymb, amsmath,amsfonts}
+\usepackage{mathtools}
+\usepackage{bussproofs}
+\usepackage{mathcomp}
+\usepackage{tcolorbox}
+\tcbuselibrary{raster,skins}
+\usepackage{varwidth}
+\usetheme{metropolis}
+
+% 色定\textmd{}義
+\definecolor{mstruct}{RGB}{68, 174, 234} 
+% \definecolor{malert}{RGB}{223, 153, 155}
+\definecolor{malert}{RGB}{255, 76, 0}
+\definecolor{mex}{RGB}{57, 149, 82}
+% 見出しカラー
+% block title color
+% alert color
+% 箇条書き
+\useinnertheme{circles}
+% フッダー
+\setbeamertemplate{footline}[frame number]
+%無を出力するコマンド
+\newtcolorbox{tblock}[1]{
+	enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=mstruct, colframe=mstruct\textmd{},
+	interior style={top color=mstruct!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[mstruct] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% Definition Box
+\newtcolorbox{dblock}[1]{enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=malert, colframe=malert,
+	interior style={top color=malert!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[malert] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% subbox
+\newtcolorbox{subbox}[1]{
+	empty,
+	coltitle=mstruct, fonttitle=\bfseries,
+	borderline horizontal={0.5mm}{0pt}{mstruct},
+	title=#1
+	titlerule style={
+		mstruct,
+		arrows={Hooks[arc=270]-Hooks[arc=270]}
+	}
+}
+\everymath{\displaystyle}
+\title{Types and Programming Languages\\ Chapter 8,9}
+\author{Rei Tomori}
+\begin{document}
+\maketitle
+\begin{frame}{概要}
+	今回は以下の内容を扱う: \begin{enumerate}
+        \item \S 8.型付き算術式
+        \item \S9. STLC
+    \end{enumerate}
+\end{frame}
+
+\section{\S8.型付き算術式}
+\begin{frame}{\S 8.1. 型}
+算術式の構文は\begin{equation*}
+\mathtt{t\Coloneq true|false|if\ t\ then\ t\ else\ t|0|succ\ t|pred\ t|iszero\ t}
+\end{equation*}
+により定義され，各項を評価すると結果は行き詰まり項もしくは値，つまりブール値$\mathtt{v\Coloneq true|false}$または数値$\mathtt{nv\Coloneq 0|succ\ nv}$になる．
+
+ある項が行き詰まり項の状態に至ることを，その項を実際に評価せずにいいたい．そのためには，数値に評価される項とブール値に評価される項を区別し，各コンストラクタが引数として取れる項を限定する必要がある．そのために，型$\mathrm{Nat, Bool}$を導入する．
+\begin{alertblock}{記法}
+	$\mathtt{S, T,U}$は型の上を動くメタ変数とする．また，項$\mathtt{t}$が型$\mathtt{T}$を持つというとき，$\mathtt{t}$を評価した結果が明らかに，i.e.静的に型$\mathtt{T}$の値になることを意味する．
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S 8.2. 型付け関係}
+算術式のための型付け関係を$\mathtt{t:T}$と書き，以下の推論規則によって定める．
+\begin{alertblock}{$\mathbf{B}$のための型付け規則}
+	\begin{columns}
+		\begin{column}{0.30\textwidth}
+			新しい構文形式
+			\begin{align*}
+			\mathtt{T}\Coloneq\mathtt{Bool}
+			\end{align*}
+		\end{column}\begin{column}{.02\textwidth}
+			\rule{.1mm}{0.20\textheight}
+		\end{column}\begin{column}{0.66\textwidth}
+			新しい型付け規則\begin{prooftree}
+				\AxiomC{}
+					\RightLabel{\tiny\rm{T-TRUE}}
+				\UnaryInfC{$\mathtt{true:Bool}$}
+			\end{prooftree}
+			\begin{prooftree}\AxiomC{}
+				\RightLabel{\tiny\rm{T-FALSE}}
+				\UnaryInfC{$\mathtt{false:Bool}$}
+			\end{prooftree}
+			\begin{prooftree}
+				\AxiomC{$\mathtt{t_{1}:Bool}$}\AxiomC{$\mathtt{t_{2}:T}$}\AxiomC{$\mathtt{t_{3}:T}$}
+				\RightLabel{\tiny\rm{T-IF}}
+				\TrinaryInfC{$\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}:T}$}
+			\end{prooftree}
+		\end{column}
+	\end{columns}\end{alertblock}\begin{alertblock}{{$\mathbf{NB}$のための型付け規則}}
+	\begin{columns}
+	\begin{column}{0.48\textwidth}
+		新しい構文形式
+		\begin{equation*}
+			\mathtt{T\Coloneq \ldots Nat}
+		\end{equation*}
+		新しい型付け規則
+		\begin{prooftree}
+		\AxiomC{}
+		\RightLabel{\tiny\rm{T-ZERO}}
+		\UnaryInfC{$\mathtt{0:Nat}$}
+		\end{prooftree}
+	\end{column}
+	\begin{column}{.02\textwidth}
+		\rule{.1mm}{0.25\textheight}
+	\end{column}
+	\begin{column}{0.48\textwidth}
+	\begin{prooftree}
+		\AxiomC{$\mathtt{t_{1}:Nat}$}
+		\RightLabel{\tiny\rm{T-SUCC}}\UnaryInfC{$\mathtt{succ\ t_{1}:Nat}$}
+	\end{prooftree}
+	\begin{prooftree}
+		\AxiomC{$\mathtt{t_{1}:Nat}$}\RightLabel{\tiny\rm{T-PRED}}\UnaryInfC{$\mathtt{pred\ t_{1}:Nat}$}
+	\end{prooftree}
+	\begin{prooftree}
+		\AxiomC{$\mathtt{t_{1}:Nat}$}\RightLabel{\tiny\rm{T-ISZERO}}\UnaryInfC{$\mathtt{iszero\ t_{1}:Bool}$}
+	\end{prooftree}
+	\end{column}
+	\end{columns}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S 8.2.型付け関係}
+\begin{dblock}{Def.8.2.1.}
+算術式のための型付け関係は p.19 における規則の全てのインスタンスを満たす，項と型の最小の二項関係である．項$\mathtt{t}$が型付け可能(正しく型付けされている)とは，$\exists \mathtt{T}, \mathtt{t:T}$なること．
+\end{dblock}
+たとえは$\mathtt{succ\ t_{1}}$が型付け可能のとき，その型は$\mathtt{Nat}$かつ$\mathtt{t_{1}:Nat}$である．このような性質は逆転補題(生成補題)と呼ばれる．
+\begin{dblock}{Lem8.2.2.型付け関係の逆転．}
+\begin{enumerate}
+	\item $\mathtt{true:R}$ならば$\mathtt{R = Bool}$.
+	\item $\mathtt{false:R}$ならば$\mathtt{R = Bool}$.
+	\item $\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}:R}$ならば$\mathtt{t_{1}:Bool\land t_{2}:R\land t_{3}:R}$.
+	\item $\mathtt{0:R}$ならば$\mathtt{R=Nat}$．
+	\item $\mathtt{succ\ t_{1}:R}$ならば$\mathtt{R=Nat\land t_{1}:Nat}$．\item $\mathtt{pred\ t_{1}:R}$ならば$\mathtt{R=Nat\land t_{1}:Nat}$．\item $\mathtt{iszero\ t_{1}:R}$ならば$\mathtt{R=Nat\land t_{1}:Nat}$．
+\end{enumerate}
+\end{dblock}
+\end{frame}
+\begin{frame}{演習 8.2.3}
+\begin{alertblock}{問題}
+正しく型付けされた項の全ての部分項は正しく型付けされている．
+\end{alertblock}
+\begin{proof}
+	項$\mathtt{t}$の帰納法．
+\begin{enumerate}
+	\item $\mathtt{t}$が定数のとき．$\mathtt{t}$の任意の部分項は$\mathtt{t}$自身に限られ，p.19 の規則から全て well-typed なことより従う．
+	\item 各項$\mathtt{t}$に対し，well-typed な$\mathtt{t}$の直接の部分項たち$\mathtt{t'}$の任意の部分項$\mathtt{s}$は well-typed なことを仮定する．\begin{enumerate}
+		\item $\mathtt{t}$が$\mathtt{t_{1}}$に$\mathtt{succ, pred, iszero}$のいずれかを適用した項のとき．$\mathtt{t}$が well-typed なことを仮定する．逆転補題により，$\mathtt{t_{1}:Nat}$より$\mathtt{t_{1}}$は well-typed である．帰納法の仮定より，$\mathtt{t_{1}}$の任意の部分項は well-typed，かつ$\mathtt{t}$はそれ自身の部分項なので示される．
+		\item $\mathtt{t} =\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}}$のとき．$\mathtt{t}$が well-typed なことを仮定すると，逆転補題より$\mathtt{t_{1},t_{2}, t_{3}}$は well-typed．帰納法の仮定より，(1)と全く同様にして主張が従う．
+	\end{enumerate}
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{型付け導出とその一意性．}
+\begin{alertblock}{Def.型付け導出}
+	型付け関係$\mathtt{t:T}$の型付け導出は，$\mathtt{t:T}$を結論とする型付け規則のインスタンスの木である．
+\end{alertblock}
+以下の性質は一般には成りたたない．たとえば subtyping などを持つ型体系においては，ある項が存在して，型付け可能かつ 2 通り以上の型をもちうる．
+\begin{dblock}{Thm.8.2.4}
+各項$\mathtt{t}$は高々一つの型を持つ．i.e.$\mathtt{t}$が型付け可能ならばその型は一意的である．
+\end{dblock}
+\end{frame}
+\begin{frame}{\S 8.3.安全性 = 進行+保存}
+p.19 で定めた型体系の安全性\footnote{つまりは健全性}，つまり任意の項$\mathtt{t}$に対し，$\mathtt{t}$が型付け可能ならば$\mathtt{t}$の評価は行き詰まらないことを示す．以下の 2 つの補題を示すことによって証明しよう．\begin{dblock}{Thm.8.3.2.進行定理}
+$\forall \mathtt{t},\exists\mathtt{T}, \mathtt{t:T}\Rightarrow (\mathtt{t}\text{は値}\lor\exists \mathtt{t'}, \mathtt{t\rightarrow t'})$
+\end{dblock}
+\begin{dblock}{Thm.8.3.3.保存定理}
+	$\forall \mathtt{t,t',\forall{T}, t:T\land t\rightarrow t'\Rightarrow t':T}$
+\end{dblock}
+\end{frame}
+\begin{frame}{証明の準備}
+$\mathtt{Bool}$型と$\mathtt{Nat}$型の標準形，i.e.それらの型を持つ正しく型付けされた値について，以下の性質が成り立つ．
+\begin{dblock}{Lem.8.3.1.標準形}
+	\begin{enumerate}
+		\item $\mathtt{v}$が$\mathtt{Bool}$型の値ならば，$\mathtt{v}$は$\mathtt{true}$または$\mathtt{false}$．
+		\item $\mathtt{v}$が$\mathtt{Nat}$型の値ならば，$\mathtt{v}$は$\mathtt{nv\Coloneq 0|succ\ nv}$の定める文法による数値．
+	\end{enumerate}
+\end{dblock}
+	\begin{proof}
+	(1)ブール値の文法$\mathtt{v\Coloneq true|false}$と併せると，この言語における値は 4 つの形$\mathtt{true, false, 0, succ\ nv}$(ただし$\mathtt{nv}$は数値)を持つ．はじめの 2 つの場合は$\mathbf{B}$の型付け規則より即座に成り立つ．後者 2 つについては，逆転補題によりともに$\mathtt{Bool = Nat}$が導かれ，これは不可能．
+	
+	(2)はじめ 2 つの場合は逆転補題より$\mathtt{Nat = Bool}$が導かれ，これは不可能．後者 2 つに対しては即座に成り立つ．
+	\end{proof}
+\end{frame}
+\begin{frame}{Thm.8.3.2.の証明}
+	$\mathtt{t:T}$の導出に関する帰納法で以下の定理を示す．
+	\begin{dblock}{Thm.8.3.2.進行定理}
+		$\forall \mathtt{t},\exists\mathtt{T}, \mathtt{t:T}\Rightarrow (\mathtt{t}\text{は値}\lor\exists \mathtt{t'}, \mathtt{t\rightarrow t'})$
+		\end{dblock}
+\begin{proof}\begin{enumerate}
+	\item$\mathrm{T}$-$\mathrm{TRUE}$，$\mathrm{T}$-$\mathrm{FALSE}$，$\mathrm{T}$-$\mathrm{ZERO}$の場合は$\mathtt{t}$は値より従う．
+	\item それ以外の場合．$\mathtt{t:T}$の直接の部分導出に対して主張を仮定．\begin{enumerate}
+		\item $\mathrm{T}$-$\mathrm{IF}$の場合．$\mathtt{t = if\ t_{1}\ then\ t_{2}\ else\ t_{3}:T}$とする．逆転補題から$\mathtt{t_{1}:Bool, t_{2}:T,t_{3}:T}$．帰納法の仮定より$\mathtt{t_{1}}$は値または$\exists \mathtt{t'_{1}, t_{1}\rightarrow t'_{1}}$．$\mathtt{t_{1}}$が値のとき，Lem.8.3.1 より$\mathtt{t_{1} = true}$または$\mathtt{t_{1} = false}$．このとき$\mathrm{E}$-$\mathrm{TRUE(FALSE)}$が適用できる．そうでない場合は$\mathrm{E}$-$\mathrm{IF}$が適用される．
+		\item $\mathrm{T}$-$\mathrm{SUCC(PRED|ISZERO)}$の場合．$\mathtt{t = succ\ t_{1}}$の場合を考えればよい．逆転補題より$\mathtt{t_{1}:Nat}$．帰納法の仮定より$\mathtt{t_{1}}$は値または$\exists \mathtt{t'_{1}, t_{1}\rightarrow t'_{1}}$．値のときは Lem.8.3.1 より$\mathtt{t_{1}}$は数値で，$\mathtt{t}$も数値．1 ステップの評価が可能な場合は$\mathrm{E}$-$\mathrm{SUCC}$が適用され，$\mathtt{t\rightarrow succ\ t'_{1}}$．
+	\end{enumerate}
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{Thm.8.3.3.の証明}
+$\mathtt{t:T}$の導出に関する帰納法で以下の定理を示す．$\mathtt{t\rightarrow t'}$の評価の導出に関する induction による証明は Ex.8.3.4 で行なう．
+\begin{dblock}{Thm.8.3.3.保存定理}
+	$\forall \mathtt{t,t'}.\forall{T}.\mathtt{t:T\land t\rightarrow t'}\Rightarrow \mathtt{t':T}$
+\end{dblock}
+\end{frame}\begin{frame}{Thm.8.3.3.の証明}
+\begin{proof}
+帰納法の各ステップにおいて，任意の部分導出に対して題意を仮定する．i.e.$\mathtt{s:S}$が部分導出で証明されるとき，$\forall \mathtt{s'. s:S\land s\rightarrow s'\Rightarrow s':S}$を仮定する．最後の導出で使われた型付け規則で分ける．\begin{enumerate}
+	\item $\mathrm{T}$-$\mathrm{(TRUE|FALSE|ZERO)}$のとき．規則の形より$\mathtt{t = true}$，かつ$\mathtt{T:Bool}$なることが分かる．しかし$\mathtt{t}$は正規形より$\mathtt{\forall t', \neg(t\rightarrow t')}$なので，主張は成立．他の規則も同様．
+	\item $\mathrm{T}$-$\mathrm{IF}$のとき．規則の形より$\mathtt{t = if \ t_{1}\ then\ t_{2}\ else\ t_{3}:T, t_{1}:Bool, t_{2}:T, t_{3}:T}$なる項$\mathtt{t_{1}, t_{2}, t_{3}}$および型$\mathtt{T}$を取る．帰納法の仮定より，$\mathtt{t_{1}:Bool, t_{2}:T, t_{3}:T}$を結論とする部分導出が存在する．$\mathtt{t\rightarrow t'}$を仮定すると，規則は$\mathrm{E}$-$\mathrm{IF(TRUE|FALSE)}$，$\mathrm{E}$-$\mathrm{IF}$のいずれかが適用できる．\begin{itemize}
+	\item $\mathrm{E}$-$\mathrm{IF(TRUE|FALSE)}$のとき．前者の場合を考える．規則の形より$\mathtt{t_{1} = true}$で，結果の項は$\mathtt{t' = t_{2}:T}$より従う．$\mathtt{t_{1}= false}$の場合も同様．
+	\item $\mathrm{E}$-$\mathrm{IF}$のとき．規則の形より$\mathtt{t_{1}\rightarrow t'_{1}}$なる$\mathtt{t'_{1}}$が存在する．帰納法の仮定より$\mathtt{t_{1}:Bool}$を併せると$\mathtt{t'_{1}:Bool}$．よって規則$\mathrm{T}$-$\mathrm{IF}$を使うと$\mathtt{t' = if\ t'_{1}\ then\ t_{2}\ else\ t_{3}:T}$より正しい．
+	\end{itemize}
+	\item $\mathrm{T}$-$\mathrm{(SUCC|PRED|ISZERO)}$のときは(2)と同様．
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{Thm.8.3.3 の別証}
+\begin{proof}{評価導出による証明．}
+帰納法の各ステップにおいて，任意の部分導出に対して題意を仮定する．つまり，$\mathtt{s \rightarrow s'}$が直接の部分導出で証明できるとき，$\mathtt{\forall S, s: S\land s \rightarrow s' \Rightarrow s' :S}$を仮定し，最後に使われた規則で分ける．詳細は白板で説明する．
+\end{proof}
+\end{frame}
+\begin{frame}{Ex.8.3.6:主部展開}
+\begin{alertblock}{Ex.8.3.6}
+$\mathtt{t\rightarrow t'}$かつ$\mathtt{t':T}$ならば$\mathtt{t:T}$は常に成り立つだろうか．成り立つなら証明し，そうでないなら反例を示せ．
+\end{alertblock}
+\begin{proof}[証明]
+反例としては，$\mathtt{t = if\ true\ then\ 0\ else\ false}$なる項が考えられる，$\mathtt{t\rightarrow 0}$かつ$\mathtt{0:Nat}$であるが，$\mathtt{t}$は型付けができない．
+\end{proof}
+\end{frame}
+\begin{frame}{Ex.8.3.7}
+\begin{alertblock}{Ex.8.3.7}
+評価関係が演習 3.5.17 の大ステップスタイルで定義されていると仮定せよ．このとき直感的な型安全性はどのように形式化すべきか．
+\end{alertblock}
+\begin{proof}[解答]
+進行定理は次のように書ける．小ステップのときに比べ，型付けされた項の評価の停止性を仮定することになる:
+$\mathtt{\forall t. \exists T.\exists v. t:T \Rightarrow t\Downarrow v}$.
+
+保存定理は，
+$\mathtt{\forall t. \forall v. \forall T. t:T \land t \Downarrow v \Rightarrow v:T}$
+\end{proof}
+\end{frame}
+\begin{frame}{Ex.8.3.8}
+\begin{alertblock}{Ex.8.3.8.}
+演習 3.5.16 のように無意味な項を$\mathtt{wrong}$という明示的な状態へ簡約する規則を追加した評価関係を仮定せよ．ここで型安全性はどのように形式化すべきか．
+\end{alertblock}
+\begin{proof}
+進行定理は次のように書ける:任意の値でない項$\mathtt{t}$に対して，$\mathtt{t}$は$\mathtt{wrong}$または$\mathtt{t'\neq t, wrong}$なる$\mathtt{t'}$に評価される．
+
+一方，$\mathtt{wrong}$はいかなる型も持ちえないことに注意すると，保存定理は次のように書ける:$\mathtt{\forall t, t'.\forall T. t:T \land t\rightarrow t'\Rightarrow t'\neq wrong \land t':T}$．
+\end{proof}
+\end{frame}
+\section{\S9.単純型付きラムダ計算}
+\begin{frame}{\S9.1.関数型}
+\begin{itemize}
+\item 純粋な$\lambda$計算のプリミティブとブール式を組合せた言語に対して，以下の条件を満たす型システムを構築する:\begin{itemize}
+\item 型安全性を満たす, i.e.進行と保存定理を満たす．
+\item 保守的すぎない．
+\end{itemize}
+\item 純粋な$\lambda$計算は Turing 完全なので，とくに発散するプログラムを構成できる(ex.$\mathtt{(\lambda x. x\ x)(\lambda x. x\ x)}$)ので，正確な型解析が出来るわけではない
+\begin{itemize}
+\item 型付け可能なプログラムには制約が課される
+\end{itemize}
+\item 以下，ブール型のみを基底型として持ち，型構築子として関数型を定める$(\rightarrow)$のみを持つ型体系を持つSTLC($\lambda_{\rightarrow}$)について考察するものとする．
+\end{itemize}
+\end{frame}
+\begin{frame}{\S9.1.関数型}
+関数に型付けする場合，各抽象に対し関数を表わす型を 1 つ定めるだけでは，たとえば$\mathtt{\lambda x. true}$と$\mathtt{\lambda x. \lambda y.y}$といった項を区別できず，保守的すぎる．そこで，関数の型をその引数と返値で区別する．
+\begin{dblock}{Def.9.1.1.(単純型の集合)}
+型$\mathtt{Bool}$上の\emph{単純型}の集合は次の文法により生成される．
+\begin{align*}
+\mathtt{T}\Coloneq\mathtt{T\rightarrow T}|\mathtt{Bool}
+\end{align*}
+$(\rightarrow)$は右結合的とする．
+\end{dblock}
+\end{frame}
+\begin{frame}{\S9.2.型付け関係}
+抽象の各引数には型注釈が施されているものとする．以下，$\lambda$項に対する型付け規則について考える．\footnote{このように，項の型注釈により型検査器を誘導する言語は\emph{明示的に型付けされた言語}と呼ばれる．対して，明示的に型注釈が施されていない項に対して，この情報を推論(i.e.再構築)させる言語は\emph{暗黙に型付けされた言語}と呼ばれる．}
+
+\begin{itemize}
+\item 抽象について．抽象$\lambda$抽象の引数の型が分かれば，関数の結果の型はその本体の型となる．これは次の規則で表わせる:\begin{prooftree}
+\AxiomC{$\mathtt{x:T_{1}\vdash t_{2}:T_{2}}$}
+\RightLabel{\tiny\rm{(T-ABS)}}
+\UnaryInfC{$\mathtt{\vdash \lambda x:T_{1}.t_{2}:T_{1}\rightarrow T_{2}}$}
+\end{prooftree}\begin{itemize}
+	\item 抽象は入れ子となるから，仮定は複数個となりうる．そのため，次に定義される型付け文脈(型環境)のもとでの型導出を定める必要がある．
+\end{itemize}
+\end{itemize}
+\end{frame}
+\begin{frame}{\S9.2.型付け関係}
+\begin{dblock}{Def(型付け文脈)}
+型付け文脈$\Gamma$は変数とその型の列である．空の文脈は$\varnothing$と書かれ，(仮定が空であるとして)省略される．$\Gamma$で束縛される変数の集合を$\mathrel{dom}(\Gamma)$と書く．
+
+また，文脈と型付け関係を取り，新たな文脈を返す演算子$(,)$が定義されている．$(,)$は$\Gamma$の\underline{右}に新しい束縛を加えて拡張する．
+\end{dblock}
+\begin{alertblock}{Rem.}
+	新しい束縛と既に$\Gamma$に現れている束縛の衝突を防ぐため，名前$\mathtt{x}$は$\Gamma$で束縛されている変数とは異なるように選ぶ．これは抽象に適宜$\alpha$変換を施すことで達成できる．
+\end{alertblock}
+
+以上を踏まえ，$\mathrm{T}$-$\mathrm{ABS}$は次のように修正される．また，変数の型付け規則も決まる:
+\begin{columns}
+	\begin{column}{0.45\textwidth}
+	\begin{prooftree}
+			\AxiomC{$\Gamma,\mathtt{x:T_{1}\vdash t_{2}:T_{2}}$}
+			\RightLabel{\tiny\rm{(T-ABS)}}
+			\UnaryInfC{$\Gamma\vdash \mathtt{\lambda x:T_{1}.t_{2}:T_{1}\rightarrow T_{2}}$}
+		\end{prooftree}
+	\end{column}\begin{column}{0.45\textwidth}\begin{prooftree}
+		\AxiomC{$\mathtt{x:T}\in\Gamma$}
+		\RightLabel{\tiny\rm{(T-VAR)}}
+		\UnaryInfC{$\Gamma\vdash\mathtt{x:T}$}
+	\end{prooftree}
+	\end{column}
+	\end{columns}
+\end{frame}
+\begin{frame}{型付け関係}
+\begin{itemize}
+\item 関数適用は，適用項と被適用項の自由変数の型を揃える必要があることに注意すれば，次のように定まる:\begin{prooftree}
+\AxiomC{$\Gamma\vdash\mathtt{t_{1}:T_{1}\rightarrow T_{2}}$}
+\AxiomC{$\Gamma\vdash\mathtt{t_{2}:T_{1}} $}
+\RightLabel{\tiny\rm{(T-APP)}}
+\BinaryInfC{$\Gamma\vdash\mathtt{t_{1}\ t_{2}:T_{2}}$}
+\end{prooftree}
+\item 他の規則は変わらない．
+\end{itemize}
+以上の内容を，次ページに再度示す．
+\end{frame}
+\begin{frame}{$\lambda_{\rightarrow}$の型付け関係}
+\begin{dblock}{図9.1}
+\begin{columns}
+\begin{column}{0.18\textwidth}
+構文\begin{align*}
+\mathtt{t}&\Coloneq\mathtt{x|\lambda x:T.t|t}\text{(項の構文)}\\
+\mathtt{v}&\Coloneq\mathtt{\lambda x:T. t}\text{(値の構文)}\\
+\mathtt{T}&\Coloneq\mathtt{T\rightarrow T}\text{(型の構文)}\\
+\Gamma &\Coloneq\varnothing|\Gamma,\mathtt{x:T}\text{(文脈の構文)}
+\end{align*}
+評価
+	\begin{prooftree}
+	\AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
+	\RightLabel{\tiny\rm{E-APP1}}
+	\UnaryInfC{$\mathtt{t_{1}\ t_{2}\rightarrow t'_{1}\ t_{2}}$}
+	\end{prooftree}
+	\begin{prooftree}
+	\AxiomC{$t_{2}\rightarrow t'_{2}$}
+	\RightLabel{\tiny\rm{E-APP2}}
+	\UnaryInfC{$\mathtt{v_{1}\ t_{2}\rightarrow v_{1}\ t'_{2}}$}
+	\end{prooftree}
+	\begin{prooftree}
+		\RightLabel{\tiny\rm{E-ABS}}
+		\AxiomC{$\mathtt{(\lambda x:T_{11}.t_{12})\ v_{2}\rightarrow \left[x\mapsto v_{2}\right]t_{12}}$}
+		\end{prooftree}
+\end{column}
+\begin{column}{0.6\textwidth}
+		型付け
+		\begin{prooftree}
+			\AxiomC{$\mathtt{x:T}\in\Gamma$}
+			\RightLabel{\tiny\rm{(T-VAR)}}
+			\UnaryInfC{$\Gamma\vdash\mathtt{x:T}$}
+		\end{prooftree}
+		\begin{prooftree}
+			\AxiomC{$\Gamma,\mathtt{x:T_{1}\vdash t_{2}:T_{2}}$}
+			\RightLabel{\tiny\rm{(T-ABS)}}
+			\UnaryInfC{$\Gamma\vdash \mathtt{\lambda x:T_{1}.t_{2}:T_{1}\rightarrow T_{2}}$}
+		\end{prooftree}
+		\begin{prooftree}
+\AxiomC{$\Gamma\vdash\mathtt{t_{1}:T_{1}\rightarrow T_{2}}$}
+\AxiomC{$\Gamma\vdash\mathtt{t_{2}:T_{1}} $}
+\RightLabel{\tiny\rm{(T-APP)}}
+\BinaryInfC{$\Gamma\vdash\mathtt{t_{1}\ t_{2}:T_{2}}$}
+\end{prooftree}
+\end{column}
+\end{columns}
+\end{dblock}
+\end{frame}
+\begin{frame}{\S9.3.型付けの性質}
+算術式の場合同様に逆転補題が成り立つ．証明は，各仮定を満たす規則が一意的であることより従う．
+\begin{alertblock}{Lem.9.3.1.(型付けの逆転補題)}
+\begin{itemize}
+\item $\Gamma\vdash\mathtt{x:R}\Longrightarrow \mathtt{x:R}\in\Gamma$．
+\item $\Gamma\vdash\mathtt{\lambda x:T_{1}.t_{2}:R}\Longrightarrow\exists \mathtt{R_{2}}. \Gamma, \mathtt{x:T_{1}\vdash t_{2}:R_{2}\land R = T_{1}\rightarrow R_{2}}$.
+\item $\Gamma\vdash\mathtt{t_{1}\ t_{2}:R}\Longrightarrow\exists \mathtt{T_{11}}.\Gamma\vdash \mathtt{t_{1}:T_{11}\rightarrow R}\land \Gamma\vdash\mathtt{t_{2}:\mathtt{T_{11}}}$
+\item $\Gamma\vdash \mathtt{true:R}\Longrightarrow \mathtt{R = Bool}$
+\item $\Gamma\vdash \mathtt{false:R}\Longrightarrow \mathtt{R = Bool}$
+\item $\Gamma\vdash\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}:R}\Longrightarrow\Gamma\vdash\mathtt{t_{1}:Bool}\land\Gamma\vdash\mathtt{t_{2},t_{3}:R}$
+\end{itemize}
+\end{alertblock}
+\end{frame}
+\begin{frame}{演習9.3.2.}
+\begin{alertblock}{演習.9.3.2}
+$\Gamma \vdash\mathtt{x\ x:T}$なる$\Gamma, \mathtt{T}$は存在するか．
+\end{alertblock}
+\begin{proof}
+存在しないことを示す．このような$\Gamma$，型$\mathtt{T}$が存在すると仮定し，これらを取る．逆転補題より，ある型$\mathtt{T'_{1}}$が存在し，$\mathtt{x:T'_{1}\rightarrow T_{1}}\land \mathtt{x:T'_{1}}$が成り立ち，この$\mathtt{T'_{1}}$を取ることで$\Gamma = \mathtt{x: T'_{1}\rightarrow T, x: T'_{1}}$と書ける．ところが，$\Gamma$中の$\mathtt{x}$の束縛は一意的なので$\mathtt{T'_{1} = T'_{1}\rightarrow T_{1}}$が成り立つ．したがって，$\mathtt{T'_{1}}$は無限の大きさを持てることになる．矛盾．ゆえにこのような$\Gamma,\mathtt{T}$は存在しない．
+\end{proof}
+\end{frame}
+\begin{frame}{型の一意性}
+\begin{alertblock}{Thm.9.3.3.(型の一意性)}
+型付け文脈$\Gamma$が1つ与えられると，それに対して1つの項$\mathtt{t}$は1つの型を持つ．ただし，$\mathrel{FV}(\mathtt{t})\subseteq\mathrel{dom}(\Gamma)$．すなわち，ある項が型付け可能ならば，その型は一意に定まる．さらに，型付け関係を生成する推論規則からただ一つの型付け導出が構築できる．
+\end{alertblock}
+\begin{proof}[証明]
+型付け導出に関する帰納法による．$\mathrel{FV}(\mathtt{t})\subseteq\mathrel{dom}(\Gamma)$なる項$\mathtt{t}$に対する$\mathtt{t:T}$の導出に関する帰納法で示す．任意の$\Gamma$に対し，$\mathtt{s:S}$が$\mathtt{t:T}$の部分導出で証明されるとき，$\mathtt{S}$が一意的であることを仮定する．このとき，導出の最後で使われた型付け規則で分ける．$\mathtt{t}$が基本型または条件文の場合は算術式同様なので，$\lambda$項の場合について示す．
+\begin{enumerate}
+\item $\mathrm{T}$-$\mathrm{VAR}$のとき．逆転補題より$\mathtt{t:T}\in\Gamma$となり，仮定から$\mathtt{t}$の型が一意的なることより従う．
+\item $\mathrm{T}$-$\mathrm{ABS}$のとき，$\mathtt{t = \lambda x: T_{1}.t_{2}:T}$なる$\mathtt{x:T_{1}, t_{2}:T_{2}}$が存在し，$\mathtt{T:T_{1}\rightarrow T_{2}}$．仮定より，導出$\Gamma, \mathtt{x:T_{1}}\vdash \mathtt{t_{2}:T_{2}}$は一意的なので示される．
+\item $\mathrm{T}$-$\mathrm{APP}$のとき．$\mathtt{t =t_{1}\ t_{2}}$なる項$\mathtt{t_{1}, t_{2}}$で，$\Gamma\vdash\mathtt{t_{1}:T_{11}\rightarrow T}$，$\Gamma\vdash\mathtt{t_{2}:T_{11}}$なるものが取れる．帰納法の仮定より，これらの型付け導出は一意的なので従う．
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{標準形}
+\begin{alertblock}{Lem.9.3.4.(標準形)}
+\begin{enumerate}
+\item $\mathtt{v}$が型$\mathtt{Bool}$の値ならば，$\mathtt{v}$は$\mathtt{true}$または$\mathtt{false}$のどちらかである．
+\item $\mathtt{v}$が型$\mathtt{T_{1}\rightarrow T_{2}}$の標準形ならば，$\mathtt{v= \lambda x:T_{1}.t_{2}}$である．
+\end{enumerate}
+\end{alertblock}
+\begin{proof}
+値は$\mathtt{true,false}$および$\mathtt{\lambda x: T.t}$の形を持つ．\begin{enumerate}
+\item (1)について．$\mathtt{true, false}$の場合は明らかである．また，$\mathtt{\lambda x:T. t:Bool}$の形にはなりえない．それは，逆転補題よりある$\mathtt{R}$が存在し，$\mathtt{x:T_{1}\vdash t:R}\land \mathtt{Bool = T_{1}\rightarrow R}$が成り立ち，基本型たる$\mathtt{Bool}$が関数型となることはできないため．
+\item (2)．後者の場合は明らか．前者の場合は，$\mathtt{T_{1}\rightarrow T_{2} = Bool}$が逆転補題から成り立ち，先程と同じ理由から成立しないことから従う．
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{進行}
+\begin{dblock}{Thm.9.3.5.(進行)}
+$\mathtt{t}$を閉じた，正しく型付けされた項とする.(i.e.$\exists T, \mathtt{\vdash t:T}$)．このとき$\mathtt{t}$は値か，$\mathtt{\exists t'. t\rightarrow t'}$を満たす．
+\end{dblock}
+\begin{proof}
+型付け導出に関する帰納法による．ブール値および条件文に対する型付け規則については，算術式と同様の理由により成立する．仮定より，$\mathtt{t}$に変数は出現しえず，値である．ラムダ抽象は値なので，即座に成立する．
+
+関数適用の場合を考える．$\mathtt{t = t_{1}\ t_{2}}$で$\vdash\mathtt{t_{1}:T_{11}\rightarrow T_{12}}\land \vdash \mathtt{t_{2}:T_{11}}$とする．帰納法の仮定より，$\mathtt{t_{1}}$は値か，1ステップ評価が可能である．\begin{itemize}
+	\item 1ステップ評価が可能のとき．$\mathrm{E}-\mathrm{APP1}$が適用され，題意が従う．
+	\item 値のとき．\begin{itemize}
+	\item $\mathtt{t_{2}}$が1ステップ評価可能のとき．$\mathrm{E}$-$\mathrm{APP2}$より評価が1ステップ可能．
+	\item 値のとき．標準形補題により$\mathtt{t_{1}}$は$\mathtt{\lambda x:T_{11}.t_{12}}$の形であり，$\mathrm{E}$-$\mathrm{APPABS}$が適用される．
+	\end{itemize}
+\end{itemize}
+\end{proof}
+\end{frame}
+\begin{frame}{保存}
+評価が型を保存することを示そう．準備として，型付け文脈に対して水増しと交換を施しても導出される型付け判断式の結論は変わらないことを確認する．
+\begin{alertblock}{Lem.9.3.6.(並べ替え)}
+$\Gamma\vdash\mathtt{t:T}$かつ$\Delta$が$\Gamma$の並べ替えならば，$\Delta\vdash\mathtt{t:T}$であり，その導出の深さは仮定を$\Gamma$とした場合と変わらない．
+\end{alertblock}
+\begin{alertblock}{Lem.9.3.7.}
+$\Delta\vdash \mathtt{t:T}$かつ$x\notin\mathrel{dom}(\Gamma)$ならば，$\Gamma,\mathtt{x:S\vdash t:T}$であり，後者と前者の導出の深さは等しい．
+\end{alertblock}
+\begin{proof}
+証明はinductionによる(白板で行なう)
+\end{proof}
+\end{frame}
+\begin{frame}{代入補題}
+\begin{alertblock}{Lem.9.3.8.(代入の下での型の保存)}
+$\Gamma,\mathtt{x:S\vdash t:T}$かつ$\Gamma\vdash\mathtt{s:S}$ならば$\Gamma\vdash\mathtt{\left[x\mapsto s\right] t:T}$．
+\end{alertblock}
+\begin{proof}
+$\Gamma\vdash\mathtt{\left[x\mapsto s\right] t:T}$の導出の深さに関する帰納法による．最後に使われた規則で分ける．
+\begin{itemize}
+\item $\mathrm{T}$-$\mathrm{VAR}$のとき．$\mathtt{z:T}\in\left(\Gamma, \mathtt{x:S}\right)$なる$\mathtt{z}$により$\mathtt{t = z}$と書ける．$\mathtt{z = x}$の場合は代入結果は$\mathtt{s:S}$であり，仮定より即座に従う．$\mathtt{z\neq x}$の場合，結果は$\mathtt{z:T}$であり，これも即座に従う．
+\item $\mathrm{T}$-$\mathrm{ABS}$のとき．$\mathtt{t= \lambda y:T_{2}.t_{1}, T = T_{2}\rightarrow T_{1} }$かつ$\Gamma,\mathtt{x:S, y:T_{2}\vdash t_{1}:T_{1}}$が成り立つ．$\mathtt{x \neq y}\land \mathtt{y}\notin\mathrel{FV}(\mathtt{s})$としてよい．仮定を並び替えると$\Gamma, \mathtt{y:T_{2}, x:S\vdash t_{1}:T_{1}}$．また$\Gamma\vdash \mathtt{s:S}$に弱化を施すと$\Gamma, \mathtt{\mathtt{y:T_{2}\vdash s:S}}$．帰納法の仮定により$\Gamma, \mathtt{y:T_{2}\vdash\left[x\mapsto s\right]t_{1}:T_{1}}$．ゆえに代入の定義および$\mathrm{T}$-$\mathrm{ABS}$より，$\Gamma\vdash\mathtt{\lambda y:T_{2}.\left[x\mapsto s\right]t_{1}:T_{2}\rightarrow T_{1}}$.
+\end{itemize}
+\end{proof}
+\end{frame}
+\begin{frame}{代入補題}
+\begin{proof}
+\begin{itemize}
+\item $\mathrm{T}$-$\mathrm{APP}$のとき．$\mathtt{t = t_{1}\ t_{2}}$かつ$\Gamma,\mathtt{x:S\vdash t_{1}:T_{2}\rightarrow T_{1}, t_{2}:T_{2}}$かつ$\mathtt{T = T_{1}}$．帰納法の仮定より$\Gamma\vdash\mathtt{\left[x\mapsto s\right]t_{1}:T_{2}\rightarrow T_{1}}$かつ$\Gamma\vdash\mathtt{\left[x\mapsto s\right]t_{2}:T_{2}}$．$\mathrm{T}$-$\mathrm{APP}$より題意が従う．
+\item $\mathrm{T}$-$\mathrm{TRUE|FALSE}$のとき．前者のみ確認すればよい．このとき$\mathtt{t = true}$かつ$\mathtt{T  = Bool}$．$\mathtt{\left[x\mapsto s\right]t = true}$より，即座に成立する．
+\item $\mathrm{T}$-$\mathrm{IF}$のとき．$\mathtt{t = if\ t_{1}\ then\ t_{2}\ else\ t_{3}}$かつ$\Gamma,\mathtt{x:S\vdash t_{1}:Bool}$かつ$\Gamma,\mathtt{x:S\vdash t_{2}:T}$かつ$\Gamma,\mathtt{x:S\vdash t_{3}:T}$．帰納法の仮定より$\Gamma\vdash\mathtt{\left[x\mapsto s\right]t_{1}:Bool}$，$\Gamma\vdash\mathtt{\left[x\mapsto s\right]t_{2}:T}$かつ$\Gamma\vdash\mathtt{\left[x\mapsto s\right]t_{3}:T}$．$\mathrm{T}$-$\mathrm{IF}$より従う．
+\end{itemize}
+\end{proof}
+\end{frame}
+\begin{frame}{型保存}
+\begin{alertblock}{Thm.9.3.9.(型保存)}
+	$\Gamma\vdash\mathtt{t:T}$かつ$\mathtt{t\rightarrow t'}$ならば$\Gamma\vdash\mathtt{t':T}$．
+\end{alertblock}
+\begin{proof}
+$\Gamma\vdash\mathtt{t:T}$の導出に関する帰納法による．いま，$\mathtt{t:T}$の任意の直接の部分導出に現れる$\mathtt{s:S}$に対して，$\mathtt{\exists s'.s\rightarrow s'}$ならば$\mathtt{s':S}$を仮定し，最後に使われた規則で場合を分ける．\begin{itemize}
+\item $\mathrm{T}$-$\mathrm{VAR}$．左辺に変数を持つ規則は存在しないので，起きえない．
+\item $\mathtt{T}$-$\mathrm{ABS}$．結論は値なので起きえない．
+\item $\mathtt{T}$-$\mathrm{APP}$．その評価に使われた規則で分ける．\begin{itemize}
+\item $\mathrm{E}$-$\mathrm{APP1}$(関数部の評価)のとき．$\mathtt{t_{1}\rightarrow t'_{1}}$なる$\mathtt{t'_{1}}$が取れる．仮定より$\mathtt{t'_{1}:T_{1}}$．したがって$\mathrm{T}$-$\mathrm{APP}$より$\mathtt{t' = t'_{1}\ t_{2}:T}$となる．
+\item $\mathrm{E}$-$\mathrm{APP2}$のとき．$\mathrm{t_{2}\rightarrow t'_{2}}$なる$\mathtt{t'_{2}}$が取れる．仮定より$\mathtt{t'_{2}:T}$．したがって$\mathrm{E}$-$\mathrm{APP1}$同様にして$\mathtt{t'= v_{1}\ t_{2}:T}$．
+\item $\mathrm{E}$-$\mathrm{APPABS}$のとき．$\mathrm{t_{1} = \lambda x:T_{11}. t_{12}, t_{2} = v_{2},t ' = \left[x\mapsto v_{2}\right]t_{12}}$．逆転補題より$\mathtt{\lambda x:T_{11}.t_{12}}$の型付け導出を分解し，$\Gamma,\mathtt{x:T_{11}\vdash t_{12}:T_{12}}$を得る．代入補題より従う．
+\item 他の場合はブール式の場合に等しい．
+\end{itemize}
+\end{itemize}
+\end{proof}
+\end{frame}
+\begin{frame}{演習9.3.10.}
+\begin{alertblock}{演習9.3.10.}
+主部展開はSTLCの"関数的な部分"では成り立つだろうか．i.e.$\mathtt{t}$が条件式を含まないと仮定したとき，$\mathtt{t \rightarrow t'}$かつ$\Gamma\vdash \mathtt{t' : T}$ならば$\Gamma\vdash \mathtt{t:T}$だろうか．
+\end{alertblock}
+\begin{proof}[解答．]
+成り立つ．条件式を含まない$\mathtt{t}$を任意に取り，$\mathtt{t \rightarrow t'}\land \Gamma \vdash \mathtt{t':T}$を仮定する．subtermが正規形か否かで場合を分ける．
+\begin{enumerate}
+\item $\mathtt{}$
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{9.4.Curry-Howard対応}
+	型と命題，項とその構成的証明を対応づけるのがCurry-Howard対応であった．以下では，STLCの型付け規則が直観主義的なimplicational logicに対応することを確認する．型付け規則との対応を明白にするために，今回はシークエント計算を用いる．
+
+	$\Gamma, \Delta, \Pi, \Sigma$を論理式の集合，$A, B$を論理式とすると，含意に関する推論規則は次の通りだった:
+	\begin{prooftree}
+		\AxiomC{$\Gamma, A, \Delta \vdash \Pi, B, \Sigma$}
+		\RightLabel{$(\Rightarrow\mathrm{R})$}
+		\UnaryInfC{$\Gamma, \Delta\vdash \Pi, A\Rightarrow B, \Sigma$}
+	\end{prooftree}
+	\begin{prooftree}
+		\AxiomC{$\Gamma\vdash A, \Delta$}
+		\AxiomC{$\Sigma, B\vdash \Pi$}
+		\RightLabel{$(\Rightarrow \mathrm{L})$}
+		\BinaryInfC{$\Gamma, \Sigma, A\Rightarrow B\vdash \Delta, \Pi$}
+	\end{prooftree}
+	これが，型付け規則T-ABS, T-APPと対応することを確認する．$\Delta = \Sigma = \Pi = \varnothing$と仮定してよい．$(\Rightarrow\mathrm{R})$とT-ABSの対応は，$A, B$をそれぞれ変数$\mathtt{x : T}$，項$\mathtt{t_{2}:T_{2}}$に読みかえれば分かる．
+	\end{frame}
+	\begin{frame}{Curry-Howard対応}
+		T-APPについて．$\Delta = \varnothing, \Sigma = \Gamma\setminus B, \Pi = \left\{B\right\}$とすると，$(\Rightarrow\mathrm{L})$は，自然演繹の以下の証明図に等しい:
+		\begin{prooftree}
+			\AxiomC{$\Gamma$}
+			\UnaryInfC{$A$}
+				\AxiomC{$A\Rightarrow B$}
+				\RightLabel{$(\Rightarrow\mathrm{E})$}
+			\BinaryInfC{$B$}
+			\AxiomC{$\Gamma$}
+			\BinaryInfC{$B$}
+		\end{prooftree}
+		重複した論理式の集合を除き(これは型環境の構成からいつでも可能)，$A = \mathtt{t_{2}:T_{1}, A \Rightarrow B = \mathtt{t_{1}: T_{1}\rightarrow T_{2}}}$とすれば，$B = \mathtt{t_{1}\ t_{2}: T_{2}}$から従う．
+
+		最後に，$\beta$簡約がcut除去に対応することを確かめる．
+	\end{frame}
+	\begin{frame}{Curry-Howard対応}
+		実際，導出木の根に$\beta$簡約を適用すると，cut則の適用を含む任意の導出木
+		\begin{prooftree}
+			\AxiomC{$\vdots$}
+			\UnaryInfC{$\Gamma\vdash \mathtt{v_{1}:T_{1}}$}
+			\AxiomC{$\vdots$}
+			\UnaryInfC{$\Gamma,\mathtt{x:T_{1}}\vdash\mathtt{t_{12}:T_{2}}$}
+			\UnaryInfC{$\Gamma\vdash \mathtt{\lambda x:T_{1}.t_{12}:T_{1}\rightarrow T_{2}}$}
+			\RightLabel{$(\mathrm{cut})$}
+			\BinaryInfC{$\Gamma\vdash \mathtt{(\lambda x:T_{1}. t_{12})v _{1}:T_{2}}$}
+			\end{prooftree}に対して，cutを含まない導出木\begin{prooftree}
+				\AxiomC{$\vdots$}
+				\UnaryInfC{$\Gamma\vdash\mathtt{\left[x\mapsto v_{1}\right]t_{12}:T_{2}}$}
+			\end{prooftree}を構成できる．以上から，確かにSTLCの型付け規則がLJの$(\Rightarrow)$のみを含むsubsetと一対一対応することが示される．
+	\end{frame}
+\begin{frame}{References}
+	\begin{itemize}
+		\item Semantics of Programming Languages: Structures and Techniques, C.Gunter, MIT Press, 1992.
+		\item Proofs and Types, J.Y. Girard, Y. Lafont and P.Taylor, Cambridge Tracts in Theoretical Computer Science, 1987.
+	\end{itemize}
+\end{frame}
+\end{document}

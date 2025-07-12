@@ -1,0 +1,450 @@
+\documentclass[9pt]{beamer}
+ \usepackage{zxjatype}
+ \usepackage{xltxtra}
+ \usepackage[ipa]{zxjafont}
+\usepackage{amssymb, amsmath,amsfonts}
+\usepackage{mathtools}
+\usepackage{bussproofs}
+\usepackage{mathcomp}
+\usepackage{tcolorbox}
+\usepackage{mathrsfs}
+\usepackage{ulem}
+\tcbuselibrary{raster,skins}
+\usepackage{varwidth}
+\usepackage{tikz}
+\usepackage{listings, fontspec}
+\usetheme{metropolis}
+
+% 色定義
+\definecolor{mstruct}{RGB}{68, 174, 234} 
+% \definecolor{malert}{RGB}{223, 153, 155}
+\definecolor{malert}{RGB}{255, 76, 0}
+\definecolor{mex}{RGB}{57, 149, 82}
+% 見出しカラー
+% block title color
+% alert color
+% 箇条書き
+\useinnertheme{circles}   
+% フッダー
+\setbeamertemplate{footline}[frame number]
+%無を出力するコマンド
+\newtcolorbox{tblock}[1]{
+	enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=mstruct, colframe=mstruct,
+	interior style={top color=mstruct!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[mstruct] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% Definition Box
+\newtcolorbox{dblock}[1]{enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=malert, colframe=malert,
+	interior style={top color=malert!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[malert] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% subbox
+\newtcolorbox{subbox}[1]{
+	empty,
+	coltitle=mstruct, fonttitle=\bfseries,
+	borderline horizontal={0.5mm}{0pt}{mstruct},
+	title=#1
+	titlerule style={
+		mstruct,
+		arrows={Hooks[arc=270]-Hooks[arc=270]}
+	}
+}
+
+\everymath{\displaystyle}
+\title{\S 6:項の名無し表現・\S 9: 型付き算術式}
+\begin{document}
+\maketitle
+\begin{frame}{前回の残り}
+	\begin{dblock}{問題 5.3.7}
+	$\mathbf{\lambda NB}$の意味論を，行き詰まり項の評価先である定数項$\mathtt{wrong}$を入れて拡張せよ．
+	\end{dblock}
+\end{frame}
+\begin{frame}
+解答:まず，$\mathtt{if}$文の条件部および算術式のコンストラクタ内に$\mathtt{\lambda}$抽象と自由変数が出現してはならない．したがって，\begin{enumerate}\item $\mathtt{badbool \Coloneq nv|\lambda x.\ t|x|wrong}$
+\item $\mathtt{badnat \Coloneq true|false|\lambda x.\ t|x|wrong}$\end{enumerate}のように変更される．
+評価規則は変わらない．
+
+$\lambda$項については，型無し$\lambda$計算の評価規則のうち，2つの合同規則について考えれば十分である．関数部に$\mathrm{NB}$の値または自由変数または行き詰まり項が，引数部に行き詰まり項が出現する場合に行き詰まるから，\begin{equation*}\mathtt{badfun\Coloneq x|true|false|nv|wrong}\end{equation*}なる構文要素を定め，以下の評価規則を足せばよい:\begin{prooftree}\AxiomC{$\mathtt{badfun\ t_{2}\longrightarrow wrong}$}\end{prooftree}\begin{prooftree}\AxiomC{$\mathtt{t_{2}\longrightarrow wrong}$}\UnaryInfC{$\mathtt{v_{1}\ t_{2}\longrightarrow wrong}$}\end{prooftree}
+\end{frame}
+\section{\S 6.項の名無し表現}
+\begin{frame}{項と文脈}
+\begin{itemize}
+\item 最も内側から数えて$k$番目の$\lambda$に束縛される変数を$k$で表わす．\begin{itemize}
+	\item ex. $\lambda x. \lambda y. x\ (y\ x)$は名無し項$\lambda.\lambda.1\ (0\ 1)$に対応する
+\end{itemize}
+\item 名無し項は de Bruijn 項，各束縛変数に対応する番号は de Bruijn index と呼ばれる．
+\end{itemize}
+項の中で高々何個の自由変数が出現するかで項を類別しよう．
+\begin{dblock}{$n$項}
+$\mathcal{T}$を，以下を満たす最小の集合族$\left\{\mathcal{T}_{0}, \mathcal{T}_{1}, \mathcal{T}_{2},\ldots\right\}$とする:
+\begin{enumerate}
+\item 任意の$0 \leq  k < n$に対して$k\in\mathcal{T}_{n}$．
+\item $\mathtt{t}_{1}\in\mathcal{T}_{n}$かつ$n > 0$ならば，$\lambda .\mathtt{t}_{1}\in\mathcal{T}_{n - 1}$．
+\item $\mathtt{t}_{1}\in\mathcal{T}_{n}$かつ$\mathtt{t}_{2}\in\mathtt{T}_{n}$ならば，$\left(\mathtt{t}_{1}\ \mathtt{t}_{2}\right)\in\mathcal{T}_{n}$．
+\end{enumerate}
+$\mathcal{T}_{n}$の要素を\bf{$n$項}という．
+
+\end{dblock}
+\end{frame}
+\begin{frame}{$n$項の性質}
+$\mathcal{T}$について，以下の性質が成り立つ:
+\begin{enumerate}
+\item 各$n$に対して，$\mathcal{T}_{n}$は自由変数を高々$n$個含む項全体の集合である．\begin{itemize}
+\item たとえば，任意の閉項$\mathtt{t}$は任意の$n$に対して$\mathtt{t}\in\mathcal{T}_{n}$を満たす．
+\end{itemize}
+\item 全ての閉項の de Bruijn 表記は一意的であり，同じ de Bruijn 表記をもつ 2 つの閉項は$\alpha$同値．
+\end{enumerate}
+\end{frame}
+\begin{frame}{名前付き文脈}
+$n$項の定義では自由変数の de Bruijn index を決定できない．そこで，de Bruijn index から自由変数への割当てを定め，自由変数に index を振るときはその割当てに従うようにする．\begin{itemize}
+\item 名前付き文脈$\Gamma =\left\{\mathtt{x}\mapsto 4, \mathtt{y}\mapsto 3, \mathtt{z}\mapsto 2, \mathtt{a}\mapsto 1, \mathtt{b}\mapsto 0\right\}$に対して，項$\mathtt{\lambda w.\ \lambda a.\ x}$の de Bruijn 表記は$\mathtt{\lambda .\lambda .6}$．
+\end{itemize}
+\begin{dblock}{名前付き文脈}
+$\mathtt{x}_{0},\ldots,\mathtt{x}_{n}\in\mathcal{V}$．名前付き文脈$\Gamma = \mathtt{x}_{n},\mathtt{x}_{n - 1},\ldots,\mathtt{x}_{1},\mathtt{x}_{0}$は各変数名$\mathtt{x}_{i}$を de Bruijn index $i$に割当てる．$\Gamma$に出現する変数名全体の集合を$\mathrm{dom}(\Gamma) =\left\{\mathtt{x}_{n},\ldots,\mathtt{x}_{0}\right\}$を書く．
+\end{dblock}
+\end{frame}
+\begin{frame}{演習6.1.4}
+\begin{alertblock}{問題}
+	$n$項の集合をDef.3.2.3の様式で構成し直し，それが上で定義したものと等しいことを示せ．
+\end{alertblock}
+\begin{proof}[構成]
+	Na\"iveな形だと非可述になるので，各$n$について$n$項を項の大きさ$k$で類別する．$\mathcal{S}_{n} = \bigcup_{k = 1}^{\infty}\mathcal{S}_{n,k}$，ただし
+	\begin{align*}
+	\mathcal{S}_{0,1} &= \emptyset\\
+	\mathcal{S}_{n,1} &= \mathcal{S}_{n - 1, 1} \cup \left\{n -1\right\}\\
+	\mathcal{S}_{n,k} &= \left\{\lambda.\mathtt{t_{1}}|\mathtt{t_{1}}\in \mathcal{S}_{n + 1, k - 1}\right\}\cup \bigcup_{i = 1}^{k - 1}\left\{\mathtt{t}_{1}\ \mathtt{t}_{2}|\mathtt{t}_{1}\in\mathcal{S}_{n, i}, \mathtt{t}_{2}\in\mathcal{S}_{n, n- i}\right\}
+	\end{align*}
+\end{proof}
+\end{frame}
+\begin{frame}
+\begin{proof}
+$n$を固定する．示すべきは，$\forall \mathtt{t},(\exists k, \mathtt{t}\in\mathcal{S}_{n, k}) \Leftrightarrow \mathtt{t}\in\mathcal{T}_{n}$なること．\begin{enumerate}
+\item $(\Rightarrow)$ $\mathtt{t}\in\mathcal{S}_{n,k}$なる$k$をとる．$k = 1$のときは高々$n$のindexなので正しい．$k > 1$のとき．\begin{itemize}\item$\mathtt{t}$が抽象のとき，$\mathtt{t = \lambda t_{1}},\mathtt{t_{1}}\in\mathcal{S}_{n+ 1, k - 1}$なる$\mathtt{t_{1}}$を取る．このとき$\mathtt{t_{1}\in\mathcal{S}_{n + 1}}$より$\mathtt{t}\in\mathcal{T}_{n + 1}$なので$\mathtt{t}\in\mathcal{T}_{n + 1}$が従う．\item 適用の場合も同様．\end{itemize}
+\item $\mathtt{t}$の場合分けを行なえばよい．
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{演習6.1.5.}
+	\begin{proof}[$removenames$の定義]
+	次のように定義する:\begin{align*}
+	removenames_{\Gamma}(\mathtt{x}) &= \Gamma(\mathtt{x})\\
+	removenames_{\Gamma}(\mathtt{\lambda x. t_{1}})&=\lambda.removenames_{\Gamma,x}(\mathtt{t_{1}})\\
+	removenames_{\Gamma}(\mathtt{t_{1}\ t_{2}}) &= removenames_{\Gamma}(\mathtt{t_{1}})\ removenames_{\Gamma}(\mathtt{t_{2}})
+	\end{align*}
+	\end{proof}
+	\begin{proof}[$restorenames$の定義]
+	\begin{align*}
+	restorenames_{\Gamma}(\mathtt{k}) &= \text{$\Gamma$における$\mathtt{k}$番目の名前}\\
+	restorenames_{\Gamma}(\mathtt{\lambda . t_{1}}) &= \mathtt{\lambda x.}restorenames_{\Gamma,x}(\mathtt{t_{1}})\\
+		&\text{$\mathtt{x}$:$x\notin dom(\Gamma)$なる最初の名前}\\
+	restorenames_{\Gamma}(\mathtt{t_{1}\ t_{2}}) &= 	restorenames_{\Gamma}(\mathtt{t_{1}})\ restorenames_{\Gamma}(\mathtt{t_{2}})
+	\end{align*}
+	\end{proof}
+\end{frame}
+\begin{frame}
+\begin{alertblock}{性質}\footnote{ただし$FV(\mathtt{t})\in dom(\Gamma)$}
+	\begin{enumerate}\item
+	$\forall \mathtt{t},\mathtt{t}\text{は名無し項}\Rightarrow removenames_{\Gamma}(restorenames_{\Gamma}(\mathtt{t})) = \mathtt{t}$
+	\item $\forall \mathtt{t}, restorenames_{\Gamma}(removenames_{\Gamma}(\mathtt{t}))\equiv_{\alpha}\mathtt{t}$
+\end{enumerate}
+\end{alertblock}
+\begin{proof}
+\begin{itemize}
+\item $\mathtt{t}$の構造帰納法．\begin{itemize}\item $\mathtt{t}$がindex $k$のとき，$\Gamma$における$k$番目の名前を$\mathtt{x_{k}}$とする．このとき与式は$removenames_{\Gamma}(\mathtt{x_{k}}) = k$となり従う．\item $\mathtt{t}$の直接の部分項について主張を仮定する．$\mathtt{t}$が$\lambda. \mathtt{t_{1}}$なら，$x$を$x\notin dom(\Gamma)$となる最初の名前として$removenames_{\Gamma, x}(\lambda x. restorenames_{\Gamma,x}(\mathtt{t_{1}})) = \lambda. removenames_{\Gamma, x}(restorenames_{\Gamma, x}(\mathtt{t_{1}}))$．帰納法の仮定より従う．適用の場合も同様．\end{itemize}
+\item $\mathtt{t}$の構造帰納法．$\mathtt{t}$が通常の$\lambda$項になること以外変わらない．
+\end{itemize}
+\end{proof}
+\end{frame}
+\begin{frame}{シフトと代入}
+de Bruijn記法での代入操作を考える．代入項の自由変数が捕獲されないためには，代入項の束縛変数のindexを変えず，自由変数のindexを最外束縛子を指すindexぶんだけ増加させる．これを形式化しよう．\begin{itemize}
+\item ex. $\mathtt{\left[1 \mapsto 2(\lambda. 0)\right]\lambda.2 = \lambda.4(\lambda.0)}$(名前付き項での$\mathtt{\left[x\mapsto z(\lambda w. w)\right](\lambda y. x) = \lambda y. z(\lambda w.w)}$に対応)
+\end{itemize}
+	\begin{dblock}{シフト}
+	項$\mathtt{t}$の，打ち切り値$c$以上の$d$シフトを$\uparrow_{c}^{d}(\mathtt{t})$と書き，次のように定義する:
+	\begin{align*}
+		\uparrow_{c}^{d}(\mathtt{k})&=\begin{cases}
+			\mathtt{k} & \text{if $k < c$}\\
+			\mathtt{k + d} &\text{otherwise}\\
+		\end{cases}\\
+		\uparrow_{c}^{d}(\lambda.\mathtt{t_{1}})&=\lambda. \uparrow_{c + 1}^{d}(\mathtt{t_{1}})\\
+		\uparrow_{c}^{d}(\mathtt{t_{1}}\ \mathtt{t_{2}})&=\uparrow_{c}^{d}(\mathtt{t_{1}})\uparrow_{c}^{d}(\mathtt{t_{2}})
+	\end{align*}
+	ただし$\uparrow^{d}(\mathtt{t}) = \uparrow_{0}^{d}(\mathtt{t})$
+	\end{dblock}
+\end{frame}
+\begin{frame}{演習6.2.3}
+\begin{alertblock}{問}
+	$\mathtt{t}$が$n$項とする．加えて$d < 0$である場合には，$\mathtt{t}$の自由変数はどれも$\left|d\right|$以上とする．このとき，$\uparrow_{c}^{d}(\mathtt{t})$が$\mathrm{max}(n + d, 0)$であることを示せ．
+\end{alertblock}
+\begin{proof}
+$d$の正負で分ける．$n$項$\mathtt{t}$に関する構造的帰納法で示す．
+\begin{enumerate}
+\item $d \geq 0$のとき．\begin{enumerate}\item$\mathtt{t}$がindex $k(< n)$の場合は明らか($k < d$のときはシフト後$k$，そうでない場合シフト後は$k + d < n + d$となり，$n + d$項となる．)
+	\item 各項$\mathtt{t}$に対して，$\mathtt{t}$の任意の直接の部分項$\mathtt{s}$と任意の$k \geq 0$に対して$\uparrow_{c + k}^{d}(\mathtt{s})\in\mathcal{T}_{\mathrm{max}(n + d + k,0)}$を仮定する．$\mathtt{t = \lambda. t_{1}}$の場合は$\uparrow_{c}^{d}(\mathtt{t}) = \lambda.\uparrow_{c+ 1}^{d}(\mathtt{t_{1}})$となり，$\uparrow_{c+ 1}^{d}(\mathtt{t_{1}})\in\mathcal{T}_{\mathrm{max}(n + d+ 1,1)}$だから$\uparrow_{c}^{d}(\mathtt{t})\in\mathcal{T}_{\mathrm{max}(n + d+ 1,0)}$．$\mathtt{t_{1}\ t_{2}}$の場合は$\uparrow_{c}^{d}(\mathtt{t_{1}}), \uparrow_{c}^{d}(\mathtt{t_{2}})\in\mathcal{T}_{\mathrm{max}(n + d+ 1,1)}$より従う．\end{enumerate}
+	\item $d < 0$のとき．$\mathtt{t}$の自由変数は全て$\left|d\right| = -d$以上とする．\begin{enumerate}
+	\item $\mathtt{t}$がindex $k$の場合は仮定より$-d \leq k$．よって$0 \leq k + d < n + d$より$\mathrm{max}(n + d, 0)$項．
+	\item 題意の各項$\mathtt{t}$に対して，$\mathtt{t}$の任意の直接の部分項と任意の$k \geq 0$に対して$\uparrow_{c}^{d}(\mathtt{s})\in\mathcal{T}_{\mathrm{max}(n + d + k, 0)}$を仮定する．抽象および関数適用の場合は全く(1)と同様に証明できる．
+	\end{enumerate}
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{代入}
+	\S 6.3で見るように，$\beta$簡約を定めるには文脈中最後にある変数, i.e. $j = 0$への代入があればよいが，たとえば$(\lambda. \lambda. 1)(\lambda. 0)$を$\beta$簡約するときのように，本体でindex 1の変数にも代入出来なければならない．より多くの束縛子がネストしている場合も同様なので，一般の変数に対して代入操作ができなければならないことがわかる．そこで，次のように定義する．
+\begin{dblock}{Def.6.2.4.代入}
+	項$\mathtt{t}$における，変数番号$\mathtt{j}$への項$\mathtt{s}$の代入を，$\mathtt{\left[j\mapsto s\right]t}$と書き，次のように定義する．
+	\begin{align*}
+		\mathtt{\left[j\mapsto s\right]k} &=\begin{cases}
+			\mathtt{s}&\text{if $\mathtt{k = j}$}\\
+			\mathtt{k}&\text{otherwise}
+		\end{cases}\\
+		\mathtt{\left[j\mapsto s\right]}(\mathtt{\lambda. t_{1}})&= \lambda. \mathtt{\left[j + 1\mapsto \uparrow^{1}(s)\right]t_{1}}\\
+		\mathtt{\left[j\mapsto s\right]}(\mathtt{t_{1}\ t_{2}}) &= (\mathtt{\left[j\mapsto s\right]t_{1}})(\mathtt{\left[j\mapsto s\right]t_{2}})
+	\end{align*}
+\end{dblock}
+\end{frame}
+\begin{frame}{演習6.2.6}
+\begin{alertblock}{問題}
+$\mathtt{s, t}$が$n$項で$\mathtt{j \leq n}$のとき，$\mathtt{\left[j\mapsto s\right]t}$は$n$項である．\end{alertblock}
+\begin{proof}
+$\mathtt{t}$の帰納法による．\begin{enumerate}
+\item $\mathtt{t}$が変数のとき．$\mathtt{t = j}$ならば代入の結果は$\mathtt{s}$となり，仮定より従う．それ以外の場合は代入の結果は$\mathtt{t}$のままで，$\mathtt{t}$も$n$項より示される．
+\item $\forall n\in\mathbb{N}, \forall j \leq n, \forall \mathtt{s, t}\in\mathcal{T}_{n}, \mathtt{\left[j\mapsto s\right]t}\in\mathcal{T}_{n}$を仮定する．\begin{enumerate}\item ß$\mathtt{t = \lambda. t_{1}}$のとき．演習6.2.3より$\uparrow^{1}(\mathtt{s})$は$n + 1$項．また，特に$\mathtt{t}$も$n + 1$項なので$\mathtt{\left[j + 1\mapsto \uparrow^{1}(s)\right]t_{1}}$は$n + 1$項．よって
+\item $\mathtt{t =t_{1}\ t_{2}}$のとき．帰納法の仮定より従う．
+\end{enumerate}
+\end{enumerate}
+\end{proof}\end{frame}
+\begin{frame}{演習6.2.8}
+\begin{alertblock}{問題}
+名無し項についての代入の定義は，通常の項についての代入の定義\footnote{Def.5.3.5}と合致すべきであるが，(1)その対応を厳密に正当化するためにはどのような定理が証明される必要があるかを考え，(2)それを証明せよ．
+\end{alertblock}
+$removenames$が代入操作について準同型写像となっていることを示せばよい．つまり，以下の定理を示す．\begin{dblock}{Thm.de Bruijn記法での代入操作とDef.5.3.5の一致性．}
+任意の通常の項$\mathtt{s, t}$，変数$\mathtt{x}$について$\mathrm{removenames}_{\Gamma}(\mathtt{\left[x\mapsto s\right]t}) = \left[\Gamma(x)\mapsto \mathrm{removenames}_{\Gamma}(\mathtt{s})\right]\mathrm{removenames}_{\Gamma}(\mathtt{t})$．ただし$\Gamma$は名前付き文脈とする．
+\end{dblock}
+\end{frame}
+\begin{frame}{演習6.2.8.(証明)}
+\begin{proof}
+通常の項$\mathtt{s}$と変数$\mathtt{x}$を任意に取る．項$\mathtt{t}$に関する構造的帰納法で示す．
+\begin{enumerate}
+\item $\mathtt{t}$が変数のとき．\begin{itemize}
+\item $\mathtt{t = x}$のとき．(左辺) = $\mathrm{removenames}_{\Gamma}(\mathtt{\left[x\mapsto s\right]x}) = \mathrm{removenames}_{\Gamma}(\mathtt{s})$，(右辺) = $\left[\Gamma(\mathtt{x})\mapsto removenames_{\Gamma}(\mathtt{s})\right]\Gamma(\mathtt{x}) = removenames_{\Gamma}(\mathtt{s})$より従う．
+\item $\mathtt{t = y\neq x}$のとき．$removenames_{\Gamma}(\mathtt{y}) = \Gamma(\mathtt{y})$とすれば，Def.6.2.4.より(左辺) = $\Gamma(\mathtt{y})$．一方でDef.5.3.5の定義により，(右辺) = $removenames_{\Gamma}(\mathtt{\left[x\mapsto s\right]y}) =removenames_{\Gamma} (\mathtt{y}) = \Gamma(\mathtt{y})$より示される．
+\end{itemize}
+\item 各$\mathtt{t}$の任意の直接の部分項$\mathtt{u}$に対して主張を仮定．適用の場合は明らか．\begin{itemize}
+\item $\mathtt{t = \lambda y. t_{1} }$の場合．$\alpha$同値な項の同一視により，$\mathtt{y = x}$と$\mathtt{y \neq x}\land \mathtt{y}\notin FV(\mathtt{s})$を考えればよい．\begin{enumerate}
+\item $\mathtt{y = x}$のとき．(左辺) = $removenames_{\Gamma}(\mathtt{\lambda x. t_{1}}) = \lambda. removenames_{\Gamma, \mathtt{x}}(\mathtt{t_{1}})$．一方で右辺は$\left[\Gamma(\mathtt{x})\mapsto removenames_{\Gamma}(\mathtt{s})\right](\lambda. removenames_{\Gamma,\mathtt{x}}(\mathtt{t_{1}})) = \lambda. \left[\Gamma(\mathtt{x}) + 1\mapsto \uparrow^{1}(s)\right]removenames_{\Gamma,\mathtt{x}}(\mathtt{t_{1}})$．ここで帰納法の仮定から$\lambda .removenames_{\Gamma, \mathtt{x}}(\mathtt{t_{1}})$\footnote{$\mathtt{x}\in\Gamma$でなければならない．}となり示される．
+\item $\mathtt{y \neq x}\land \mathtt{y}\notin FV(\mathtt{s})$．(左辺) = $\lambda. removenames_{\Gamma, \mathtt{y}}(\mathtt{\left[x\mapsto s\right]t_{1}})$．帰納法の仮定により$removenames_{\Gamma, \mathtt{y}}(\mathtt{\left[x\mapsto s\right]t_{1}}) = \left[removenames_{\Gamma, \mathtt{y}}(\mathtt{x})\mapsto removenames_{\Gamma, y}(\mathtt{s})\right]removenames_{\Gamma, \mathtt{y}}(\mathtt{t_{1}})$．一方右辺は$\left[\Gamma(\mathtt{x}) + 1\mapsto \uparrow^{1}(removenames_{\Gamma}(\mathtt{s}))\right]removenames_{\Gamma, \mathtt{y}}(\mathtt{t_{1}})$より示される．
+\end{enumerate}
+\end{itemize}
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{演習6.2.8.(続き)}
+ただし2-(1), (2)の証明では以下の補題を用いた:\begin{alertblock}{Lem.名前付き文脈に関する補題}\begin{enumerate}
+	\item 	任意の文脈$\Gamma$，変数$\mathtt{x}$，項$\mathtt{t}$について，$\uparrow^{1}(removenames_{\Gamma}(\mathtt{t})) = removenames_{\Gamma, \mathtt{t}}(\mathtt{t})$
+\end{enumerate}
+\end{alertblock}
+\end{frame}
+\begin{frame}{6.3.評価}
+簡約基を簡約することで束縛変数が消費されるので，代入結果の中の変数に番号を振り直す必要がある．また，被代入項の束縛子の数は代入項より多いから，de Bruijn indexが負となることを防ぐために予め1を加えるシフトを行なう必要がある．以上より，\begin{dblock}{$\beta$簡約規則}
+$\mathtt{(\lambda .t_{12})v_{2}\rightarrow \uparrow^{-1}\left(\left[\mathtt{0}\mapsto \uparrow^{1}(\mathtt{v_{2}})\right]\mathtt{t_{12}}\right)}$\small\rm{(E-APPABS)}
+\end{dblock}
+他の評価規則は同一．
+\end{frame}
+\section{\S8.型付き算術式}
+\begin{frame}{\S 8.1. 型}
+算術式の構文は\begin{equation*}
+\mathtt{t\Coloneq true|false|if\ t\ then\ t\ else\ t|0|succ\ t|pred\ t|iszero\ t}
+\end{equation*}
+により定義され，各項を評価すると結果は行き詰まり項もしくは値，つまりブール値$\mathtt{v\Coloneq true|false}$または数値$\mathtt{nv\Coloneq 0|succ\ nv}$になる．
+
+ある項が行き詰まり項の状態に至ることを，その項を実際に評価せずにいいたい．そのためには，数値に評価される項とブール値に評価される項を区別し，各コンストラクタが引数として取れる項を限定する必要がある．そのために，型$\mathrm{Nat, Bool}$を導入する．
+\begin{alertblock}{記法}
+	$\mathtt{S, T,U}$は型の上を動くメタ変数とする．また，項$\mathtt{t}$が値$\mathtt{T}$を持つというとき，$\mathtt{t}$を評価した結果が明らかに，i.e.静的に型$\mathtt{T}$の値になることを意味する．
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S 8.2. 型付け関係}
+算術式のための型付け関係を$\mathtt{t:T}$と書き，以下の推論規則によって定める．
+\begin{alertblock}{$\mathbf{B}$のための型付け規則}
+	\begin{columns}
+		\begin{column}{0.30\textwidth}
+			新しい構文形式
+			\begin{align*}
+			\mathtt{T}\Coloneq\mathtt{Bool}
+			\end{align*}
+		\end{column}\begin{column}{.02\textwidth}
+			\rule{.1mm}{0.20\textheight}
+		\end{column}\begin{column}{0.66\textwidth}
+			新しい型付け規則\begin{prooftree}
+				\AxiomC{}
+					\RightLabel{\tiny\rm{T-TRUE}}
+				\UnaryInfC{$\mathtt{true:Bool}$}
+			\end{prooftree}
+			\begin{prooftree}\AxiomC{}
+				\RightLabel{\tiny\rm{T-FALSE}}
+				\UnaryInfC{$\mathtt{false:Bool}$}
+			\end{prooftree}
+			\begin{prooftree}
+				\AxiomC{$\mathtt{t_{1}:Bool}$}\AxiomC{$\mathtt{t_{2}:T}$}\AxiomC{$\mathtt{t_{3}:T}$}
+				\RightLabel{\tiny\rm{T-IF}}
+				\TrinaryInfC{$\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}:T}$}
+			\end{prooftree}
+		\end{column}
+	\end{columns}\end{alertblock}\begin{alertblock}{{$\mathbf{NB}$のための型付け規則}}
+	\begin{columns}
+	\begin{column}{0.48\textwidth}
+		新しい構文形式
+		\begin{equation*}
+			\mathtt{T\Coloneq \ldots Nat}
+		\end{equation*}
+		新しい型付け規則
+		\begin{prooftree}
+		\AxiomC{}
+		\RightLabel{\tiny\rm{T-ZERO}}
+		\UnaryInfC{$\mathtt{0:Nat}$}
+		\end{prooftree}
+	\end{column}
+	\begin{column}{.02\textwidth}
+		\rule{.1mm}{0.25\textheight}
+	\end{column}
+	\begin{column}{0.48\textwidth}
+	\begin{prooftree}
+		\AxiomC{$\mathtt{t_{1}:Nat}$}
+		\RightLabel{\tiny\rm{T-SUCC}}\UnaryInfC{$\mathtt{succ\ t_{1}:Nat}$}
+	\end{prooftree}
+	\begin{prooftree}
+		\AxiomC{$\mathtt{t_{1}:Nat}$}\RightLabel{\tiny\rm{T-PRED}}\UnaryInfC{$\mathtt{pred\ t_{1}:Nat}$}
+	\end{prooftree}
+	\begin{prooftree}
+		\AxiomC{$\mathtt{t_{1}:Nat}$}\RightLabel{\tiny\rm{T-ISZERO}}\UnaryInfC{$\mathtt{iszero\ t_{1}:Bool}$}
+	\end{prooftree}
+	\end{column}
+	\end{columns}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S 8.2.型付け関係}
+\begin{dblock}{Def.8.2.1.}
+算術式のための型付け関係はp.19における規則の全てのインスタンスを満たす，項と型の最小の二項関係である．項$\mathtt{t}$が型付け可能(正しく型付けされている)とは，$\exists \mathtt{T}, \mathtt{t:T}$なること．
+\end{dblock}
+たとえは$\mathtt{succ\ t_{1}}$が型付け可能のとき，その型は$\mathtt{Nat}$かつ$\mathtt{t_{1}:Nat}$である．このような性質は逆転補題(生成補題)と呼ばれる．
+\begin{dblock}{Lem8.2.2.型付け関係の逆転．}
+\begin{enumerate}
+	\item $\mathtt{true:R}$ならば$\mathtt{R = Bool}$.
+	\item $\mathtt{false:R}$ならば$\mathtt{R = Bool}$.
+	\item $\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}:R}$ならば$\mathtt{t_{1}:Bool\land t_{2}:R\land t_{3}:R}$.
+	\item $\mathtt{0:R}$ならば$\mathtt{R:Nat}$．
+	\item $\mathtt{succ\ t_{1}:R}$ならば$\mathtt{R:Nat\land t_{1}:Nat}$．\item $\mathtt{pred\ t_{1}:R}$ならば$\mathtt{R:Nat\land t_{1}:Nat}$．\item $\mathtt{iszero\ t_{1}:R}$ならば$\mathtt{R:Nat\land t_{1}:Nat}$．
+\end{enumerate}
+\end{dblock}
+\end{frame}
+\begin{frame}{演習8.2.3}
+\begin{alertblock}{問題}
+正しく型付けされた項の全ての部分項は正しく型付けされている．
+\end{alertblock}
+\begin{proof}
+	項$\mathtt{t}$の帰納法．
+\begin{enumerate}
+	\item $\mathtt{t}$が定数のとき．$\mathtt{t}$の任意の部分項は$\mathtt{t}$自身に限られ，p.19の規則から全てwell-typedなことより従う．
+	\item 各項$\mathtt{t}$に対し，well-typedな$\mathtt{t}$の直接の部分項たち$\mathtt{t'}$の任意の部分項$\mathtt{s}$はwell-typedなことを仮定する．\begin{enumerate}
+		\item $\mathtt{t}$が$\mathtt{t_{1}}$に$\mathtt{succ, pred, iszero}$のいずれかを適用した項のとき．$\mathtt{t}$がwell-typedなことを仮定する．逆転補題により，$\mathtt{t_{1}:Bool}$より$\mathtt{t_{1}}$はwell-typedである．帰納法の仮定より，$\mathtt{t_{1}}$の任意の部分項はwell-typed，かつ$\mathtt{t}$はそれ自身の部分項なので示される．
+		\item $\mathtt{t} =\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}}$のとき．$\mathtt{t}$がwell-typedなことを仮定すると，逆転補題より$\mathtt{t_{1},t_{2}, t_{3}}$はwell-typed．帰納法の仮定より，(1)と全く同様にして主張が従う．
+	\end{enumerate}
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{型付け導出とその一意性．}
+\begin{alertblock}{Def.型付け導出}
+	型付け関係$\mathtt{t:T}$の型付け導出は，$\mathtt{t:T}$を結論とする型付け規則のインスタンスの木である．
+\end{alertblock}
+以下の性質は一般には成りたたない．たとえばsubtypingなどを持つ型体系においては，ある項が存在して，型付け可能かつ2通り以上の型をもちうる．
+\begin{dblock}{Thm.8.2.4}
+各項$\mathtt{t}$は高々一つの型を持つ．i.e.$\mathtt{t}$が型付け可能ならばその型は一意的である．
+\end{dblock}
+\end{frame}
+\begin{frame}{\S 8.3.安全性 = 進行+保存}
+p.19で定めた型体系の安全性\footnote{つまりは健全性}，つまり任意の項$\mathtt{t}$に対し，$\mathtt{t}$が型付け可能ならば$\mathtt{t}$の評価は行き詰まらないことを示す．以下の2つの補題を示すことによって証明しよう．\begin{dblock}{Thm.8.3.2.進行定理}
+$\forall \mathtt{t},\exists\mathtt{T}, \mathtt{t:T}\Rightarrow (\mathtt{t}\text{は値}\lor\exists \mathtt{t'}, \mathtt{t\rightarrow t'})$
+\end{dblock}
+\begin{dblock}{Thm.8.3.3.保存定理}
+	$\forall \mathtt{t,t'},\forall{T}, \mathtt{t:T\land t\rightarrow t'}\Rightarrow \mathtt{t':T}$
+\end{dblock}
+\end{frame}
+\begin{frame}{証明の準備}
+$\mathtt{Bool}$型と$\mathtt{Nat}$型の標準形，i.e.それらの型を持つ正しく型付けされた値について，以下の性質が成り立つ．
+\begin{dblock}{Lem.8.3.1.標準形}
+	\begin{enumerate}
+		\item $\mathtt{v}$が$\mathtt{Bool}$型の値ならば，$\mathtt{v}$は$\mathtt{true}$または$\mathtt{false}$．
+		\item $\mathtt{v}$が$\mathtt{Nat}$型の値ならば，$\mathtt{v}$は$\mathtt{nv\Coloneq 0|succ\ nv}$の定める文法による数値．
+	\end{enumerate}
+\end{dblock}
+	\begin{proof}
+	(1)ブール値の文法$\mathtt{v\Coloneq true|false}$と併せると，この言語における値は4つの形$\mathtt{true, false, 0, succ\ nv}$(ただし$\mathtt{nv}$は数値)を持つ．はじめの2つの場合は$\mathbf{B}$の型付け規則より即座に成り立つ．後者2つについては，逆転補題によりともに$\mathtt{Bool = Nat}$が導かれ，これは不可能．
+	
+	(2)はじめ2つの場合は逆転補題より$\mathtt{Nat = Bool}$が導かれ，これは不可能．後者2つに対しては即座に成り立つ．
+	\end{proof}
+\end{frame}
+\begin{frame}{Thm.8.3.2.の証明}
+	$\mathtt{t:T}$の導出に関する帰納法で以下の定理を示す．
+	\begin{dblock}{Thm.8.3.2.進行定理}
+		$\forall \mathtt{t},\exists\mathtt{T}, \mathtt{t:T}\Rightarrow (\mathtt{t}\text{は値}\lor\exists \mathtt{t'}, \mathtt{t\rightarrow t'})$
+		\end{dblock}
+\begin{proof}\begin{enumerate}
+	\item$\mathrm{T}$-$\mathrm{TRUE}$，$\mathrm{T}$-$\mathrm{FALSE}$，$\mathrm{T}$-$\mathrm{ZERO}$の場合は$\mathtt{t}$は値より従う．
+	\item それ以外の場合．$\mathtt{t}$の直接の部分導出に対して主張を仮定．\begin{enumerate}
+		\item $\mathrm{T}$-$\mathrm{IF}$の場合．$\mathtt{t = if\ t_{1}\ then\ t_{2}\ else\ t_{3}:T}$とする．逆転補題から$\mathtt{t_{1}:Bool, t_{2}:T,t_{3}:T}$．帰納法の仮定より$\mathtt{t_{1}}$は値または$\exists \mathtt{t'_{1}, t_{1}\rightarrow t'_{1}}$．$\mathtt{t_{1}}$が値のとき，Lem.8.3.1より$\mathtt{t_{1} = true}$または$\mathtt{t_{1} = false}$．このとき$\mathrm{E}$-$\mathrm{TRUE(FALSE)}$が適用できる．そうでない場合は$\mathrm{E}$-$\mathrm{IF}$が適用される．
+		\item $\mathrm{T}$-$\mathrm{SUCC(PRED|ISZERO)}$の場合．$\mathtt{t = succ\ t_{1}}$の場合を考えればよい．逆転補題より$\mathtt{t_{1}:Nat}$．帰納法の仮定より$\mathtt{t_{1}}$は値または$\exists \mathtt{t'_{1}, t_{1}\rightarrow t'_{1}}$．値のときはLem.8.3.1より$\mathtt{t_{1}}$は数値で，$\mathtt{t}$も数値．1ステップの評価が可能な場合は$\mathrm{E}$-$\mathrm{SUCC}$が適用され，$\mathtt{t\rightarrow succ\ t'_{1}}$．
+	\end{enumerate}
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{Thm.8.3.3.の証明．}
+$\mathtt{t:T}$の導出に関する帰納法で以下の定理を示す．$\mathtt{t\rightarrow t'}$の評価の導出に関するinductionによる証明はEx.8.3.4で行なう．
+\begin{dblock}{Thm.8.3.3.保存定理}
+	$\forall \mathtt{t,t'},\forall{T}, \mathtt{t:T\land t\rightarrow t'}\Rightarrow \mathtt{t':T}$
+\end{dblock}
+\end{frame}\begin{frame}{Thm.8.3.3.の証明．}
+\begin{proof}
+帰納法の各ステップにおいて，任意の部分導出に対して題意を仮定する．i.e.$\mathtt{s:S}$が部分導出で証明されるとき，$\forall \mathtt{s'. s:S\land s\rightarrow s'\Rightarrow s':S}$を仮定する．最後の導出で使われた型付け規則で分ける．\begin{enumerate}
+	\item $\mathrm{T}$-$\mathrm{(TRUE|FALSE|ZERO)}$のとき．規則の形より$\mathtt{t = true}$，かつ$\mathtt{T:Bool}$なることが分かる．しかし$\mathtt{t}$は正規形より$\mathtt{\forall t', \neg(t\rightarrow t')}$なので，主張は成立．他の規則も同様．
+	\item $\mathrm{T}$-$\mathrm{IF}$のとき．規則の形より$\mathtt{t = if \ t_{1}\ then\ t_{2}\ else\ t_{3}, t_{1}:T, t_{2}:T, t_{3}:T}$なる項$\mathtt{t_{1}, t_{2}, t_{3}}$および型$\mathtt{T}$を取る．帰納法の仮定より，$\mathtt{t_{1}:Bool, t_{2}:T, t_{3}:T}$を結論とする部分導出が存在する．$\mathtt{t\rightarrow t'}$を仮定すると，規則は$\mathrm{E}$-$\mathrm{IF(TRUE|FALSE)}$，$\mathrm{E}$-$\mathrm{IF}$のいずれかが適用できる．\begin{itemize}
+	\item $\mathrm{E}$-$\mathrm{IF(TRUE|FALSE)}$のとき．規則の形より$\mathtt{t_{1} = true}$で，結果の項は$\mathtt{t' = t_{2}:T}$より従う．$\mathtt{t_{1}= false}$の場合も同様．
+	\item $\mathrm{E}$-$\mathrm{IF}$のとき．規則の形より$\mathtt{t_{1}\rightarrow t'_{1}}$が存在する．帰納法の仮定より$\mathtt{t_{1}:Bool}$を併せると$\mathtt{t'_{1}:Bool}$．よって規則$\mathrm{T}$-$\mathrm{IF}$を使うと$\mathtt{t' = if\ t'_{1}\ then\ t_{2}\ else\ t_{3}:T}$より正しい．
+	\end{itemize}
+	\item $\mathrm{T}$-$\mathrm{(SUCC|PRED|ISZERO)}$のときは(2)と同様．
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{Thm.8.3.3の別証}
+\begin{proof}{評価導出による証明．}
+帰納法の各ステップにおいて，任意の部分導出に対して題意を仮定する:$\mathtt{s \rightarrow s'}$が部分導出で証明できるとき，$\mathtt{\forall S, s: S\land s \rightarrow s' \Rightarrow s' :S}$を仮定し，最後に使われた規則で分ける．
+\begin{enumerate}
+	\item $\mathrm{E}$-$\mathrm{IFTRUE}$のとき．$\mathtt{t = if\ true\ then\ t_{2}\ else\ t_{3}\rightarrow t_{2}}$．
+\end{enumerate}
+\end{proof}
+\end{frame}
+\end{document}

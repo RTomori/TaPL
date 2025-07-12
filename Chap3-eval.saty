@@ -1,0 +1,41 @@
+@require: class-slydifi/theme/arctic-noto
+@require: math
+@require: base/typeset/satysfi-it
+@require: derive/derive
+@require: class-jlreq/theorem
+@require: class-jlreq/proof
+@require: figbox/figbox
+@require: colorbox/colorbox
+open Derive
+open FigBox
+open DeriveDSL
+let-mutable theorem-counter <-0
+let-block ctx +definition = JLReqTheorem.theorem-scheme (|JLReqTheorem.default-config-theorem with font = [italic];|) {Def.} theorem-counter ctx
+
+let-block ctx +theorem = JLReqTheorem.theorem-scheme (|JLReqTheorem.default-config-theorem with font = [italic];|){Thm.} theorem-counter ctx
+ in 
+let-math \mathscr m = math-char-class MathScript m in
+let-math \Coloneq = math-char MathRel `::=` in
+let-math \blacktriangleright = math-char MathRel `▸` in
+let-math \mathscr m = math-char-class MathScript m in
+
+
+document '<
+    +make-title(|title = {|Types and Programming Languages|};author = {|Rei Tomori|}; date = {|4/21/2024.|}|);
+    +section{|3. 型無し算術式|}<
+        +frame{3.5: 評価}<
+        +p{ブール式(以後単に${\mathbb{B}})の操作的意味論を次のように定める:}
+        +definition ?:(`opsem-bool`) ?:({ブール式の操作的意味論})<
+            +enumerate{
+              * 項の構文\fig-center(textbox{${t \Coloneq \mathbf{true}\|\mathbf{false}\|\mathbf{if}\ t\ \mathbf{then}\ t\ \mathbf{else}\ t}});
+              * 値の構文\fig-center(textbox{${v \Coloneq \mathbf{true}\|\mathbf{false}}});
+              * 評価関係\fig-center(vconcat[hconcat[textbox{(E-IFTRUE)}; gap 10pt;textbox{${\mathbf{if}\ \mathbf{true}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\to t_{2}}}; ];gap 5pt; hconcat[textbox{(E-IFFALSE)}; gap 10pt;textbox{${\mathbf{if}\ \mathbf{false}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\to t_{3}}};]; hconcat[textbox{${\proven!(derive ${\mathbf{if}\ t_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}\to \mathbf{if}\ t'_{1}\ \mathbf{then}\ t_{2}\ \mathbf{else}\ t_{3}} |> from[assume${t_{1}\to t'_{1}}] |> by {(E-IF)})}}]]);
+            }
+        >
+      >
+      +frame{3.5:評価(cont'd)}
+      <
+        +p{項${t, t'}が${t\Rightarrow t'}を満たすとき，項${t}は${t'}へ\emph{1ステップで簡約される}という．}
+      >
+    >
+>
