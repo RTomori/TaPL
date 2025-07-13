@@ -296,7 +296,7 @@ $\mathtt{\forall t. \forall v. \forall T. t:T \land t \Downarrow v \Rightarrow v
 \begin{itemize}
 \item 型付け可能なプログラムには制約が課される
 \end{itemize}
-\item 以下，ブール型のみを基底型として持ち，型構築子として関数型を定める$(\rightarrow)$のみを持つ型体系を持つSTLC($\lambda_{\rightarrow}$)について考察するものとする．
+\item 以下，ブール型のみを基底型として持ち，型構築子として関数型を定める$(\rightarrow)$のみを持つ型体系を持つ STLC($\lambda_{\rightarrow}$)について考察するものとする．
 \end{itemize}
 \end{frame}
 \begin{frame}{\S9.1.関数型}
@@ -361,7 +361,7 @@ $(\rightarrow)$は右結合的とする．
 以上の内容を，次ページに再度示す．
 \end{frame}
 \begin{frame}{$\lambda_{\rightarrow}$の型付け関係}
-\begin{dblock}{図9.1}
+\begin{dblock}{図 9.1}
 \begin{columns}
 \begin{column}{0.18\textwidth}
 構文\begin{align*}
@@ -421,7 +421,7 @@ $(\rightarrow)$は右結合的とする．
 \end{itemize}
 \end{alertblock}
 \end{frame}
-\begin{frame}{演習9.3.2.}
+\begin{frame}{演習 9.3.2.}
 \begin{alertblock}{演習.9.3.2}
 $\Gamma \vdash\mathtt{x\ x:T}$なる$\Gamma, \mathtt{T}$は存在するか．
 \end{alertblock}
@@ -431,7 +431,7 @@ $\Gamma \vdash\mathtt{x\ x:T}$なる$\Gamma, \mathtt{T}$は存在するか．
 \end{frame}
 \begin{frame}{型の一意性}
 \begin{alertblock}{Thm.9.3.3.(型の一意性)}
-型付け文脈$\Gamma$が1つ与えられると，それに対して1つの項$\mathtt{t}$は1つの型を持つ．ただし，$\mathrel{FV}(\mathtt{t})\subseteq\mathrel{dom}(\Gamma)$．すなわち，ある項が型付け可能ならば，その型は一意に定まる．さらに，型付け関係を生成する推論規則からただ一つの型付け導出が構築できる．
+型付け文脈$\Gamma$が 1 つ与えられると，それに対して 1 つの項$\mathtt{t}$は 1 つの型を持つ．ただし，$\mathrel{FV}(\mathtt{t})\subseteq\mathrel{dom}(\Gamma)$．すなわち，ある項が型付け可能ならば，その型は一意に定まる．さらに，型付け関係を生成する推論規則からただ一つの型付け導出が構築できる．
 \end{alertblock}
 \begin{proof}[証明]
 型付け導出に関する帰納法による．$\mathrel{FV}(\mathtt{t})\subseteq\mathrel{dom}(\Gamma)$なる項$\mathtt{t}$に対する$\mathtt{t:T}$の導出に関する帰納法で示す．任意の$\Gamma$に対し，$\mathtt{s:S}$が$\mathtt{t:T}$の部分導出で証明されるとき，$\mathtt{S}$が一意的であることを仮定する．このとき，導出の最後で使われた型付け規則で分ける．$\mathtt{t}$が基本型または条件文の場合は算術式同様なので，$\lambda$項の場合について示す．
@@ -464,9 +464,9 @@ $\mathtt{t}$を閉じた，正しく型付けされた項とする.(i.e.$\exists
 型付け導出に関する帰納法による．ブール値および条件文に対する型付け規則については，算術式と同様の理由により成立する．仮定より，$\mathtt{t}$に変数は出現しえず，値である．ラムダ抽象は値なので，即座に成立する．
 
 関数適用の場合を考える．$\mathtt{t = t_{1}\ t_{2}}$で$\vdash\mathtt{t_{1}:T_{11}\rightarrow T_{12}}\land \vdash \mathtt{t_{2}:T_{11}}$とする．帰納法の仮定より，$\mathtt{t_{1}}$は値か，1ステップ評価が可能である．\begin{itemize}
-	\item 1ステップ評価が可能のとき．$\mathrm{E}-\mathrm{APP1}$が適用され，題意が従う．
+	\item 1 ステップ評価が可能のとき．$\mathrm{E}-\mathrm{APP1}$が適用され，題意が従う．
 	\item 値のとき．\begin{itemize}
-	\item $\mathtt{t_{2}}$が1ステップ評価可能のとき．$\mathrm{E}$-$\mathrm{APP2}$より評価が1ステップ可能．
+	\item $\mathtt{t_{2}}$が 1 ステップ評価可能のとき．$\mathrm{E}$-$\mathrm{APP2}$より評価が 1 ステップ可能．
 	\item 値のとき．標準形補題により$\mathtt{t_{1}}$は$\mathtt{\lambda x:T_{11}.t_{12}}$の形であり，$\mathrm{E}$-$\mathrm{APPABS}$が適用される．
 	\end{itemize}
 \end{itemize}
@@ -481,7 +481,7 @@ $\Gamma\vdash\mathtt{t:T}$かつ$\Delta$が$\Gamma$の並べ替えならば，$\
 $\Delta\vdash \mathtt{t:T}$かつ$x\notin\mathrel{dom}(\Gamma)$ならば，$\Gamma,\mathtt{x:S\vdash t:T}$であり，後者と前者の導出の深さは等しい．
 \end{alertblock}
 \begin{proof}
-証明はinductionによる(白板で行なう)
+証明は induction による(白板で行なう)
 \end{proof}
 \end{frame}
 \begin{frame}{代入補題}
@@ -522,19 +522,16 @@ $\Gamma\vdash\mathtt{t:T}$の導出に関する帰納法による．いま，$\m
 \end{itemize}
 \end{proof}
 \end{frame}
-\begin{frame}{演習9.3.10.}
-\begin{alertblock}{演習9.3.10.}
-主部展開はSTLCの"関数的な部分"では成り立つだろうか．i.e.$\mathtt{t}$が条件式を含まないと仮定したとき，$\mathtt{t \rightarrow t'}$かつ$\Gamma\vdash \mathtt{t' : T}$ならば$\Gamma\vdash \mathtt{t:T}$だろうか．
+\begin{frame}{演習 9.3.10.}
+\begin{alertblock}{演習 9.3.10.}
+主部展開は STLC の"関数的な部分"では成り立つだろうか．i.e.$\mathtt{t}$が条件式を含まないと仮定したとき，$\mathtt{t \rightarrow t'}$かつ$\Gamma\vdash \mathtt{t' : T}$ならば$\Gamma\vdash \mathtt{t:T}$だろうか．
 \end{alertblock}
-\begin{proof}[解答．]
-成り立つ．条件式を含まない$\mathtt{t}$を任意に取り，$\mathtt{t \rightarrow t'}\land \Gamma \vdash \mathtt{t':T}$を仮定する．subtermが正規形か否かで場合を分ける．
-\begin{enumerate}
-\item $\mathtt{}$
-\end{enumerate}
+\begin{proof}[解答]
+成立しない．関数適用の形の項で，引数部が ill-typed な項であるものを考える．たとえば，$(\lambda \mathtt{x} :\mathbb{B}\rightarrow\mathbb{B}.\lambda \mathtt{y}:\mathbb{B}.\mathtt{y})(\lambda z:\mathbb{B}.\mathtt{true\ true})$に対して，$\mathtt{true:}\mathbb{B}$なので正しく型付けできないが，簡約すると$\lambda\mathtt{y:}\mathbb{B}.\mathtt{y}$を得，この場合は型付けできる．
 \end{proof}
 \end{frame}
-\begin{frame}{9.4.Curry-Howard対応}
-	型と命題，項とその構成的証明を対応づけるのがCurry-Howard対応であった．以下では，STLCの型付け規則が直観主義的なimplicational logicに対応することを確認する．型付け規則との対応を明白にするために，今回はシークエント計算を用いる．
+\begin{frame}{9.4.Curry-Howard 対応}
+	型と命題，項とその構成的証明を対応づけるのが Curry-Howard 対応であった．以下では，STLC の型付け規則が直観主義的な implicational logic に対応することを確認する．型付け規則との対応を明白にするために，今回はシークエント計算を用いる．
 
 	$\Gamma, \Delta, \Pi, \Sigma$を論理式の集合，$A, B$を論理式とすると，含意に関する推論規則は次の通りだった:
 	\begin{prooftree}
@@ -548,10 +545,10 @@ $\Gamma\vdash\mathtt{t:T}$の導出に関する帰納法による．いま，$\m
 		\RightLabel{$(\Rightarrow \mathrm{L})$}
 		\BinaryInfC{$\Gamma, \Sigma, A\Rightarrow B\vdash \Delta, \Pi$}
 	\end{prooftree}
-	これが，型付け規則T-ABS, T-APPと対応することを確認する．$\Delta = \Sigma = \Pi = \varnothing$と仮定してよい．$(\Rightarrow\mathrm{R})$とT-ABSの対応は，$A, B$をそれぞれ変数$\mathtt{x : T}$，項$\mathtt{t_{2}:T_{2}}$に読みかえれば分かる．
+	これが，型付け規則 T-ABS, T-APP と対応することを確認する．$\Delta = \Sigma = \Pi = \varnothing$と仮定してよい．$(\Rightarrow\mathrm{R})$と T-ABS の対応は，$A, B$をそれぞれ変数$\mathtt{x : T}$，項$\mathtt{t_{2}:T_{2}}$に読みかえれば分かる．
 	\end{frame}
-	\begin{frame}{Curry-Howard対応}
-		T-APPについて．$\Delta = \varnothing, \Sigma = \Gamma\setminus B, \Pi = \left\{B\right\}$とすると，$(\Rightarrow\mathrm{L})$は，自然演繹の以下の証明図に等しい:
+	\begin{frame}{Curry-Howard 対応}
+		T-APP について．$\Delta = \varnothing, \Sigma = \Gamma\setminus B, \Pi = \left\{B\right\}$とすると，$(\Rightarrow\mathrm{L})$は，自然演繹の以下の証明図に等しい:
 		\begin{prooftree}
 			\AxiomC{$\Gamma$}
 			\UnaryInfC{$A$}
@@ -563,10 +560,10 @@ $\Gamma\vdash\mathtt{t:T}$の導出に関する帰納法による．いま，$\m
 		\end{prooftree}
 		重複した論理式の集合を除き(これは型環境の構成からいつでも可能)，$A = \mathtt{t_{2}:T_{1}, A \Rightarrow B = \mathtt{t_{1}: T_{1}\rightarrow T_{2}}}$とすれば，$B = \mathtt{t_{1}\ t_{2}: T_{2}}$から従う．
 
-		最後に，$\beta$簡約がcut除去に対応することを確かめる．
+		最後に，$\beta$簡約が cut 除去に対応することを確かめる．
 	\end{frame}
-	\begin{frame}{Curry-Howard対応}
-		実際，導出木の根に$\beta$簡約を適用すると，cut則の適用を含む任意の導出木
+	\begin{frame}{Curry-Howard 対応}
+		実際，導出木の根に$\beta$簡約を適用すると，cut 則の適用を含む任意の導出木
 		\begin{prooftree}
 			\AxiomC{$\vdots$}
 			\UnaryInfC{$\Gamma\vdash \mathtt{v_{1}:T_{1}}$}
@@ -575,11 +572,71 @@ $\Gamma\vdash\mathtt{t:T}$の導出に関する帰納法による．いま，$\m
 			\UnaryInfC{$\Gamma\vdash \mathtt{\lambda x:T_{1}.t_{12}:T_{1}\rightarrow T_{2}}$}
 			\RightLabel{$(\mathrm{cut})$}
 			\BinaryInfC{$\Gamma\vdash \mathtt{(\lambda x:T_{1}. t_{12})v _{1}:T_{2}}$}
-			\end{prooftree}に対して，cutを含まない導出木\begin{prooftree}
+			\end{prooftree}に対して，cut を含まない導出木\begin{prooftree}
 				\AxiomC{$\vdots$}
 				\UnaryInfC{$\Gamma\vdash\mathtt{\left[x\mapsto v_{1}\right]t_{12}:T_{2}}$}
-			\end{prooftree}を構成できる．以上から，確かにSTLCの型付け規則がLJの$(\Rightarrow)$のみを含むsubsetと一対一対応することが示される．
+			\end{prooftree}を構成できる．以上から，確かに STLC の型付け規則が LJ の$(\Rightarrow)$のみを含む subset と一対一対応することが示される．
 	\end{frame}
+\begin{frame}{9.5.型消去と型付け可能性}
+\begin{enumerate}
+\item p.21 に導入した$\lambda_{\leftarrow}$の評価関係から，型の実行時検査は行なわれないことが分かる．\begin{enumerate}\item 型注釈を利用する評価関係は含まれない\end{enumerate}
+\item 本格的なプログラミング言語の殆んどでは，型注釈は型検査・コード生成時に用いられるがコンパイル後には型無しの形に戻される．これは型消去\footnote{type erasure}によって形式化される．
+\end{enumerate}
+\begin{alertblock}{Def.9.5.1.(STLC の型消去関数)}
+単純型付き項$\mathtt{t}$の型消去は次のように定義される:\begin{align*}
+erase(\mathtt{x}) &= \mathtt{x}\\
+erase(\mathtt{\lambda x:T_{1}.t_{2}}) &= = \lambda \mathtt{x}.erase(\mathtt{t_{2}})\\
+erase(\mathtt{t_{1}\ t_{2}}) &= erase(\mathtt{t_{1}})\ erase(\mathtt{t_{2}})
+\end{align*}
+\end{alertblock}
+型消去はプログラムの意味を保たなければならない．つまり，型消去と評価は可換でなければならない．
+\end{frame}
+\begin{frame}{型消去と型付け可能性}
+\begin{alertblock}{Thm.9.5.2.(評価と型消去の可換性)}
+\begin{enumerate}
+\item 型付きの評価関係の下で$\mathtt{t\rightarrow t'}$ならば，$erase(\mathtt{t})\rightarrow erase(\mathtt{t'})$.
+\item 型無しの評価関係の下で$erase(\mathtt{t})\rightarrow \mathtt{m'}$ならば，ある単純型付き項$t'$が存在して$\mathtt{t\rightarrow t'}\land erase(t') = m'$．
+\end{enumerate}
+\end{alertblock}\begin{proof}
+評価導出に関する帰納法による．
+\begin{enumerate}\item 型付きの評価関係$\mathtt{t\rightarrow t'}$の任意の部分導出に対して主張を仮定し，最後の規則で分ける．
+\begin{itemize}\item $\tiny\rm{E-APP1}$のとき．$\mathtt{t_{1}\rightarrow t'_{1}}$なる項$\mathtt{t_{1}, t'_{1}, t_{2}}$が存在し，$\mathtt{t = t_{1}\ t_{2}, t' = t'_{1}\ t_{2}}$．(IH)より$erase(\mathtt{t_{1}})\rightarrow erase(\mathtt{t'_{1}}$により，$erase(\mathtt{t}) = erase(\mathtt{t_{1}})\ erase(\mathtt{t_{2}})\xrightarrow{IH}erase(\mathtt{t'_{1}})\ erase(\mathtt{t_{2}}) = erase(\mathtt{t'})$.
+\item $\tiny\rm{E-APP2}$のとき．正規形$\mathtt{v_{1}}$，$\mathtt{t_{2}\rightarrow t'_{2}}$なる$t_{2}, t'_{2}$により，$\mathtt{t = v_{1}\ t_{2}, t' = v_{1}\ t'_{2}}$と書ける．$\tiny\rm{E-APP1}$同様にすれば主張が従う．
+\item $\tiny\rm{E-APPABS}$のとき．$\mathtt{t, t'}$は$\mathtt{t = (\lambda x:T_{1}.t_{12})v_{2}, t' = \left[x\mapsto v_{2}\right]t_{12}}$の形である．(IH)と型無し$\lambda$計算の評価規則から，主張が従う．\end{itemize}
+\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{型消去と型付け可能性}
+\begin{proof}
+\begin{enumerate}\setcounter{enumi}{1}
+\item 型無しの評価関係$erase(\mathtt{t})\rightarrow \mathtt{m'}$の任意の部分導出に対して主張を仮定し，最後に使われた規則で分ける．
+\begin{itemize}
+\item $\tiny\rm{E-APP1}$.
+\item $\tiny\rm{E-APP2}$
+\item $\tiny\rm{E-APPABS}$
+\end{itemize}\end{enumerate}
+\end{proof}
+\end{frame}
+\begin{frame}{型消去と型付け可能性}
+型消去の双対的な操作を考える．つまり，型無し$\lambda$項$\mathtt{m}$に対して，型消去により$\mathtt{m}$になるような単純型付き項$\mathtt{t}$を構成することを考える．この点については\S22 でより詳細に扱う．
+\begin{alertblock}{Def.9.5.3.}
+ある型無し$\lambda$計算の項$\mathtt{m}$について，単純型付き項$\mathtt{t}$，型$\mathtt{T}$,文脈$\Gamma$が存在し$erase(\mathtt{t}) = \mathtt{m}\land \Gamma\vdash\mathtt{t:T}$のとき，$\mathtt{m}$は$\lambda_{\leftarrow}$で型付け可能という．
+\end{alertblock}
+\end{frame}
+\begin{frame}{9.6.Curry スタイル対 Church スタイル}
+\begin{enumerate}
+\item Curry スタイル\begin{itemize}
+\item 意味論が型付けに優先する定式化，つまり項が ill-typed でもその意味を考えられる定式化
+\item 歴史的には暗黙に型付けされた$\lambda$計算の定式化で用いられた
+\item e.g.今回用いた意味論の定式化，つまり STLC の構文上で評価関係を定義する方法と，型消去と型無し計算上の評価関係を組合せた方法
+\end{itemize}
+\item Church スタイル\begin{itemize}
+\item Curry スタイルの逆，つまり項を定義し，ill-typed な項を識別し，それらの項に対してのみ評価関係を定める定式化
+\item 歴史的には，明示的に型付けされた体系のみで一般的
+\item この体系では型付け導出が評価される(ex.\S15.6; 型強制意味論)
+\end{itemize}
+\end{enumerate}
+\end{frame}
 \begin{frame}{References}
 	\begin{itemize}
 		\item Semantics of Programming Languages: Structures and Techniques, C.Gunter, MIT Press, 1992.
