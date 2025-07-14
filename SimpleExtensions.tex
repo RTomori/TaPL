@@ -1,0 +1,261 @@
+%%% Local Variables:
+%%% mode: japanese-laTeX
+%%% TeX-engine: xetex
+%%% End;
+\documentclass[9pt]{beamer}
+ \usepackage{zxjatype}
+ \usepackage{xltxtra}
+ \usepackage[ipa]{zxjafont}
+\usepackage{amssymb, amsmath,amsfonts}
+\usepackage{mathtools}
+\usepackage{bussproofs}
+\usepackage{mathcomp}
+\usepackage{tcolorbox}
+\usepackage{mathrsfs}
+\tcbuselibrary{raster,skins}
+\usepackage{varwidth}
+\usetheme{metropolis}
+
+% 色定\textmd{}義
+\definecolor{mstruct}{RGB}{68, 174, 234} 
+% \definecolor{malert}{RGB}{223, 153, 155}
+\definecolor{malert}{RGB}{255, 76, 0}
+\definecolor{mex}{RGB}{57, 149, 82}
+% 見出しカラー
+% block title color
+% alert color
+% 箇条書き
+\useinnertheme{circles}
+% フッダー
+\setbeamertemplate{footline}[frame number]
+%無を出力するコマンド
+\newtcolorbox{tblock}[1]{
+	enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=mstruct, colframe=mstruct\textmd{},
+	interior style={top color=mstruct!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[mstruct] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[mstruct!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% Definition Box
+\newtcolorbox{dblock}[1]{enhanced, skin=enhancedlast jigsaw,
+	attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+	colbacktitle=malert, colframe=malert,
+	interior style={top color=malert!10!white, bottom color=white},
+	boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+	underlay boxed title={
+		\fill[malert] (title.north west) -- (title.north east)
+		-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+		-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+		-- (title.south west) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+		-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+		\fill[malert!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+		-- +(0,-0.3) -- +(0.4,0) -- cycle; 
+	},
+	title=#1
+}
+% subbox
+\newtcolorbox{subbox}[1]{
+	empty,
+	coltitle=mstruct, fonttitle=\bfseries,
+	borderline horizontal={0.5mm}{0pt}{mstruct},
+	title=#1
+	titlerule style={
+		mstruct,
+		arrows={Hooks[arc=270]-Hooks[arc=270]}
+	}
+}
+\everymath{\displaystyle}
+\title{Types and Programming Languages\\ Chapter 8,9}
+\author{Rei Tomori}
+\begin{document}
+\maketitle
+\begin{frame}{概要}
+	今回は以下の内容を扱う: \begin{enumerate}
+        \item \S 11. 単純な拡張
+        \item \S 12. 正規化
+        \item \S 13. 参照
+    \end{enumerate}
+\end{frame}
+\section{\S11. 単純な拡張}
+\subsection{\S11.1 基本型}
+\begin{frame}{基本型}
+    \begin{enumerate}
+    \item プログラミング言語には基本型\footnote{基底型}.i.e.構造を持たない単純な値の集合とその上のプリミティブな演算がある．\begin{itemize}
+    \item 今後は$\mathtt{Nat, Bool}$に加え，$\mathtt{String, Float}$型を用いる．
+    \end{itemize}
+    \item (その上の演算を捨象した)一般的な基本型を扱いたいことがある．そのためには，言語が"非解釈の"基本型の集合$\mathscr{A}$\footnote{原子型，つまり型システムにおいては内部システムを持たない型の略}を備えているとする．\begin{itemize}
+    \item これを表わすためには，型の構文規則を変更してメタ変数$\mathtt{A}$($\mathscr{A}$の要素を表わす)を加える．
+    \item 以降，基本型の名前として$\mathtt{A, B, C}$を用いる．
+    \end{itemize}
+    \item 非解釈な型を導入することで，基本型の要素上を特定することなく，その上で走る変数を束縛できる．\begin{itemize}
+    \item $\mathtt{\lambda x:A. x}$は$\mathtt{x:A}$が何であれ，$\mathtt{x}$を$\mathtt{x}$自身に写す恒等関数である．
+    \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{\S11.2. $\mathtt{Unit}$型}
+    要素を1つしか持たない型である$\mathtt{Unit}$型を導入する．この型は次のように解釈される:\begin{itemize}
+    \item 唯一の要素は項定数$\mathtt{unit}$($\mathtt{u}$，しばしば()で表わされる)で，任意の$\mathtt{Unit}$型の項は一意的に$\mathtt{unit}$に評価される．
+    \end{itemize}
+    $\mathtt{Unit}$型は主に副作用を持つ言語で応用される\footnote{純粋函数型言語では，たとえば各$n\in\mathbb{N}$に対して}．たとえば，可変参照を変更する関数では，返り値ではなく副作用に興味があるため，$\mathtt{Unit}$型が返り値の型とされる．類似物としてC系言語の$\mathtt{void}$型がある．
+    \end{frame}
+\begin{frame}{Unit型}
+$\mathtt{Unit}$型は\footnote{Haskellでいうところの0-tuple}，以下の構文，型付け規則および派生形式(i.e.糖衣構文)，すなわちSTLCへの埋め込み方で定義される．
+\begin{dblock}{Def.$\mathtt{Unit}$型の定義}
+	\begin{columns}
+		\begin{column}{0.30\textwidth}
+			新しい構文形式
+			\begin{align*}
+			\mathtt{\text{(項)\ }t}\Coloneq&\ldots\\
+                                        &\mathtt{Unit}
+			\end{align*}
+        \begin{align*}
+                \mathtt{\text{(項)\ }v}\Coloneq&\ldots\\
+                &\mathtt{unit}
+            \end{align*}
+            \begin{align*}
+                \mathtt{\text{(型)\ }T}\Coloneq&\ldots\\
+                &\mathtt{Unit}
+            \end{align*}
+		\end{column}\begin{column}{0.66\textwidth}
+			新しい型付け規則\begin{prooftree}
+				\AxiomC{$\Gamma\vdash \mathtt{unit:Unit}$}
+			\end{prooftree}
+            新しい派生形式
+            \begin{align*}
+                \mathtt{t_{1};t_{2}}&\stackrel{\text{def}}{=}(\lambda \mathtt{x:Unit. t_{2}})\mathtt{t_{1}}\\
+                    &\text{ただし}x\notin FV(\mathtt{t_{2}})
+            \end{align*}
+		\end{column}
+	\end{columns}\end{dblock}
+\end{frame}
+\begin{frame}{\S11.3.派生形式: 逐次実行とワイルドカード}
+副作用のある言語における文の逐次実行を形式化する．逐次実行形式は項$\mathtt{t_{1}, t_{2}}$に対し，$\mathtt{t_{1}}$を正規形まで評価し，結果を捨てた後に$\mathtt{t_{2}}$を評価する．
+
+$(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の略記とする2通りの形式化が考えられる．\begin{enumerate}\item $\mathtt{t_{1};t_{2}}$を新たな構文要素とする方法．評価規則
+\begin{prooftree}
+\AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
+\RightLabel{\tiny\rm{(E-SEQ)}}
+\UnaryInfC{$\mathtt{t_{1};t_{2}\rightarrow t'_{1};t_{2}}$}
+\end{prooftree}
+\begin{prooftree}
+        \AxiomC{}
+        \noLine
+        \UnaryInfC{$\mathtt{v_{1};t_{2}\rightarrow t_{2}}$\ \tiny\rm{(E-SEQNEXT)}}
+\end{prooftree}
+および型付け規則
+\begin{prooftree}
+\AxiomC{$\Gamma\vdash\mathtt{t_{1}:Unit}$}
+\AxiomC{$\Gamma\vdash\mathtt{t_{2}:T_{2}}$}
+\RightLabel{\tiny\rm{(T-SEQ)}}
+\BinaryInfC{$\Gamma\vdash\mathtt{t_{1};t_{2}:T_{2}}$}
+\end{prooftree}を付け加えることで$(;)$の振る舞いを特徴付ける．
+\item 内部言語の項の略記とする方法．$\mathtt{t_{1};t_{2}\stackrel{def}{=}(\lambda x:Unit. t_{2})t_{1}}$，ただし$x\mathtt{x}\notin FV(\mathtt{t_{2}})$とする．
+\end{enumerate}
+\end{frame}
+\begin{frame}{派生形式}
+はじめの形式化で定めた評価および型付け規則は，$\mathtt{Unit}$のみを型として持つSTLCの評価関係および型付け規則より従う．このことを確認しよう．
+\begin{alertblock}{Thm.11.3.1[逐次実行は派生形式である]}
+    $\mathtt{Unit}$型，逐次実行およびそれらの評価・型付け規則を持つSTLCを$\lambda^{E}$と書く．\footnote{外部言語の略．}また，$\mathtt{Unit}$型のみを持つSTLCを$\lambda^{I}$と書き，$e\in\lambda^{I}\to\lambda^{E}$を，$\lambda^{I}$の各項を対応する$\lambda^{E}$の項に写す詳細化関数\footnote{elaboration function}とする．つまり，$e$は$\mathtt{t_{1};t_{2}}$の各出現を，$\mathtt{(\lambda x:Unit. t_{2})t_{1}}(\mathtt{x}\notin FV(\mathtt{t_{2}}))$に置き換える．すると，$\lambda^{E}$の各項$\mathtt{t}$に対して，\begin{enumerate}
+    \item $\mathtt{t\rightarrow_{E} t'}\Rightarrow e(\mathtt{t})\rightarrow_{I} e(\mathtt{t'})$．逆に$e(\mathtt{t})\rightarrow_{I}\mathtt{u}\Rightarrow\exists \mathtt{t'}.\mathtt{t'}$は$\lambda^{E}$の項$\land \mathtt{u} = e(\mathtt{t'})\land \mathtt{t\rightarrow_{E}t'}$．
+    \item $\Gamma\vdash^{E}\mathtt{t:T}\Leftrightarrow \Gamma\vdash^{I}e\mathtt{(t):T}$
+    \end{enumerate}
+\end{alertblock}
+\end{frame}
+\begin{frame}{Thm.11.3.1.の証明(一部)}
+    \begin{proof}
+       $\mathtt{t}$の構造帰納法で示す．(2)の主張は白板で示すことにする．
+        \begin{enumerate}
+        \item (1)の証明．\begin{enumerate}
+        \item $(\Rightarrow)$ 新たな構文要素，つまり$\mathtt{t = t_{1};t_{2}}$または$\mathtt{t = v_{1};t_{2}}$の場合を考え，$\mathtt{t\rightarrow_{E} t'}$なる$\mathtt{t'}$の存在を仮定．\begin{itemize}
+        \item $\mathtt{t = v_{1};t_{2}}$．仮定より$\mathtt{t' = t_{2}}$．いま$\mathtt{x}\notin FV(\mathtt{t_{2}})$を任意に取ると，定義より$e(\mathtt{t}) = \mathtt{(\lambda x: Unit. }e\mathtt{(t_{2}))\ v_{1}}$．$\text{\rm(E-APPABS)}$から$\mathtt{t}\rightarrow_{I}\left[\mathtt{x\mapsto v_{1}}\right]e\mathtt{(t_{2})} = \mathtt{t'}$がいえ，$\mathtt{x\notin}FV(e(\mathtt{t_{2}}))$からこれは$\mathtt{v_{1}}$に等しい．
+        \item $\mathtt{t = t_{1};t_{2}}$．仮定より$\mathtt{t' = t'_{1};t_{2}}\land \mathtt{t_{1}\rightarrow_{E}t'_{1}}$なる$\mathtt{t', t'_{1}}$が存在．IHより$e(\mathtt{t_{1}}) \rightarrow_{I} e(\mathtt{t'_{1}})$．$\text{\rm{(E-APP1)}}$から$e(\mathtt{t}) = e(\mathtt{t_{1}})e(\mathtt{t_{2}})\rightarrow_{I} e(\mathtt{t'_{1}})e(\mathtt{t_{2}} = e(\mathtt{t'})$．
+        \end{itemize}
+        \item $(\Leftarrow)$．$e(\mathtt{t})\rightarrow_{I}\mathtt{u}$を仮定する．(1)と同様に場合を分ける．\begin{itemize}
+        \item $\mathtt{t = v_{1};t_{2}}$のとき．$e(\mathtt{t}) = \mathtt{(\lambda x:Unit. }e\mathtt{(t_{2}))v_{1}}$($\mathtt{x}$はfreshな変数)，$\mathtt{u} = e(\mathtt{t_{2}})$．このとき．$\mathtt{t' = t_{2}}$とすれば従う．
+        \item $\mathtt{t = t_{1};t_{2}}$のとき．$\mathtt{t} = (\mathtt{\lambda x:Unit.}e (\mathtt{t_{2}}))\ e(\mathtt{t_{1}})$であり，仮定より$e(\mathtt{t_{1}})\rightarrow \mathtt{u'_{1}}$なる$\mathtt{u'_{1}}$を取ると$\mathtt{u} = (\mathtt{\lambda x:Unit.}e(\mathtt{t_{1}}))\ \mathtt{u'_{1}}$．帰納法の仮定より，$\mathtt{u'_{1}} = e(\mathtt{t'_{1}})\land \mathtt{t_{1}}\rightarrow_{E} \mathtt{t'_{1}}$なる$\lambda^{E}$の項$\mathtt{t'_{1}}$が取れる．ゆえに$\mathtt{u} = (\mathtt{\lambda x: Unit.}e(\mathtt{t_{2}}))e(\mathtt{t'_{1}}) = e(\mathtt{t'_{1};t_{2}})$となり従う．
+        \end{itemize}
+        \end{enumerate}
+        \end{enumerate}
+    \end{proof}
+\end{frame}
+\begin{frame}{派生形式}
+\begin{enumerate}\item 派生形式として導入する利点には，表層構文を拡張しつつ型安全性を保証しなければならない内部言語を単純に保てることにある．
+    \item 他の派生形式として，抽象の本体で使わない引数を束縛するようなワイルドカード\footnote{holeなどということもある}の慣習がある．ワイルドカード束縛子は$(\_)$で表わされる．
+    \begin{itemize}
+    \item $\mathtt{\lambda \_: S. t\stackrel{def}{=}\lambda x: S. t}$，ただし$\mathtt{x}$は$\mathtt{t}$に現れない．
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+\begin{frame}{\S11.4.型指定}
+\begin{enumerate}
+\item 所与の項に特定の型を明示的に指定する機能を\underline{型指定}といい，型$\mathtt{T}$を指定した項$\mathtt{t}$は$\mathtt{t\ as\ T}$と書かれる．用途としては次のようなものがある:
+\begin{itemize}
+\item ドキュメンテーション．特に型シグネチャが複雑になる場合などは有用．
+\item 複雑な型の表示の制御．複雑な型式の略記\footnote{型シノニムなどと呼ばれる}を導入し，型検査器に必要に応じて略記を折り畳み/展開させる．
+\item 抽象化．項$\mathtt{t}$が複数の異なる型を持ちうる体系(たとえば部分型付けのある)において，$\mathtt{t}$がより少数の型を持つかのよう型検査器に指示し，型の一部を隠蔽させる．
+\end{itemize}
+\end{enumerate}
+\end{frame}
+\begin{frame}{型指定}
+\begin{enumerate}
+\item 型指定の型付けおよび評価規則は以下の通り:
+\end{enumerate}
+\begin{alertblock}{Def.型指定}
+    \begin{columns}
+    \begin{column}{0.30\columnwidth}
+        \begin{align*}
+        \mathtt{t}\Coloneq&\ldots\\
+        &\mathtt{t\ as\ T}
+        \end{align*}
+        評価規則
+        \begin{prooftree}
+            \AxiomC{$\mathtt{v_{1}\ as\ T\rightarrow v_{1}}$\text{\tiny\rm{(E-ASCRIBE)}}}
+        \end{prooftree}
+        \begin{prooftree}
+        \AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
+        \RightLabel{\tiny\rm{(E-ASCRIBE1)}}
+        \UnaryInfC{$\mathtt{t_{1}\ as\ T\rightarrow t'_{1}\ as\ T}$}
+        \end{prooftree}
+    \end{column}
+    \begin{column}{0.40\columnwidth}
+        型付け規則
+        \begin{prooftree}
+            \AxiomC{$\Gamma\vdash\mathtt{t_{1}:T}$}
+            \RightLabel{\tiny\rm{(T-ASCRIBE)}}
+            \UnaryInfC{$\Gamma\vdash\mathtt{t_{1}\ as\ T}$}
+        \end{prooftree}
+    \end{column}
+    \end{columns}
+\end{alertblock}
+\end{frame}
+\begin{frame}{型指定}
+\begin{alertblock}{演習11.4,1.(推奨)}
+    \begin{enumerate}
+    \item 型指定を派生形式として形式化せよ．また，p.10の型付け規則および評価規則が派生形式と対応することを示せ．
+    \item $\text{\rm{E-ASCRIBE, E-ASCRIBE1}}$の代りに，以下の先行的な規則が与えられたとする:\begin{prooftree}
+        \AxiomC{$\mathtt{t_{1}\ as\ T\rightarrow t_{1}}$\text{\tiny\rm{(E-ASCRIBEEAGER)}}}
+    \end{prooftree}
+    この場合に型指定を派生形式として扱うことは出来るか．
+    \end{enumerate}
+\end{alertblock}
+\begin{proof}
+    \begin{enumerate}
+    \item 型指定を持つSTLCを外部言語$\lambda^{E}$，非解釈な型を持つSTLCを内部言語$\lambda^{I}$とし，詳細化関数$e$を各$\mathtt{t\ as\ T}$に対し$e(\mathtt{t\ as\ T}) = \mathtt{(\lambda x : T. x)\ t}$と定める．評価規則と型付け規則を示そう．
+    \end{enumerate}
+\end{proof}
+\end{frame}
+
+\end{document}
