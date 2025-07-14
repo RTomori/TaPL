@@ -1,11 +1,11 @@
 # Fdb version 4
-["xdvipdfmx"] 1752415383.80241 "STLC.xdv" "STLC.pdf" "STLC" 1752415384.19565 0
-  "STLC.xdv" 1752415383.72547 443004 84d24743d1b7a0e923b01eeb62228d57 "xelatex"
+["xdvipdfmx"] 1752454767.03386 "STLC.xdv" "STLC.pdf" "STLC" 1752454767.52275 0
+  "STLC.xdv" 1752454766.92686 453588 43d04d92411c96d88acf0d870a3a2f0f "xelatex"
   (generated)
   "STLC.pdf"
   (rewritten before read)
-["xelatex"] 1752415381.6076 "/Users/reitomori/Documents/TaPL/STLC.tex" "STLC.xdv" "STLC" 1752415384.19355 0
-  "/Users/reitomori/Documents/TaPL/STLC.tex" 1752412993.53877 43600 ac085c95800323827b4247fd13aab06e ""
+["xelatex"] 1752454764.03839 "/Users/reitomori/Documents/TaPL/STLC.tex" "STLC.xdv" "STLC" 1752454767.51954 0
+  "/Users/reitomori/Documents/TaPL/STLC.tex" 1752454763.85066 45106 d700badb5395615402e185c648b89895 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/tcrm0500.tfm" 1136768653 1536 b3387106d9afecbfe14bde2de6eadf47 ""
@@ -243,10 +243,10 @@
   "/usr/local/texlive/2023/texmf-dist/web2c/texmf.cnf" 1697057529 41009 84b61f42d16d06bedb915f57aa2374cf ""
   "/usr/local/texlive/2023/texmf-var/web2c/xetex/xelatex.fmt" 1705120139 10847970 8d7b1dd146855de98f0162b4d786cfd3 ""
   "/usr/local/texlive/2023/texmf.cnf" 1678822455 577 1b2b1af17af2508fb20dd85783af4050 ""
-  "STLC.aux" 1752415383.72384 8240 35b2bb84039524178e5c8b2681d7cb88 "xelatex"
-  "STLC.nav" 1752415383.72538 4552 1768a72274b831a8f46c8b790b9d3e18 "xelatex"
-  "STLC.out" 1752415383.72511 250 9d54836bf62bc75172ef719dcfe6b969 "xelatex"
-  "STLC.tex" 1752412993.53877 43600 ac085c95800323827b4247fd13aab06e ""
+  "STLC.aux" 1752454766.92481 8411 255094834de9294d40df714f5340cf73 "xelatex"
+  "STLC.nav" 1752454766.92672 4645 1c3e5e91ccc97e4ccce663036167b635 "xelatex"
+  "STLC.out" 1752454766.92634 250 9d54836bf62bc75172ef719dcfe6b969 "xelatex"
+  "STLC.tex" 1752454763.85066 45106 d700badb5395615402e185c648b89895 ""
   "beamercolorthememetropolis.sty" 1747608310.79261 3961 a26340357813f2d570838e33aec7d93b ""
   "beamerfontthememetropolis.sty" 1747606342.7585 11439 631ed428006d7cf3f27ae648004ca47f ""
   "beamerinnerthememetropolis.sty" 1747606342.75868 9093 b3363c49bd2ed0be1fd18f75a61056fe ""

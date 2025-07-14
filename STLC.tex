@@ -473,18 +473,36 @@ $\mathtt{t}$を閉じた，正しく型付けされた項とする.(i.e.$\exists
 \end{proof}
 \end{frame}
 \begin{frame}{保存}
-評価が型を保存することを示そう．準備として，型付け文脈に対して水増しと交換を施しても導出される型付け判断式の結論は変わらないことを確認する．
+評価が型を保存することを示そう．準備として，型付け文脈の中の型付け関係同士を交換，もしくは型付け関係を水増し，もしくは導出される型付け判断式の結論は変わらないことを確認する．
 \begin{alertblock}{Lem.9.3.6.(並べ替え)}
 $\Gamma\vdash\mathtt{t:T}$かつ$\Delta$が$\Gamma$の並べ替えならば，$\Delta\vdash\mathtt{t:T}$であり，その導出の深さは仮定を$\Gamma$とした場合と変わらない．
 \end{alertblock}
 \begin{alertblock}{Lem.9.3.7.}
 $\Delta\vdash \mathtt{t:T}$かつ$x\notin\mathrel{dom}(\Gamma)$ならば，$\Gamma,\mathtt{x:S\vdash t:T}$であり，後者と前者の導出の深さは等しい．
 \end{alertblock}
-\begin{proof}
-証明は induction による(白板で行なう)
-\end{proof}
+\end{frame}
+\begin{frame}{保存}
+	\begin{proof}
+		証明は induction による．\begin{enumerate}
+		\item $\Gamma\vdash\mathtt{t:T}$，および$\Delta = \Gamma$を仮定する．いま，$\Gamma\vdash\mathtt{t:T}$より型付け導出の浅い任意の導出$\Gamma\vdash\mathtt{u:U}$に対して，$\Delta\vdash\mathtt{u:U}$かつその深さが$\Gamma\vdash\mathtt{u:U}$と等しいことを仮定する．最後に使われた型付け規則で分ける．\begin{itemize}
+		\item$\text{\tiny\rm{(E-VAR)}}$のとき．導出\begin{prooftree}
+		\AxiomC{$\mathtt{x:T\in\mathtt{Gamma}}$}
+		\UnaryInfC{$\Gamma\vdash\mathtt{x:T}$}
+		\end{prooftree}と\begin{prooftree}
+			\AxiomC{$\mathtt{x:T\in\mathtt{Gamma}}$}
+			\UnaryInfC{$\Gamma\vdash\mathtt{x:T}$}
+		\end{prooftree}は共に等しいので成立．
+		\item $\text{\tiny\rm{(E-ABS)}}$のとき．仮定より，部分導出$\Gamma,\mathtt{x:T}\vdash\mathtt{t_{2}:T_{2}}$に対し，$\Delta,\mathtt{x:T}\vdash\mathtt{t_{2}:T_{2}}$が成立し，しかも深さが等しいことから従う．
+		\item $\text{\tiny\rm{(E-APP)}}$のとき．部分導出$\Gamma\vdash\mathtt{t_{1}:T_{11}\rightarrow T_{12}}$および$\Gamma\vdash\mathtt{t_{2}:T_{11}}$に対し，仮定から$\Gamma\vdash\mathtt{t_{1}:T_{11}\rightarrow T_{12}}$および$\Gamma\vdash\mathtt{t_{2}:T_{11}}$が成り立ち，しかも深さが等しいことから成立．
+		\end{itemize}
+		\item 同様にして示せる．
+		\end{enumerate}
+		
+		\end{proof}
+
 \end{frame}
 \begin{frame}{代入補題}
+	以下の主張は代入補題と呼ばれる．
 \begin{alertblock}{Lem.9.3.8.(代入の下での型の保存)}
 $\Gamma,\mathtt{x:S\vdash t:T}$かつ$\Gamma\vdash\mathtt{s:S}$ならば$\Gamma\vdash\mathtt{\left[x\mapsto s\right] t:T}$．
 \end{alertblock}
