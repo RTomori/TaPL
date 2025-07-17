@@ -1,0 +1,51 @@
+%%% Local Variables:
+%%% mode: japanese-laTeX
+%%% TeX-engine: xetex
+%%% End;
+\documentclass[a4paper,10pt,platex]{jsarticle}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+%\usepackage[scaled]{beramono}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{manfnt}
+\usepackage{amsmath,amsfonts, amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{mathcomp}
+\usepackage{mathrsfs}
+\usepackage{listings}
+\usepackage{siunitx}
+\newtheorem{thm}{Thm}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{problem}{Problem}
+\lstset{language = Haskell,
+basicstyle={\ttfamily},
+ identifierstyle={\small},
+ commentstyle={\smallitshape},
+ keywordstyle={\small\bfseries},
+ ndkeywordstyle={\small},
+ stringstyle={\small\ttfamily},
+ frame={tb},
+ breaklines=true,
+ columns=[l]{fullflexible},
+ numbers=left,
+ xrightmargin=0zw,
+ xleftmargin=3zw,
+ numberstyle={\scriptsize},
+ stepnumber=1,
+ numbersep=1zw,
+ lineskip=-0.5ex,
+literate={'"'}{\textquotesingle "\textquotesingle}3}
+\everymath{\displaystyle}
+\title{Ta}
+\author{Rei Tomori}
+\begin{document}
+\maketitle
+
+\end{document}
