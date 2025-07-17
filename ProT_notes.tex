@@ -2,7 +2,7 @@
 %%% mode: japanese-laTeX
 %%% TeX-engine: xetex
 %%% End;
-\documentclass[a4paper,10pt,platex]{jsarticle}
+\documentclass[a4paper,10pt,platex, dvipdfmx]{jsarticle}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
 %\usepackage[scaled]{beramono}
@@ -18,6 +18,8 @@
 \usepackage{mathrsfs}
 \usepackage{listings}
 \usepackage{siunitx}
+\usepackage{tikz-cd}
+\usepackage{here}
 \newtheorem{thm}{Thm}
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
@@ -47,6 +49,26 @@ literate={'"'}{\textquotesingle "\textquotesingle}3}
 \begin{document}
 \maketitle
 \section{Curry-Howard同型}
+\subsection{表示的意義}
+型は現在議論されている対象の種類を表わす．たとえば型$U \to V$の対象は$U$から$V$への関数，型$U\times V$の対象は$U$の対象と$V$の対象の順序対といったように．
+
+原子型の意味は重要ではない\footnote{命題変数と思うことにする}．文脈による．
+
+項は我々がHeytingの意味論と自然演繹で用いた5つの図式に極めて正確に従う．\begin{enumerate}
+\item 型$T$の変数$x^{T}$は，型$T$の任意の項$t$を表わす．ただし$x^{T}$は$t$で置換されるとする．
+\item $\left<u, v\right>$は$u$と$v$の順序対である．
+\item $\pi^{1}t$と$\pi^{2}t$はそれぞれ$t$の第一成分と第二成分への射影である．
+\item $\lambda x^{U}. v$は型$U$の各項$u$を$v\left[u/ x\right]$，すなわち$x^{T}$を$u$の略記としたときの$v$に写す関数である．
+\end{enumerate}
+表示的には，以下のsecondaryな等式
+\begin{eqnarray*}
+\left<\pi^{1}t, \pi^{2}t\right> &= t\\
+\lambda x^{U} . t x & = t\ (x\notin\mathrm{FV}(t))
+\end{eqnarray*}に加え，(primaryな)等式がある:\begin{eqnarray*}
+\pi^{1}\left<u, v\right> &= u\\
+pi^{2}\left<u, v\right> &= v\\
+(\lambda x^{U}. v) u &= v\left[u/x\right]
+\end{eqnarray*}
 \subsection{操作的な意義}
 等式規則により，$\lambda$項の表示的意味が定められた．次に，$\lambda$項の操作的意味について考察しよう．
 
@@ -121,5 +143,35 @@ $t, t'$を任意に取り，$t:T$とする．$t\rightarrow t'$を仮定し，$t$
     \lambda x_{1}.\lambda x_{2}.\ldots \lambda x_{n}. y\ u_{1}\ u_{2}\ \ldots\ u_{m}
 \end{equation}であることである．ただし$y$は$x_{i}$の何れかに一致しうる．また，各$j$に対して$u_{j}$は正規形である．
 \end{lemma}
+\section{正規化性定理}
+この章は，型付き$\lambda$計算が計算論的に良い振る舞いをする事を保証する2つの結果について扱う; \emph{正規化性定理}は正規形の存在性を，\emph{Church-Rosser性}はその一意性を保証する．\footnote{Church-Rosserは示さない．Barendregtなどを見よ．}
+正規化性定理には2つの形がある．\begin{itemize}
+\item \emph{弱正規化性定理}(正規化を行なうための評価戦略で，停止するものが存在する．)この主張はこの節で扱う．
+\item \emph{強正規化性定理}(全ての評価戦略において正規化が停止する); これは\S6で示す．
+\end{itemize}
 
+\subsection{Church-Rosser性}
+この性質は，正規形の一意性を，その存在性とは独立して主張する．実際，それは型無し$\lambda$計算のような正規化定理の成り立たない体系にとって意味がある．
+\begin{thm}[]
+    $t\rightsquigarrow u$ならば，$u, v\rightsquigarrow w$であるような$w$が存在する．
+\end{thm}
+\begin{figure}[H]
+    \centering
+\begin{tikzcd}
+& t \ar[ld] \ar[rd] & \\
+u \ar[rd]& & v\ar[ld]\\
+& w &
+\end{tikzcd}
+\end{figure}
+\begin{corollary}[A]
+    項$t$は高々1つの正規形を持つ．
+\end{corollary}
+\begin{proof}
+    $t \rightsquigarrow u ,v$なる正規形$u, v$を任意に取る．このとき，定理より$w$が存在して$u, v\rightsquigarrow w$．
+
+    しかし$u, v$は正規形なのでそれら自身にのみ簡約される．つまり$u = v, v = w$．ゆえに$u = v$．
+\end{proof}
+Church-Rosserの証明には多少デリケートな部分がある(少なくとも力ずくで示そうとする場合)．この性質は多種多様な体系で成り立ち，証明は常にほぼ一緒である．
+
+Church-Rosserから即座に従う補題として，体系の健全性がある．
 \end{document}
