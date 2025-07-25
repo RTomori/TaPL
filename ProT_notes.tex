@@ -13,6 +13,7 @@
 \usepackage{amsthm}
 \usepackage{bm}
 \usepackage{mathtools}
+\usepackage{mathdots}
 \usepackage{physics}
 \usepackage{mathcomp}
 \usepackage{mathrsfs}
@@ -20,6 +21,7 @@
 \usepackage{siunitx}
 \usepackage{tikz-cd}
 \usepackage{here}
+\usepackage{bussproofs}
 \newtheorem{thm}{Thm}
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
@@ -48,6 +50,8 @@ literate={'"'}{\textquotesingle "\textquotesingle}3}
 \author{Rei Tomori}
 \begin{document}
 \maketitle
+\section{意義，表示と意味論}
+\section{自然演繹}
 \section{Curry-Howard同型}
 \subsection{表示的意義}
 型は現在議論されている対象の種類を表わす．たとえば型$U \to V$の対象は$U$から$V$への関数，型$U\times V$の対象は$U$の対象と$V$の対象の順序対といったように．
@@ -61,14 +65,26 @@ literate={'"'}{\textquotesingle "\textquotesingle}3}
 \item $\lambda x^{U}. v$は型$U$の各項$u$を$v\left[u/ x\right]$，すなわち$x^{T}$を$u$の略記としたときの$v$に写す関数である．
 \end{enumerate}
 表示的には，以下のsecondaryな等式
-\begin{eqnarray*}
+\begin{align}
+\nonumber
 \left<\pi^{1}t, \pi^{2}t\right> &= t\\
+\nonumber
 \lambda x^{U} . t x & = t\ (x\notin\mathrm{FV}(t))
-\end{eqnarray*}に加え，(primaryな)等式がある:\begin{eqnarray*}
+\end{align}に加え，(primaryな)等式がある:\begin{align}
+    \nonumber
 \pi^{1}\left<u, v\right> &= u\\
+\label{eqn:1}
 pi^{2}\left<u, v\right> &= v\\
+\nonumber
 (\lambda x^{U}. v) u &= v\left[u/x\right]
-\end{eqnarray*}
+\end{align}
+これらは適切な立ち位置を与えられてこなかった．
+\begin{thm}
+    これらの等式によって定められる体系は健全かつ決定可能である．
+\end{thm}
+健全とは，相異なる変数$x, y$に対して$x = y$が証明不可能であることである．
+
+この結果はいずれの等式においても成り立つが，最初の3つに対してのみ考えることにする．この定理は，Church-Rosser性と正規化定理の帰結である(\S4)．
 \subsection{操作的な意義}
 等式規則により，$\lambda$項の表示的意味が定められた．次に，$\lambda$項の操作的意味について考察しよう．
 
@@ -173,5 +189,236 @@ u \ar[rd]& & v\ar[ld]\\
 \end{proof}
 Church-Rosserの証明には多少デリケートな部分がある(少なくとも力ずくで示そうとする場合)．この性質は多種多様な体系で成り立ち，証明は常にほぼ一緒である．
 
-Church-Rosserから即座に従う補題として，体系の健全性がある．
+Church-Rosserから即座に従う補題として，体系の健全性がある: ($u$と$v$が同じ型として)任意の等式$u = v$が\ref{eqn:1}の等式から演繹できるわけではない．実際，以下のことに注意を払おう:\begin{itemize}
+\item $u\rightsquigarrow    v$ならば$u = v$は\ref{eqn:1}および等号の一般的公理から導出できる．
+\item 逆に，\ref{eqn:1}と等号の公理から$u =v$が演繹できるならば，項$u = t_{0},t_{1},\ldots ,t_{2n - 1}, t_{2n} = v$が存在し，各$i = 0, 1, \ldots , n - 1$に対して$t_{2i}, t_{2i+2}\rightsquigarrow t_{2i+1}$．Church-Rosserの定理を繰返し適用することで，$u ,v\rightsquigarrow w$となる$w$の存在を得る．
+\end{itemize}
+いま，$u,v$が同じ型の相異なる正規形とする．このとき，$u, v\rightsquigarrow w$なる$w$は存在しない．そのため$u = v$の証明はできない．
+
+\subsection{弱正規化定理}
+\begin{thm}[弱正規化定理]
+任意の項$u$に対して，一意な正規形$v$に至るようなリダクション列$u = t_{0},t_{1},\ldots t_{n} = v$が存在する．
+\end{thm}
+ここから，表示的等価性の決定可能性が従う．つまり，$u = v$は有限のステップで証明可能である(正規形に至るリダクション列をそれぞれに対して構成でき，その正規形は一意なため．)実際，我々は等式$u = v$が証明可能であることと，ある$w$に対して$u, v \rightsquigarrow w$なることが同値であることをみた．そして$w$は正規形を持つので，この正規形は$u, v$に対する共通の正規形となる．したがって，$u$と$v$の表示的等価性を決定するためには，次のように議論を進めればよいことが分かる:
+\begin{itemize}
+\item 最初のステップで，$u$と$v$の正規形を計算する．
+\item 2つめのステップで，それらを比較する．
+\end{itemize}
+
+今に至るまで，評価戦略を定めていない\footnote{強いていえば完全$\beta$簡約を戦略として採用している}ことに注意する．そのため，簡約は決定的でない．つまり，任意に$t$を取って固定すると，$t$の部分項に対して(有限個だが)複数の簡約が可能である．定理は''適切な''簡約を経ることで正規形を決められることを主張していると分かる．もちろん，正規形に至らない評価も可能である．
+
+とはいえ，項のリダクション列たちを木で表わすと，これは有限分岐である．したがって，全て書き下せば決定することはできる．
+
+強正規化定理は，(正規形に至るという意味で)全ての正規化戦略が良いことを保証し，状況をより単純にする．ただし，計算量が他より少ない簡約戦略も存在する．
+
+\subsection{弱正規化定理の証明}
+はじめに，型もしくは項の大きさをdegreeと呼ぶことにしよう．定義は次のようになる．
+\begin{definition}[型の大きさ]
+型$T$の大きさ$\partial(T)$を，型のつくる木の高さにより定める:\begin{itemize}
+\item $T_{i}$が原子型ならば$\partial(T_{I}) = 1$．
+\item $\partial(U\times V) = \partial(U\rightarrow V) = \max(\partial(U), \partial(V)) + 1$．
+\end{itemize}
+\end{definition}
+\begin{definition}[簡約基の次数]
+    簡約基の大きさ$\delta(r)$を次のように定める．
+\begin{itemize}
+\item $\partial(\pi^{1}\left<u, v\right>) = \partial(\pi^{2}\left<u, v\right>) = \partial(U\times V)$
+\item $\partial((\lambda x . v) u) = \partial(U\rightarrow V)$ただし$(\lambda x. v): U\rightarrow V$．
+\end{itemize}
+\end{definition}
+項の大きさ$d(t)$を，$t$に含まれる簡約基の次数の上限により定める．ただし，正規形のdegreeは0とする．
+
+\dbend 簡約基$r$は簡約基としての大きさと項としての大きさの2つのdegreeを持つ．定義より$\partial(r) \leq d(r)$．
+
+\subsubsection{Degree and Substitution}
+\begin{lemma}
+    $x:U$とする．このとき，$d(t\left[u/x\right])\leq \max(d(t), d(u), \partial(U))$．
+\end{lemma}
+\begin{proof}
+定義より，$d(t)$は$t\left[u/x\right]$に含まれる簡約基のdegreeの上限である．そこで，$t\left[u/x\right]$に含まれるredexが何か考えよう．\begin{itemize}
+\item $t$の簡約基
+\item $u$の簡約基
+\item それ以外の簡約基，たとえば$x$が組もしくは関数適用の関数部に出現する場合で，$u$が組か抽象である場合．このdegreeは$\partial(U)$である．
+\end{itemize}
+以上の最大値が$d(t)$を与えるので，主張が成り立つ．
+\end{proof}
+\subsubsection{Degree and Conversion}
+$r$が型$T$の簡約基ならば，$\partial(r) > \partial(T)$である．実際，$r$が組の射影の形で書けるとき，$T$は$r$の引数$\left<u, v\right>: T\times U$の第一(第二)成分の型であり，定義から従う．$\lambda$項の正規形の場合も同様．
+
+\begin{lemma}
+$t\rightsquigarrow u$ならば$d(u)\leq d(t)$．
+\end{lemma}
+多ステップの場合は1ステップの場合から従う．実際評価列の長さに関する帰納法から示せる．そこで，より弱めた，1ステップに関する主張を示せば十分である．
+\begin{lemma}
+$t\rightarrow u$ならば$d(u)\leq d(t)$．
+\end{lemma}
+\begin{proof}
+$u$は$t$に対し，$t$のある簡約基$r$をコントラクタム$c$で置き換えることで得られる．以下，$u$に含まれるredexの形について場合を分ける．\begin{itemize}
+\item $r$を$c$で置換することで変更される，$t$に出現したが$r$に含まれない簡約基．このとき，$d(r) = \partial(r)$なので$d(u) = d(t)$
+\item $c$の簡約基．$c$は$r$の簡約によって得られる，もしくは$r$の内部の簡約によって得られる．つまり，$(\lambda x. s)s'$は$s\left[s'/x\right]$．また，\S4.3.1.の補題より$d(s\left[s'/x\right])\leq \max(d(s), d(s'), \partial(T))$．最初に確認したように$\partial(T) < d(r)$なので，$d(c) \leq d(r)$．
+\item $r$を$c$によって置き換えることで得られる簡約基．この場合の次数は\S4.3.1により$r :T$として$\partial(T)$に等しい．また，$\partial(T) < \partial(r)$が成り立つ．
+\end{itemize}
+\end{proof}
+\subsubsection{最大次数の項の変換}
+\begin{lemma}
+$r$を$t$における最大の次数$n$を持つ簡約基とする．また$r$自身を除いた$r$に含まれる簡約基の次数は$n$未満とする．$u$が$t$において$r$をコントラクタム$c$で置き換えることで得られる項ならば，$u$の次数$n$の簡約基の個数は$t$より真に小さい．
+\end{lemma}
+\begin{proof}
+    $t$において，最大の次数$n$を持つ簡約基が$r$に限られると仮定する．$\beta$変換を施したとき，以下が成り立つ．
+    \begin{itemize}    
+    \item $r$外部の簡約基は変わらないので次数には影響しない．
+    \item $r$の内側の簡約基は一般に簡約されているが，増加している場合もある．たとえば，$(\lambda x. \left<x, x\right>) s \rightarrow \left<s, s\right>$を考えればよい．ただしこの場合，仮定より$s$の次数は$n$未満である(そのため，$t$の次数は$n$未満)．
+    \item $r$は破壊され，補題5より$r$未満の項に書き変わる．$r$はredexであり，$c$と次数は等しくなりえない．
+    \end{itemize}
+    したがって補題5より，$d(t) = \max(t_{1},t_{2},\ldots ,r,t_{k+1}\ldots)$に対し， $d(u) = \max(t_{1},t_{2}\ldots,c,k_{k + 1}\ldots) < n$．
+\end{proof}
+
+\subsubsection{定理の証明}
+\S4.3.3.から，任意の項$t$に対し，各ステップごとに項の最大の次数を持つ簡約基を選んで簡約すれば，リダクション列に現れる項の次数は狭義減少列をなす．$\mathbb{N}$上の順序は整礎なので，かならずリダクション列は有限の長さとなることが保証される．これをより正確に述べよう．
+\begin{thm}[弱正規化定理]
+任意の項$u$に対して，一意な正規形$v$に至るようなリダクション列$u = t_{0},t_{1},\ldots t_{n} = v$が存在する．
+\end{thm}
+\begin{proof}
+$t$を項とする．項上の関数$\mu(t) = \left(n, m\right)$を，\begin{align*}
+n &= d(t)\\
+m &=t\text{の次数}n\text{の簡約基の個数}
+\end{align*}
+として定める．
+$t$を任意に取り，$\mu(t) =(n, m)$とする．整礎帰納法で示す．
+
+補題6により，$t$の簡約基$r$であって，$r$そのものでない$r$内の簡約基の次数が$n$未満のものを取る．このとき，$t$の$r$の出現を$r$のコントラクタム$c$で置き換えた項を$t'$とすると，$t'$のredexの次数$n$の項は$t$より真に少ない．
+
+$\mu(t') \prec \mu(t)$．$t'$に対して同じ操作を施し，その後同様の操作を繰替えして得られたリダクション列を構成できる．これを$\left\{t_{i}\right\}_{i = 0}^{\infty}$とする．同様の議論により$\ldots d(t_{1}) \prec d(t)$である．これが無限列をなすとしよう．すると$n \geq 0$より$m$が無限降下列をなすことになるが，これは$\mathbb{N}$が整礎集合であることに反し矛盾する．ゆえにリダクション列は有限列であり，主張が示された．
+\end{proof}
+
+\subsection{強正規化定理}
+正規形に至るredexを各簡約ステップで選ぶアルゴリズムは補題6によって定められた．そのため，弱正規化定理は(より構成的な意味合いを持つため)その主張よりも若干優れているといえる．それでもやはり，全ての正規化戦略が停止するかという問いは興味深い．
+\begin{definition}
+項$t$が強正規化可能とは，$t$から始まる無限長の簡約列が存在しないことである．
+\end{definition}
+\begin{lemma}
+$t$が強正規化可能である必要十分条件とは，$t$から始まる全ての簡約列の長さを上から抑える$\nu(t)\in\mathbb{N}$が存在することである．
+\end{lemma}
+\begin{proof}
+($\Longrightarrow$)$t$から始まる全ての簡約列が$\nu(t)$で抑えられたとする．このとき，$t$の任意の簡約列は有限長なので即座に従う．
+
+($\Longleftarrow$)$t$が強正規化可能であるとする．このとき，$t$の任意の簡約列は有限長である．
+以下の定理を思いだそう:
+\begin{lemma}[K\"onigの補題]
+有限分岐の無限木には無限長の枝が存在する．
+\end{lemma}
+この対偶を取れば，有限分岐で任意の枝が有限長の木は有限木であることが即座に従う．\footnote{橙色G\"odel本でやっていたように各枝にラベルを振らない場合は選択公理が必要．}
+いま，$t$から始まる(有限の)簡約列$\left\{t_{i}\right\}_{i = 1}^{N}$が与えられたとき，各変換ステップにおける変換列は$t_{i}$の簡約対象の簡約基$r_{i}$により特徴付けると約束する．
+
+すると，可能な簡約列は木の形で表わすことができる．$t_{i}$が$r_{i}$を変換して$t_{i +1}$を得るとき，ノード$t_{i}$からノード$t_{i+1}$に至る辺を$r_{i}$でラベル付けすればよい．各ステップにおいて，項は有限個の部分項を含むので特に分岐は有限となる．仮定より全ての枝は有限長なので，K\"onigの補題からこの木は有限木である．
+
+よって，特に$\nu(t)$をこの木の大きさとして定めれば，$\nu(t)$は簡約列の長さの上界となるので示される．
+\end{proof}
+型付き$\lambda$計算の任意の項が強正規化可能であることの証明には，いくつかの方法がある:\begin{itemize}
+\item 内部化．弱正規化性の場合に証明を帰着できるように計算体系を(回りくどい形で)翻訳する方法．
+\item 簡約可能性．複雑な組合せ的情報を操作するための方法である''遺伝的計算可能性''の性質を導入する．この方法は非常に複雑な状況に一般化できる唯一の方法なので，以後この手法を使うことにする．この手法は第6章の主題となるだろう．
+\end{itemize}
+\pagebreak
+\section{シーケント計算}
+Gentzenによる\emph{シーケント計算}は，論理の対称性を最も美しく示している．自然演繹と数多くの点で類似しているが，直観主義的な場合に制限されない．\footnote{自然演繹の場合の制限とは，証明の対称性についての事だった．}
+
+シーケント計算では同じ証明を書く複数の方法が存在するため，Curry-Howard同型を持たない．\footnote{Curry-Howard同型があったとすると，正規形の一意性に反するため}このため，シーケント計算を型付き$\lambda$計算として用いることはできないが，並列性と(おそらく)関連付けられる，深い部分にあるこの種の構造を見て取ることができる．\footnote{どういうことか?}
+しかしながら，その対応を書き表わすには，自然演繹で複数の結論を認めるなどの構文への新たなアプローチが必要となる．
+
+\subsection{計算体系}
+\subsubsection{シーケント}
+\begin{definition}[シーケント]
+\emph{シーケント}とは，$\underline{A}$，$\underline{B}$をそれぞれ論理式の有限列$A_{1},\ldots,A_{n}, B_{1},\ldots,B_{m}$としたときの式$\underline{A}\vdash\underline{B}$である．
+\end{definition}
+
+シーケントの表示的な解釈を考えよう．$\underline{A}\vdash\underline{B}$を，$\underline{A} = \land_{i = 1}^{n}A_{i}\vdash\lor_{j = 1}^{m}B_{j} = \underline{B}$と解釈する方法である．つまり，$A_{i}$の連言が$B_{j}$の選言を含意するというものである．ただし，$\underline{A} = \varnothing$のとき$\underline{A} = \top$，$\underline{B} = \varnothing$のとき$\underline{B} = \bot$と解釈するものとする．とりわけ，
+\begin{itemize}
+\item $\underline{A}$が空ならば，シーケントは$B_{j}$の選言を主張する．
+\item $\underline{A}$が空かつ$\underline{B}$が$B_{1}$のみならば，$B_{1}$を主張する．
+\item $\underline{B}$が空ならば，$A_{i}$の連言の否定を主張する．
+\item どちらも空ならば，矛盾を主張する．
+\end{itemize}
+\subsubsection{構造規則}
+以下の規則は，式を挿入できる位置に制約を加える．
+\begin{enumerate}
+\item exchange則: turnstileの右辺または左辺の式の交換を許す．論理の可換性に対応する．
+\begin{figure}[H]
+    \begin{minipage}[b]{0.45\linewidth}
+        \begin{prooftree}
+            \AxiomC{$\underline{A}, C, D, \underline{A'}\vdash \underline{B}$}
+            \RightLabel{$\mathcal{L}X$}
+            \UnaryInfC{$\underline{A}, D, C,\underline{A'}\vdash\underline{B}$}
+            \end{prooftree}
+    \end{minipage}
+    \begin{minipage}[b]{0.45\linewidth}
+        \begin{prooftree}
+            \AxiomC{$A\vdash \underline{B}, C, D, \underline{B}'$}
+            \RightLabel{$\mathcal{R}X$}
+            \UnaryInfC{$A\vdash \underline{B}, D,C, \underline{B}'$}
+            \end{prooftree}
+    \end{minipage}
+\end{figure}
+\item weakening則: シーケントをより弱いものに置き換える．\begin{figure}[H]
+\begin{minipage}[b]{0.45\columnwidth}
+    \begin{prooftree}
+        \AxiomC{$\underline{A}\vdash\underline{B}$}
+        \RightLabel{$\mathcal{L}W$}
+        \UnaryInfC{$\underline{A},C\vdash\underline{B}$}
+    \end{prooftree}
+\end{minipage}
+\begin{minipage}[b]{0.45\columnwidth}
+    \begin{prooftree}
+        \AxiomC{$\underline{A}\vdash\underline{B}$}
+        \RightLabel{$\mathcal{R}W$}
+        \UnaryInfC{$\underline{A}\vdash C,\underline{B}$}
+    \end{prooftree}
+\end{minipage}
+\begin{minipage}[b]{0.45\columnwidth}
+\end{minipage}
+\end{figure}
+\item contraction則: 選言・連言の巾等律に対応する．
+\begin{figure}[H]
+    \begin{minipage}[b]{0.45\columnwidth}
+        \begin{prooftree}
+            \AxiomC{$\underline{A}, C, C\vdash \underline{B}$}
+            \RightLabel{$\mathcal{L}C$}
+            \UnaryInfC{$\underline{A}, C\vdash\underline{B}$}
+        \end{prooftree}
+    \end{minipage}
+    \begin{minipage}[b]{0.45\columnwidth}
+        \begin{prooftree}
+        \AxiomC{$\underline{A}\vdash C, C, \underline{B}$}
+            \RightLabel{$\mathcal{L}C$}
+            \UnaryInfC{$\underline{A} \vdash C,\underline{B}$}
+        \end{prooftree}
+    \end{minipage}
+\end{figure}
+\end{enumerate}
+これらの規則は計算規則のうち最も重要なものである．論理記号を使うことなしに論理演算の振る舞い，とくに選言と連言ぼの振る舞いを決定できるためである．とはいえ，表示的な観点からは明らかだったとしても，構造規則は操作的観点から検討する必要がある．
+
+これらの構造規則を弱めたシーケント計算の体系を考えることができる．たとえば線形論理がそれである．
+
+\subsubsection{直観主義的なケース}
+直観主義的なシーケント計算はシーケントの形に制約を加えることで実現できる．
+\begin{definition}
+\emph{直観主義的シーケント}とは，$\underline{B}$が高々1つの式からなる列であるようなシーケント$\underline{A}\vdash\underline{B}$である．
+\end{definition}
+したがって，右辺に対するexchange則$\mathcal{R}X$，右辺に対するcontraction則$\mathcal{R}C$は適用できない．$\underline{B}$が空列であるときにのみ$\mathcal{R}W$が適用できる．
+
+$\vdash$の位置は，contraction則を適用できない位置を示しているといえる．その意味で，直観主義的な制約は式の管理方法を変更しているといえる．
+他方，適用できる規則に対する斯様な制約は，右辺と左辺の対称性を失なわせていることに注意しよう．そして，対称性を回復させるためには，exchange則とcontraction則のない体系とすればよい．
+
+他の方法としては，古典的シーケント計算の構造規則を1つを除き残し，シーケントを直観主義的シーケントに制限することで体系を得る．
+
+\subsubsection{"恒等"群}
+\begin{enumerate}
+\item 任意の式$C$に対して，恒等公理$C\vdash C$が成り立つ．$C$は原子式に制限してもよい．
+\item それと等価な規則がcut則である．\begin{prooftree}
+\AxiomC{$\underline{A}\vdash C, \underline{B}$}
+\AxiomC{$\underline{A}', C\vdash \underline{B}'$}
+\BinaryInfC{$\underline{A},\underline{A}'\vdash \underline{B}, \underline{B}'$}
+\end{prooftree}
+恒等公理は左部分式の$C$が右部分式の$C$よりも強いことを意味する．cut則はその逆もまた成立することを主張する．つまり，右辺の$C$は左辺の$C$より強いことを表わす．
+恒等規則は始式に相当するので，何如なる証明に対しても必要である．
+\end{enumerate}
 \end{document}

@@ -15,6 +15,7 @@
 \tcbuselibrary{raster,skins}
 \usepackage{varwidth}
 \usepackage{listings}
+\usepackage{bcprules}
 \usetheme{metropolis}
 
 % 色定\textmd{}義
@@ -108,13 +109,13 @@
 \end{frame}
 
 \begin{frame}{\S11.2. $\mathtt{Unit}$型}
-    要素を1つしか持たない型である$\mathtt{Unit}$型を導入する．この型は次のように解釈される:\begin{itemize}
+    要素を 1 つしか持たない型である$\mathtt{Unit}$型を導入する．この型は次のように解釈される:\begin{itemize}
     \item 唯一の要素は項定数$\mathtt{unit}$($\mathtt{u}$，しばしば()で表わされる)で，任意の$\mathtt{Unit}$型の項は一意的に$\mathtt{unit}$に評価される．
     \end{itemize}
-    $\mathtt{Unit}$型は主に副作用を持つ言語で応用される\footnote{純粋函数型言語では，たとえば各$n\in\mathbb{N}$に対して}．たとえば，可変参照を変更する関数では，返り値ではなく副作用に興味があるため，$\mathtt{Unit}$型が返り値の型とされる．類似物としてC系言語の$\mathtt{void}$型がある．
+    $\mathtt{Unit}$型は主に副作用を持つ言語で応用される\footnote{純粋函数型言語では，たとえば各$n\in\mathbb{N}$に対して}．たとえば，可変参照を変更する関数では，返り値ではなく副作用に興味があるため，$\mathtt{Unit}$型が返り値の型とされる．類似物として C 系言語の$\mathtt{void}$型がある．
     \end{frame}
-\begin{frame}{Unit型}
-$\mathtt{Unit}$型は\footnote{Haskellでいうところの0-tuple}，以下の構文，型付け規則および派生形式(i.e.糖衣構文)，すなわちSTLCへの埋め込み方で定義される．
+\begin{frame}{Unit 型}
+$\mathtt{Unit}$型は\footnote{Haskell でいうところの 0-tuple}，以下の構文，型付け規則および派生形式(i.e.糖衣構文)，すなわち STLC への埋め込み方で定義される．
 \begin{dblock}{Def.$\mathtt{Unit}$型の定義}
 	\begin{columns}
 		\begin{column}{0.30\textwidth}
@@ -146,7 +147,7 @@ $\mathtt{Unit}$型は\footnote{Haskellでいうところの0-tuple}，以下の�
 \begin{frame}{\S11.3.派生形式: 逐次実行とワイルドカード}
 副作用のある言語における文の逐次実行を形式化する．逐次実行形式は項$\mathtt{t_{1}, t_{2}}$に対し，$\mathtt{t_{1}}$を正規形まで評価し，結果を捨てた後に$\mathtt{t_{2}}$を評価する．
 
-$(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の略記とする2通りの形式化が考えられる．\begin{enumerate}\item $\mathtt{t_{1};t_{2}}$を新たな構文要素とする方法．評価規則
+$(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の略記とする 2 通りの形式化が考えられる．\begin{enumerate}\item $\mathtt{t_{1};t_{2}}$を新たな構文要素とする方法．評価規則
 \begin{prooftree}
 \AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
 \RightLabel{\tiny\rm{(E-SEQ)}}
@@ -168,9 +169,9 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
 \end{enumerate}
 \end{frame}
 \begin{frame}{派生形式}
-はじめの形式化で定めた評価および型付け規則は，$\mathtt{Unit}$のみを型として持つSTLCの評価関係および型付け規則より従う．このことを確認しよう．
+はじめの形式化で定めた評価および型付け規則は，$\mathtt{Unit}$のみを型として持つ STLC の評価関係および型付け規則より従う．このことを確認しよう．
 \begin{alertblock}{Thm.11.3.1[逐次実行は派生形式である]}
-    $\mathtt{Unit}$型，逐次実行およびそれらの評価・型付け規則を持つSTLCを$\lambda^{E}$と書く．\footnote{外部言語の略．}また，$\mathtt{Unit}$型のみを持つSTLCを$\lambda^{I}$と書き，$e\in\lambda^{I}\to\lambda^{E}$を，$\lambda^{I}$の各項を対応する$\lambda^{E}$の項に写す詳細化関数\footnote{elaboration function}とする．つまり，$e$は$\mathtt{t_{1};t_{2}}$の各出現を，$\mathtt{(\lambda x:Unit. t_{2})t_{1}}(\mathtt{x}\notin FV(\mathtt{t_{2}}))$に置き換える．すると，$\lambda^{E}$の各項$\mathtt{t}$に対して，\begin{enumerate}
+    $\mathtt{Unit}$型，逐次実行およびそれらの評価・型付け規則を持つ STLC を$\lambda^{E}$と書く．\footnote{外部言語の略．}また，$\mathtt{Unit}$型のみを持つ STLC を$\lambda^{I}$と書き，$e\in\lambda^{I}\to\lambda^{E}$を，$\lambda^{I}$の各項を対応する$\lambda^{E}$の項に写す詳細化関数\footnote{elaboration function}とする．つまり，$e$は$\mathtt{t_{1};t_{2}}$の各出現を，$\mathtt{(\lambda x:Unit. t_{2})t_{1}}(\mathtt{x}\notin FV(\mathtt{t_{2}}))$に置き換える．すると，$\lambda^{E}$の各項$\mathtt{t}$に対して，\begin{enumerate}
     \item $\mathtt{t\rightarrow_{E} t'}\Rightarrow e(\mathtt{t})\rightarrow_{I} e(\mathtt{t'})$．逆に$e(\mathtt{t})\rightarrow_{I}\mathtt{u}\Rightarrow\exists \mathtt{t'}.\mathtt{t'}$は$\lambda^{E}$の項$\land \mathtt{u} = e(\mathtt{t'})\land \mathtt{t\rightarrow_{E}t'}$．
     \item $\Gamma\vdash^{E}\mathtt{t:T}\Leftrightarrow \Gamma\vdash^{I}e\mathtt{(t):T}$
     \end{enumerate}
@@ -183,10 +184,10 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
         \item (1)の証明．\begin{enumerate}
         \item $(\Rightarrow)$ 新たな構文要素，つまり$\mathtt{t = t_{1};t_{2}}$または$\mathtt{t = v_{1};t_{2}}$の場合を考え，$\mathtt{t\rightarrow_{E} t'}$なる$\mathtt{t'}$の存在を仮定．\begin{itemize}
         \item $\mathtt{t = v_{1};t_{2}}$．仮定より$\mathtt{t' = t_{2}}$．いま$\mathtt{x}\notin FV(\mathtt{t_{2}})$を任意に取ると，定義より$e(\mathtt{t}) = \mathtt{(\lambda x: Unit. }e\mathtt{(t_{2}))\ v_{1}}$．$\text{\rm(E-APPABS)}$から$\mathtt{t}\rightarrow_{I}\left[\mathtt{x\mapsto v_{1}}\right]e\mathtt{(t_{2})} = \mathtt{t'}$がいえ，$\mathtt{x\notin}FV(e(\mathtt{t_{2}}))$からこれは$\mathtt{v_{1}}$に等しい．
-        \item $\mathtt{t = t_{1};t_{2}}$．仮定より$\mathtt{t' = t'_{1};t_{2}}\land \mathtt{t_{1}\rightarrow_{E}t'_{1}}$なる$\mathtt{t', t'_{1}}$が存在．IHより$e(\mathtt{t_{1}}) \rightarrow_{I} e(\mathtt{t'_{1}})$．$\text{\rm{(E-APP1)}}$から$e(\mathtt{t}) = e(\mathtt{t_{1}})e(\mathtt{t_{2}})\rightarrow_{I} e(\mathtt{t'_{1}})e(\mathtt{t_{2}} = e(\mathtt{t'})$．
+        \item $\mathtt{t = t_{1};t_{2}}$．仮定より$\mathtt{t' = t'_{1};t_{2}}\land \mathtt{t_{1}\rightarrow_{E}t'_{1}}$なる$\mathtt{t', t'_{1}}$が存在．IH より$e(\mathtt{t_{1}}) \rightarrow_{I} e(\mathtt{t'_{1}})$．$\text{\rm{(E-APP1)}}$から$e(\mathtt{t}) = e(\mathtt{t_{1}})e(\mathtt{t_{2}})\rightarrow_{I} e(\mathtt{t'_{1}})e(\mathtt{t_{2}} = e(\mathtt{t'})$．
         \end{itemize}
         \item $(\Leftarrow)$．$e(\mathtt{t})\rightarrow_{I}\mathtt{u}$を仮定する．(1)と同様に場合を分ける．\begin{itemize}
-        \item $\mathtt{t = v_{1};t_{2}}$のとき．$e(\mathtt{t}) = \mathtt{(\lambda x:Unit. }e\mathtt{(t_{2}))v_{1}}$($\mathtt{x}$はfreshな変数)，$\mathtt{u} = e(\mathtt{t_{2}})$．このとき．$\mathtt{t' = t_{2}}$とすれば従う．
+        \item $\mathtt{t = v_{1};t_{2}}$のとき．$e(\mathtt{t}) = \mathtt{(\lambda x:Unit. }e\mathtt{(t_{2}))v_{1}}$($\mathtt{x}$は fresh な変数)，$\mathtt{u} = e(\mathtt{t_{2}})$．このとき．$\mathtt{t' = t_{2}}$とすれば従う．
         \item $\mathtt{t = t_{1};t_{2}}$のとき．$\mathtt{t} = (\mathtt{\lambda x:Unit.}e (\mathtt{t_{2}}))\ e(\mathtt{t_{1}})$であり，仮定より$e(\mathtt{t_{1}})\rightarrow \mathtt{u'_{1}}$なる$\mathtt{u'_{1}}$を取ると$\mathtt{u} = (\mathtt{\lambda x:Unit.}e(\mathtt{t_{1}}))\ \mathtt{u'_{1}}$．帰納法の仮定より，$\mathtt{u'_{1}} = e(\mathtt{t'_{1}})\land \mathtt{t_{1}}\rightarrow_{E} \mathtt{t'_{1}}$なる$\lambda^{E}$の項$\mathtt{t'_{1}}$が取れる．ゆえに$\mathtt{u} = (\mathtt{\lambda x: Unit.}e(\mathtt{t_{2}}))e(\mathtt{t'_{1}}) = e(\mathtt{t'_{1};t_{2}})$となり従う．
         \end{itemize}
         \end{enumerate}
@@ -195,7 +196,7 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
 \end{frame}
 \begin{frame}{派生形式}
 \begin{enumerate}\item 派生形式として導入する利点には，表層構文を拡張しつつ型安全性を保証しなければならない内部言語を単純に保てることにある．
-    \item 他の派生形式として，抽象の本体で使わない引数を束縛するようなワイルドカード\footnote{holeなどということもある}の慣習がある．ワイルドカード束縛子は$(\_)$で表わされる．
+    \item 他の派生形式として，抽象の本体で使わない引数を束縛するようなワイルドカード\footnote{hole などということもある}の慣習がある．ワイルドカード束縛子は$(\_)$で表わされる．
     \begin{itemize}
     \item $\mathtt{\lambda \_: S. t\stackrel{def}{=}\lambda x: S. t}$，ただし$\mathtt{x}$は$\mathtt{t}$に現れない．
     \end{itemize}
@@ -242,9 +243,9 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
 \end{alertblock}
 \end{frame}
 \begin{frame}{型指定}
-\begin{alertblock}{演習11.4.1.(推奨)}
+\begin{alertblock}{演習 11.4.1.(推奨)}
     \begin{enumerate}
-    \item 型指定を派生形式として形式化し，p.10の型付け規則と評価規則が派生形式と対応することを示せ．
+    \item 型指定を派生形式として形式化し，p.10 の型付け規則と評価規則が派生形式と対応することを示せ．
     \item $\text{\rm{E-ASCRIBE, E-ASCRIBE1}}$の代りに，以下の規則が与えられたとする:\begin{prooftree}
         \AxiomC{$\mathtt{t_{1}\ as\ T\rightarrow t_{1}}$\text{\tiny\rm{(E-ASCRIBEEAGER)}}}
     \end{prooftree}
@@ -260,7 +261,7 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
     \end{enumerate}
 \end{proof}
 \end{frame}
-\begin{frame}{演習11.4.1.}
+\begin{frame}{演習 11.4.1.}
 \begin{proof}
 \begin{enumerate}
 \item 以下の導出木より成り立つ:\begin{prooftree}
@@ -275,16 +276,16 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
 \item $\text{\tiny\rm{E-ASCRIBEEAGER}}$を実現するためにはサンクを噛ませることで$\mathtt{t_{1}}$の評価を遅延させなければならない．次のようになる．ただし$\mathtt{y}$はフレッシュとする:\begin{equation*}
 \mathtt{t_{1}\ as\ T \stackrel{def}{=} (\lambda x: Unit\rightarrow T. x\ unit)(\lambda y:Unit.  t_{1})}
 \end{equation*}
-この定義では，$\mathtt{t\ as\ T}$の型指定を消去するために$\mathtt{t\ as\ T\rightarrow (\lambda y : Unit. t_{1})\ unit\rightarrow t_{1}}$と2ステップの簡約を経なければならない．したがって，Thm11.3.1を考えると，(2)は成立するものの，(1)の結論は内部言語で多ステップの簡約を経るように弱めなければならない．
+この定義では，$\mathtt{t\ as\ T}$の型指定を消去するために$\mathtt{t\ as\ T\rightarrow (\lambda y : Unit. t_{1})\ unit\rightarrow t_{1}}$と 2 ステップの簡約を経なければならない．したがって，Thm11.3.1 を考えると，(2)は成立するものの，(1)の結論は内部言語で多ステップの簡約を経るように弱めなければならない．
 \end{enumerate}
 \end{proof}
 \end{frame}
-\begin{frame}{\S11.5.let束縛}
+\begin{frame}{\S11.5.let 束縛}
 \begin{enumerate}
-\item ML系言語などでは，部分式に名前を付ける手段として$\mathtt{let}$束縛子を提供している．\begin{itemize}
+\item ML 系言語などでは，部分式に名前を付ける手段として$\mathtt{let}$束縛子を提供している．\begin{itemize}
 \item $\mathtt{let\ x = t_{1}\ in\ t_{2}}$は，項$\mathtt{t_{1}}$を値に評価して$\mathtt{x}$に束縛し，$\mathtt{t_{2}}$を評価することを意味していた．
 \end{itemize}\end{enumerate}
-今回はML同様に値呼び戦略を用いて$\mathtt{let}$束縛子を定義する:
+今回は ML 同様に値呼び戦略を用いて$\mathtt{let}$束縛子を定義する:
 \begin{alertblock}{Def.11.4.$\mathtt{let}$束縛}
     \begin{columns}
     \begin{column}{0.3\columnwidth}
@@ -315,8 +316,8 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
     \end{columns}
 \end{alertblock}
 \end{frame}
-\begin{frame}{演習11.5.1}
-\begin{alertblock}{演習11.5.1.(推奨)}
+\begin{frame}{演習 11.5.1}
+\begin{alertblock}{演習 11.5.1.(推奨)}
     型検査器$\mathtt{letexercise}$の$\mathtt{eval}$関数および$\mathtt{typeof}$関数を完成させよ．
 \end{alertblock}
 \begin{proof}[解答]
@@ -328,7 +329,7 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
     型検査器$\mathtt{typeof}$関数に対しては以下を足せばよい:
 \end{proof}
 \end{frame}
-\begin{frame}{let束縛}
+\begin{frame}{let 束縛}
 $\mathtt{let}$を派生形式として定義することを考える．\begin{itemize}
 \item 素朴には，$\mathtt{let\ x= t_{1}\ in \ t_{2}}\stackrel{def}{=}\mathtt{(\lambda x:T_{1}. t_{1})\ t_{2}}$とすることが考えられるが，左辺には右辺の型注釈が出現しない(実際には，構文解析器は型検査器から$\mathtt{x}$の型を得る)．そのため，単純に項に対する脱糖衣変換とはみなせず，代わりに型付け導出に対する変換と見做す必要がある．具体的には，派生形式は$\mathtt{let}$に関する導出\begin{prooftree}
 \AxiomC{$\vdots$}
@@ -348,18 +349,18 @@ $\mathtt{let}$を派生形式として定義することを考える．\begin{it
 \BinaryInfC{$\Gamma\vdash\mathtt{(\lambda x:T_{1}.t_{2})t_{1}:T_{2}}$}
 \end{prooftree}
 \end{itemize}
-つまり，評価に関する振る舞いとは違い，型付けに関する振る舞いは(型がimplicitな場合を扱えるように)内部言語に組込まれていなければならない．このことは，\S22でより詳細に扱う．
+つまり，評価に関する振る舞いとは違い，型付けに関する振る舞いは(型が implicit な場合を扱えるように)内部言語に組込まれていなければならない．このことは，\S22 でより詳細に扱う．
 \end{frame}
-\begin{frame}{\S11.6.2つ組}
+\begin{frame}{\S11.6.2 つ組}
 \begin{enumerate}
-\item 2つ組，ひいては任意個の値の組(およびその一般化であるレコード型)について考える．\footnote{以後，$n$個組を単にタプルと呼ぶことがある．}\begin{itemize}
-\item 以下の構文要素を追加する:2つ組化$\left\{\mathtt{t_{1},t_{2}}\right\}$，第一および第二成分への射影$\mathtt{t.1, t.2}$，および型$\mathtt{T_{1}}$と$\mathtt{T_{2}}$の直積\footnote{デカルト積}$\mathtt{T_{1}\times T_{2}}$．組を表現するために波括弧を用いているのはレコード型の具体例であることを強調するため．
-\item 組は第一成分を値に評価した後第二成分を，そして完全に評価された2つ組に対して射影の適用を許すことにする．
+\item 2 つ組，ひいては任意個の値の組(およびその一般化であるレコード型)について考える．\footnote{以後，$n$個組を単にタプルと呼ぶことがある．}\begin{itemize}
+\item 以下の構文要素を追加する:2 つ組化$\left\{\mathtt{t_{1},t_{2}}\right\}$，第一および第二成分への射影$\mathtt{t.1, t.2}$，および型$\mathtt{T_{1}}$と$\mathtt{T_{2}}$の直積\footnote{デカルト積}$\mathtt{T_{1}\times T_{2}}$．組を表現するために波括弧を用いているのはレコード型の具体例であることを強調するため．
+\item 組は第一成分を値に評価した後第二成分を，そして完全に評価された 2 つ組に対して射影の適用を許すことにする．
 \end{itemize}
 \end{enumerate}
 型付け規則は次頁に示す通り:
 \end{frame}
-\begin{frame}{\S11.6.2つ組}
+\begin{frame}{\S11.6.2 つ組}
 \begin{columns}
 \begin{column}{0.2\columnwidth}
     構文:$\mathtt{t\Coloneq\ldots|\left\{t, t\right\}|t.1|t.2}$
@@ -416,7 +417,7 @@ $\mathtt{let}$を派生形式として定義することを考える．\begin{it
 \end{columns}
 \end{frame}
 \begin{frame}{\S11.7.組}
-\S11.6を$n$項の直積に拡張する．$n$項の直積を，$\left\{\mathtt{t_{i}^{i\in 1\ldots n}}\right\}:\left\{\mathtt{T_{i}^{i\in 1\ldots n}}\right\}$と表わす．ただし$n = 0$の場合は空の組$\left\{\right\}$を表わし，射影は定義されない．構文，評価および型付けは以下の通り:\begin{alertblock}{Def.11.6.組}
+\S11.6 を$n$項の直積に拡張する．$n$項の直積を，$\left\{\mathtt{t_{i}^{i\in 1\ldots n}}\right\}:\left\{\mathtt{T_{i}^{i\in 1\ldots n}}\right\}$と表わす．ただし$n = 0$の場合は空の組$\left\{\right\}$を表わし，射影は定義されない．構文，評価および型付けは以下の通り:\begin{alertblock}{Def.11.6.組}
 \begin{columns}
 \begin{column}{0.18\columnwidth}
 項:$\mathtt{t\Coloneq\ldots|\left\{t_{i}^{i\in 1\ldots n}\right\}|t.i}$
@@ -453,7 +454,7 @@ $\mathtt{let}$を派生形式として定義することを考える．\begin{it
 \end{alertblock}
 \end{frame}
 \begin{frame}{\S11.8.レコード}
-\S11.7を(ラベル付き)レコード型に拡張する．以下のように定めればよい:
+\S11.7 を(ラベル付き)レコード型に拡張する．以下のように定めればよい:
 \begin{alertblock}{Def.11.7.}
     \begin{columns}
     \begin{column}{0.3\columnwidth}
@@ -489,5 +490,33 @@ $\mathtt{let}$を派生形式として定義することを考える．\begin{it
     \end{column}
     \end{columns}
 \end{alertblock}
+\end{frame}
+\begin{frame}{\S11.10.和}
+\begin{enumerate}
+\item 異種の値が混在したデータ構造を表わすことを考える．\begin{itemize}
+\item e.g.二分木，cons-list ，$\lambda$項の抽象構文木．
+\end{itemize}
+\item これらのデータ構造はバリアント型を用いて表わされる．\begin{itemize}\item 以降では，まず一般的なバリアント型について議論し，ついでより制限された項である直和型，オプション型や列挙型について議論する．\end{itemize}
+\end{enumerate}
+\end{frame}
+\begin{frame}{\S11.10.バリアント}
+ラベル付きのバリアントを導入する．たとえば，以下の型を用いて 2 種類のアドレス帳のレコードを表わしているとする:
+$\mathtt{PhysicalAddr = \left\{firstlast: String, addr:String\right\}}$
+
+$\mathtt{VirtualAddr = \left\{name:String, email:String\right\}}$
+\end{frame}
+\begin{frame}{ヴァリアント型の構文形式}
+ヴァリアントの構文形式として，次を導入する:\begin{enumerate}
+\item 項:$\mathtt{t\Coloneq\ldots|\left<l = t\right>\ as\ T|case\ t\ of\ \left<l_{i}=x_{i}\right>\Rightarrow t_{i}^{i\in1\ldots n}}$
+\item 値:$\mathtt{v\Coloneq\ldots|\left<l = v\right>\ as\ T}$
+\item 型:$\mathtt{T\Coloneq\ldots|\left<l_{i}:T_{i}^{i\in1\ldots n}\right>}$
+\end{enumerate}
+\end{frame}
+\begin{frame}{\S11.10.バリアント型の評価および型付け規則}
+バリアント型の評価規則および型付け規則を次に示す．
+\infax[E-CaseVariant]{case(\left<l_{j} = v_{j}\right>\ as\ T)\ of\ <l_{i} =x_{i}> \Rightarrow t_{i}^{i\in1\ldots n}\\\longrightarrow \left[x_{j}\mapsto v_{j}\right]t_{j}}
+\infrule[E-Case]{t_{0}\rightarrow t'_{0}}{case\ t_{0}\ of \left<l_{i}=x_{i}\right>\Rightarrow t_{i}^{1\in1\ldots n}\\\longrightarrow case\ t'_{0}\ of\ \left<l_{i}=x_{i}\right>\Rightarrow t_{i}^{i\in1\ldots n}}
+\infrule[T-Variant]{\Gamma\vdash t_{j}:T_{j}}{\Gamma\vdash\left<l_{j}=t_{j}\right>\ as \left<l_{i}:T_{i}^{i\in1\ldots n}\right>:\left<l_{i}:T_{i}^{i\in1\ldots n}\right>}
+\infrule[T-Case]{\Gamma\vdash t_{0}:\left<l_{i}:T_{i}^{i\in1\ldots n}\right> \andalso \forall i. \Gamma, x_{i}:T_{i}\vdash t_{i}:T}{\Gamma\vdash case\ t_{0}\ of\ \left<l_{i}=x_{i}\right>\Rightarrow t_{i}^{i\in1\ldots n}:T}
 \end{frame}
 \end{document}
