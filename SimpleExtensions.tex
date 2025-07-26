@@ -15,6 +15,8 @@
 \tcbuselibrary{raster,skins}
 \usepackage{varwidth}
 \usepackage{listings}
+\usepackage{manfnt}
+\usepackage{array}
 \usepackage{bcprules}
 \usetheme{metropolis}
 
@@ -79,16 +81,25 @@
 	}
 }
 
+\newcommand{\dnote}[1]{%
+    \noindent % I guess this is intended...
+    \begin{tabular}{@{}m{0.13\textwidth}@{}m{0.87\textwidth}@{}}%
+        \huge\textdbend &#1%
+    \end{tabular}%
+    \par % ... and this too.
+}
+
 \everymath{\displaystyle}
-\title{Types and Programming Languages\\ Chapter 8,9}
+\title{Types and Programming Languages\\ Chapter 11-14}
 \author{Rei Tomori}
 \begin{document}
 \maketitle
 \begin{frame}{概要}
 	今回は以下の内容を扱う: \begin{enumerate}
-        \item \S 11. 単純な拡張
+        \item \S 11. 単純な拡張(\S11.4-)
         \item \S 12. 正規化
         \item \S 13. 参照
+        \item \S14. 例外
     \end{enumerate}
 \end{frame}
 \section{\S11. 単純な拡張}
@@ -194,329 +205,248 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
         \end{enumerate}
     \end{proof}
 \end{frame}
-\begin{frame}{派生形式}
-\begin{enumerate}\item 派生形式として導入する利点には，表層構文を拡張しつつ型安全性を保証しなければならない内部言語を単純に保てることにある．
-    \item 他の派生形式として，抽象の本体で使わない引数を束縛するようなワイルドカード\footnote{hole などということもある}の慣習がある．ワイルドカード束縛子は$(\_)$で表わされる．
-    \begin{itemize}
-    \item $\mathtt{\lambda \_: S. t\stackrel{def}{=}\lambda x: S. t}$，ただし$\mathtt{x}$は$\mathtt{t}$に現れない．
-    \end{itemize}
-\end{enumerate}
-\end{frame}
 \begin{frame}{\S11.4.型指定}
-\begin{enumerate}
-\item 所与の項に特定の型を明示的に指定する機能を\underline{型指定}といい，型$\mathtt{T}$を指定した項$\mathtt{t}$は$\mathtt{t\ as\ T}$と書かれる．用途としては次のようなものがある:
-\begin{itemize}
-\item ドキュメンテーション．特に型シグネチャが複雑になる場合などは有用．
-\item 複雑な型の表示の制御．複雑な型式の略記\footnote{型シノニムなどと呼ばれる}を導入し，型検査器に必要に応じて略記を折り畳み/展開させる．
-\item 抽象化．項$\mathtt{t}$が複数の異なる型を持ちうる体系(たとえば部分型付けのある)において，$\mathtt{t}$がより少数の型を持つかのよう型検査器に指示し，型の一部を隠蔽させる．
-\end{itemize}
-\end{enumerate}
-\end{frame}
-\begin{frame}{型指定}
-型指定の型付けおよび評価規則は以下の通り:
-\begin{alertblock}{Def.型指定}
-    \begin{columns}
-    \begin{column}{0.30\columnwidth}
-        \begin{align*}
-        \mathtt{t}\Coloneq&\ldots\\
-        &\mathtt{t\ as\ T}
-        \end{align*}
-        評価規則
-        \begin{prooftree}
-            \AxiomC{$\mathtt{v_{1}\ as\ T\rightarrow v_{1}}$\text{\tiny\rm{(E-ASCRIBE)}}}
-        \end{prooftree}
-        \begin{prooftree}
-        \AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
-        \RightLabel{\tiny\rm{(E-ASCRIBE1)}}
-        \UnaryInfC{$\mathtt{t_{1}\ as\ T\rightarrow t'_{1}\ as\ T}$}
-        \end{prooftree}
-    \end{column}
-    \begin{column}{0.40\columnwidth}
-        型付け規則
-        \begin{prooftree}
-            \AxiomC{$\Gamma\vdash\mathtt{t_{1}:T}$}
-            \RightLabel{\tiny\rm{(T-ASCRIBE)}}
-            \UnaryInfC{$\Gamma\vdash\mathtt{t_{1}\ as\ T:T}$}
-        \end{prooftree}
-    \end{column}
-    \end{columns}
+項の型を明示的に指定する機能を導入しよう．\begin{alertblock}{Def. 型指定}
+型$\mathtt{T}$を指定した項$\mathtt{t}$を，$\mathtt{t\ as\ T}$と書く．評価規則を次のように定める:
+\infax[E-Ascribe]{\mathtt{v_{1}\ as\ T\longrightarrow v_{1}}}
+\infrule[E-Ascribe1]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{t_{1}\ as\ T\longrightarrow t'_{1}\ as\ T}}
+型付け規則を次のように定める:
+\infrule[T-Ascribe1]{\Gamma\vdash\mathtt{t_{1}:T}}{\Gamma\vdash\mathtt{t_{1}\ as\ T:T}}
 \end{alertblock}
-\end{frame}
-\begin{frame}{型指定}
-\begin{alertblock}{演習 11.4.1.(推奨)}
-    \begin{enumerate}
-    \item 型指定を派生形式として形式化し，p.10 の型付け規則と評価規則が派生形式と対応することを示せ．
-    \item $\text{\rm{E-ASCRIBE, E-ASCRIBE1}}$の代りに，以下の規則が与えられたとする:\begin{prooftree}
-        \AxiomC{$\mathtt{t_{1}\ as\ T\rightarrow t_{1}}$\text{\tiny\rm{(E-ASCRIBEEAGER)}}}
-    \end{prooftree}
-    この場合に型指定を派生形式として扱うことは出来るか．
-    \end{enumerate}
-\end{alertblock}
-\begin{proof}
-    \begin{enumerate}
-    \item $\mathtt{t\ as\ T}$を$\mathtt{(\lambda x : T. x)\ t}$の略記と定める．評価規則と型付け規則を示そう．\begin{itemize}
-    \item 評価規則．$\mathtt{v_{1}\ as\ T}$とすると$\mathtt{v_{1}\ as\ T} = \mathtt{(\lambda x : T. x)\ v_{1}} \rightarrow \left[x\mapsto v_{1}\right] \mathtt{x} = \mathtt{v_{1}}$より$\text{\tiny\rm{E-ASCRIBE}}$が従う．$\mathtt{t_{1}\rightarrow t'_{1}}$とすると$\mathtt{t_{1}\ as\ T} = \mathtt{(\lambda x:T. x)\ t_{1}}\rightarrow\mathtt{(\lambda x: T. x)\ t'_{1}} = \mathtt{t'_{1}\ as\ T}$より，$\text{\tiny\rm{E-ASCRIBE1}}$も従う．
-    \item 型付け規則．$\Gamma\vdash\mathtt{t_{1}:T}$とする．
-    \end{itemize}
-    \end{enumerate}
-\end{proof}
 \end{frame}
 \begin{frame}{演習 11.4.1.}
-\begin{proof}
+\begin{alertblock}{演習 11.4.1.[推奨]}
 \begin{enumerate}
-\item 以下の導出木より成り立つ:\begin{prooftree}
-\AxiomC{$\Gamma, \mathtt{x:T}\vdash \mathtt{x:T}$}
-\RightLabel{\tiny\rm{(Proj)}}
-\UnaryInfC{$\Gamma\vdash\mathtt{\lambda x: T. x:T\rightarrow T}$}
-\RightLabel{\tiny\rm{(T-ABS)}}
-\AxiomC{$\Gamma\vdash\mathtt{t_{1}:T}$}
-\BinaryInfC{$\Gamma\vdash \mathtt{(\lambda x : T. x)\ t_{1}:T}$}
-\UnaryInfC{$\Gamma\vdash \mathtt{t_{1}\ as\ T: T}$}
-\end{prooftree}
-\item $\text{\tiny\rm{E-ASCRIBEEAGER}}$を実現するためにはサンクを噛ませることで$\mathtt{t_{1}}$の評価を遅延させなければならない．次のようになる．ただし$\mathtt{y}$はフレッシュとする:\begin{equation*}
-\mathtt{t_{1}\ as\ T \stackrel{def}{=} (\lambda x: Unit\rightarrow T. x\ unit)(\lambda y:Unit.  t_{1})}
-\end{equation*}
-この定義では，$\mathtt{t\ as\ T}$の型指定を消去するために$\mathtt{t\ as\ T\rightarrow (\lambda y : Unit. t_{1})\ unit\rightarrow t_{1}}$と 2 ステップの簡約を経なければならない．したがって，Thm11.3.1 を考えると，(2)は成立するものの，(1)の結論は内部言語で多ステップの簡約を経るように弱めなければならない．
+\item 型指定を派生形式として形式化せよ．「公式」の型付け規則および評価規則が，その形式化に何らかの適切な意味で対応することを証明せよ．
+\item Def.で定めた評価規則の代わりに，以下の先行的な規則が与えられたとする:\infax[E-AscribeEager]{\mathtt{t_{1}\ as\ T\longrightarrow t_{1}}}．この場合にも，型指定を派生形式として扱うことはできるか．
 \end{enumerate}
-\end{proof}
+\end{alertblock}
+\end{frame}
+\begin{frame}{Ex11.4.1.の解答}
+\begin{enumerate}
+\item $\mathtt{t\ as\ T}$の派生形式は$\mathtt{(\lambda x:T.x)\ t}$とすればよい．また，拡張された構文の項を拡張前の項に写す関数$e$を次のように定める:
+\begin{equation*}e(t) = \begin{cases}
+\mathtt{(\lambda x:T. x)\ t_{1}}& \text{$\mathtt{t}$が$\mathtt{t_{1}:T}$の形のとき} \\
+\mathtt{t} & \text{otherwise}
+\end{cases}\end{equation*}．$e$は明らかに全単射である．「公式」の型付けおよび評価規則が派生形式と対応することを示すためには，次の補題を示せばよい．
+\begin{alertblock}{Cor.}\begin{enumerate}
+\item $\mathtt{t\longrightarrow t'}$のとき$\mathtt{e(t)\longrightarrow e(t')}$．また，$\mathtt{e(t)\longrightarrow u}$ならば型指定された項$\mathtt{t'}$が存在して$\mathtt{u = e(t')\land t\longrightarrow t'}$
+\item (型付け)$\Gamma\vdash\mathtt{t:T}$，かつそのときに限り$\Gamma\vdash \mathtt{e(t):T}$
+\end{enumerate}
+\end{alertblock}
+\end{enumerate}
+\end{frame}
+\begin{frame}{Ex11.4.1:補題の証明}
+\begin{enumerate}
+\item 前半部分は，$\mathtt{t}$を$\mathtt{t = t_{1}:T}$の形に限定し，$\mathtt{t_{1}}$が値か否かで分ければ示せる．後半部分についても$\mathtt{t}$が型指定された項$\mathtt{t_{1}\ as\ T}$の場合のみに限定し，$\mathtt{e(t) = (\lambda x:T. x)t_{1}}$，$\mathtt{u}$は$\mathtt{t_{1}}$が値のとき$\mathtt{t_{1}}$，そうでないとき$\mathtt{(\lambda x:T. x)t'_{1}}$(ただし$\mathtt{t_{1}\longrightarrow t'_{1}}$)に評価されることに注意すれば，評価された項に$e$の逆関数を適用して存在が示せる．
+\item $\Gamma\vdash\mathtt{t\ as\ T}$の型導出は次のようになるので，$\Gamma\vdash\mathtt{t:T}$が成立:\begin{prooftree}\AxiomC{$\vdots$}\UnaryInfC{$\Gamma\vdash\mathtt{t:T}$}\UnaryInfC{$\Gamma\vdash\mathtt{t\ as\ T:T}$}\end{prooftree}
+$\Gamma\vdash\mathtt{e(t\ as\ T):T}$に至る導出木は，$\Gamma\vdash\mathtt{t:T}$に至る部分木から下の導出木を作ることで示せる:\begin{prooftree}
+\AxiomC{$\Gamma,\mathtt{x:T}\vdash\mathtt{x:T}$}
+\UnaryInfC{$\Gamma\vdash\mathtt{\lambda x:T.x:T\to T}$}
+\AxiomC{$\vdots$}
+\UnaryInfC{$\Gamma\vdash\mathtt{t:T}$}
+\BinaryInfC{$\Gamma\vdash \mathtt{e(t\ as\ T) = (\lambda x:T.x)\ t:T}$}
+\end{prooftree}
+
+逆向きの主張は，上の導出木の部分木で$\Gamma\vdash\mathtt{t:T}$が成立していることから，$\tiny\rm{T-ASCRIBE}$を用いて示せる．
+\end{enumerate}
+\end{frame}
+\begin{frame}{Ex11.4.1(2)}
+派生形式として表わすことができる．型指定された項の評価を進めることなく消去するので，次のように定義すればよい:\begin{equation}
+\mathtt{t\ as\ T\stackrel{def}{=}(\lambda x:Unit\to T.x\ Unit)(\lambda y:Unit.t_{1})}
+\end{equation}
 \end{frame}
 \begin{frame}{\S11.5.let 束縛}
+部分式に対して名付けるための機能である$\mathtt{let}$束縛子を導入する.
+\begin{alertblock}{Def.let 束縛}
+式$\mathtt{t_{1}}$を評価した値を変数$\mathtt{x}$に束縛した状態で項$\mathtt{t_{2}}$を評価する．これを，式$\mathtt{let\ x=t_{1}\ in\ t_{2}}$で表わす．評価規則を次のように定める:
+\infax[E-LetV]{\mathtt{let\ x=v_{1}\ in\ t_{2}\longrightarrow \left[x\mapsto v_{1}\right]t_{2}}}
+\infrule[E-Let]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{let\ x=t_{1}\ in\ t_{2}\longrightarrow let\ x=t'_{1}\ in\ t_{2}}}
+
+つまり，この定義における$\mathtt{let}$束縛子は値呼びである．型付け規則を次のように定める:
+\infrule[T-Let]{\Gamma\vdash\mathtt{t_{1}:T_{1}}\andalso \Gamma,\mathtt{x:T_{1}}\vdash \mathtt{t_{2}:T_{2}}}{\Gamma\vdash\mathtt{let\ x=t_{1}\ in\ t_{2}}}
+つまり，束縛項の型を計算し，その型を持つ束縛で水増しされた文脈で本体の型を計算することで，$\mathtt{let}$式全体の型を計算している．
+\end{alertblock}
+\end{frame}
+\begin{frame}{$\mathtt{let}$束縛に関する補足}
 \begin{enumerate}
-\item ML 系言語などでは，部分式に名前を付ける手段として$\mathtt{let}$束縛子を提供している．\begin{itemize}
-\item $\mathtt{let\ x = t_{1}\ in\ t_{2}}$は，項$\mathtt{t_{1}}$を値に評価して$\mathtt{x}$に束縛し，$\mathtt{t_{2}}$を評価することを意味していた．
-\end{itemize}\end{enumerate}
-今回は ML 同様に値呼び戦略を用いて$\mathtt{let}$束縛子を定義する:
-\begin{alertblock}{Def.11.4.$\mathtt{let}$束縛}
-    \begin{columns}
-    \begin{column}{0.3\columnwidth}
-        構文要素
-        \begin{align*}
-        \mathtt{t}\Coloneq&\ldots\\
-            &\mathtt{let\ x = t_{1}\ in\ t_{2}}
-        \end{align*}
-    \end{column}
-    \begin{column}{0.65\columnwidth}
-        評価関係
-        \begin{prooftree}
-            \AxiomC{$\mathtt{let\ x = v_{1}\ in\ t_{2}\rightarrow \left[x\mapsto v_{1}\right]t_{2}}$\text{\tiny\rm{(E-LETV)}}}
-            \end{prooftree}
-            \begin{prooftree}
-                \AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
-                \RightLabel{\tiny\rm{(E-LET)}}
-                \UnaryInfC{$\mathtt{let\ x = t_{1}\ in\ t_{2}\rightarrow let\ x=t'_{1}\ in\ t_{2}}$}
-                \end{prooftree}
-        型付け規則
-        \begin{prooftree}
-        \AxiomC{$\Gamma\vdash \mathtt{t_{1}: T_{1}}$}
-        \AxiomC{$\Gamma,\mathtt{x:T_{1}}\vdash\mathtt{t_{2}:T_{2}}$}
-        \RightLabel{\tiny\rm{(T-LET)}}
-        \BinaryInfC{$\Gamma\vdash\mathtt{let\ x = t_{1}\ in\ t_{2}:T_{2}}$}
-        \end{prooftree}
-    \end{column}
-    \end{columns}
-\end{alertblock}
-\end{frame}
-\begin{frame}{演習 11.5.1}
-\begin{alertblock}{演習 11.5.1.(推奨)}
-    型検査器$\mathtt{letexercise}$の$\mathtt{eval}$関数および$\mathtt{typeof}$関数を完成させよ．
-\end{alertblock}
-\begin{proof}[解答]
-    $\mathtt{eval1}$関数のパターンマッチの$\mathtt{TmLet}$の節に以下を足せばよい:
-    \begin{align*}
-    \mathtt{  |TmLet(fi, x, t1, t2)} &\rightarrow \mathtt{if\ isval\ ctx \ t1\ then\ termSubstTop\ t1\ t2}\\
-        &\mathtt{else\ let\ t1' = eval1\ ctx\ t1\ in\ TmLet(fi, x, t1', t2)}
-    \end{align*}
-    型検査器$\mathtt{typeof}$関数に対しては以下を足せばよい:
-\end{proof}
-\end{frame}
-\begin{frame}{let 束縛}
-$\mathtt{let}$を派生形式として定義することを考える．\begin{itemize}
-\item 素朴には，$\mathtt{let\ x= t_{1}\ in \ t_{2}}\stackrel{def}{=}\mathtt{(\lambda x:T_{1}. t_{1})\ t_{2}}$とすることが考えられるが，左辺には右辺の型注釈が出現しない(実際には，構文解析器は型検査器から$\mathtt{x}$の型を得る)．そのため，単純に項に対する脱糖衣変換とはみなせず，代わりに型付け導出に対する変換と見做す必要がある．具体的には，派生形式は$\mathtt{let}$に関する導出\begin{prooftree}
+\item $\mathtt{let}$式は派生形式$\mathtt{let\ x=t_{1}\ in\ t_{2} \stackrel{def}{=}(\lambda x:T_{1}.t_{2})t_{1}}$として書けるが，束縛項の型は型検査器からしか分からない．
+\begin{itemize}
+\item 型指定などのように項を脱糖するのではない(構文的には束縛項の型が分からない!)
+\item 派生形式は型付け導出\begin{prooftree}
 \AxiomC{$\vdots$}
 \UnaryInfC{$\Gamma\vdash\mathtt{t_{1}:T_{1}}$}
-\AxiomC{$\vdots$}
-\UnaryInfC{$\Gamma,\mathtt{x:T_{1}}\vdash\mathtt{t_{2}:T_{2}}$}
-\BinaryInfC{$\Gamma\vdash\mathtt{let\ x= t_{1}\ in\ t_{2}:T_{2}}$}
-\end{prooftree}
-を以下の導出に写すように定める:\begin{prooftree}
 \AxiomC{$\vdots$}
 \UnaryInfC{$\Gamma, \mathtt{x:T_{1}}\vdash\mathtt{t_{2}:T_{2}}$}
-\RightLabel{\tiny\rm{(T-ABS)}}
-\UnaryInfC{$\Gamma\vdash \mathtt{\lambda x: T_{1}.t_{2}:T_{2}}$}
+\BinaryInfC{$\Gamma\vdash\mathtt{let\ x=t_{1}\ in\ t_{2}}$}\end{prooftree}を\begin{prooftree}
+\AxiomC{$\vdots$}
+\UnaryInfC{$\Gamma,\mathtt{x:T_{1}\vdash t_{2}:T_{2}}$}
+\UnaryInfC{$\Gamma\vdash\mathtt{\lambda x:T_{1}.t_{2}:T_{1}\to T_{2}}$}
 \AxiomC{$\vdots$}
 \UnaryInfC{$\Gamma\vdash\mathtt{t_{1}:T_{1}}$}
-\RightLabel{\tiny\rm{(T-APP)}}
 \BinaryInfC{$\Gamma\vdash\mathtt{(\lambda x:T_{1}.t_{2})t_{1}:T_{2}}$}
-\end{prooftree}
-\end{itemize}
-つまり，評価に関する振る舞いとは違い，型付けに関する振る舞いは(型が implicit な場合を扱えるように)内部言語に組込まれていなければならない．このことは，\S22 でより詳細に扱う．
-\end{frame}
-\begin{frame}{\S11.6.2 つ組}
-\begin{enumerate}
-\item 2 つ組，ひいては任意個の値の組(およびその一般化であるレコード型)について考える．\footnote{以後，$n$個組を単にタプルと呼ぶことがある．}\begin{itemize}
-\item 以下の構文要素を追加する:2 つ組化$\left\{\mathtt{t_{1},t_{2}}\right\}$，第一および第二成分への射影$\mathtt{t.1, t.2}$，および型$\mathtt{T_{1}}$と$\mathtt{T_{2}}$の直積\footnote{デカルト積}$\mathtt{T_{1}\times T_{2}}$．組を表現するために波括弧を用いているのはレコード型の具体例であることを強調するため．
-\item 組は第一成分を値に評価した後第二成分を，そして完全に評価された 2 つ組に対して射影の適用を許すことにする．
+\end{prooftree}に写す変換とみなす必要がある．
+\item また，今後$\mathtt{let}$多相を導入するさいに問題が生じる(後述).
 \end{itemize}
 \end{enumerate}
-型付け規則は次頁に示す通り:
 \end{frame}
-\begin{frame}{\S11.6.2 つ組}
+\begin{frame}{\S11.7.直積}
+型$T_{1},\ldots,T_{n}$に対して直積型$\{\mathtt{T_{i}}^{i\in1\ldots n}\}$と，直積型の項$t:\{\mathtt{T_{i}}^{1\in1\ldots n}\}$と各$j = 1,\ldots, n$に対する射影演算子$t.j:\{\mathtt{T_{i}}^{i\in1\ldots n}\}\to T_{j}$を導入する．
+\begin{alertblock}{Def.$n$-tuple}
+$n$項の直積の導入に伴う項，値および型の構文要素を次のように定める:\begin{enumerate}
+\item (項)$\mathtt{t\Coloneq\ldots|\{t_{i}^{i\in 1\ldots n}\}|t.i}$
+\item (値)$\mathtt{v\Coloneq\ldots|\{\mathtt{v_{i}^{i\in1\ldots n}}\}}$
+\item (型)$\mathtt{T\Coloneq\ldots|\{\mathtt{T_{i}^{i\in1\ldots n}}\}}$
+\end{enumerate}
+評価規則を次のように定める:
 \begin{columns}
-\begin{column}{0.2\columnwidth}
-    構文:$\mathtt{t\Coloneq\ldots|\left\{t, t\right\}|t.1|t.2}$
-
-    値:$\mathtt{v\Coloneq\ldots\left\{v, v\right\}}$
-
-    型:$\mathtt{T\Coloneq \ldots|T_{1}\times T_{2}}$
-評価・型付け
-\begin{prooftree}
-    \AxiomC{$\mathtt{\left\{v_{1},v_{2}\right\}}.1\rightarrow\mathtt{v_{1}}$}
-    \end{prooftree}
-    \begin{prooftree}
-        \AxiomC{$\mathtt{\left\{v_{1},v_{2}\right\}}.2\rightarrow\mathtt{v_{2}}$}
-        \end{prooftree}
+\begin{column}{0.5\columnwidth}
+\infax[E-ProjTuple]{\{\mathtt{v_{i}^{i\in1\ldots n}\}.j\longrightarrow v_{j}}}
+\infrule[E-Proj]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{t_{1}.i\longrightarrow t'_{1}.i}}
 \end{column}
-\begin{column}{0.75\columnwidth}
-    \begin{prooftree}
-    \AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
-    \RightLabel{\tiny\rm{(E-PROJ1)}}
-    \UnaryInfC{$\mathtt{t_{1}.1\rightarrow t'_{1}.1}$}
-    \end{prooftree}
-    \begin{prooftree}
-        \AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
-        \RightLabel{\tiny\rm{(E-PROJ2)}}
-        \UnaryInfC{$\mathtt{t_{1}.2\rightarrow t'_{1}.2}$}
-        \end{prooftree}
-    \begin{prooftree}
-    \AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
-    \RightLabel{\tiny\rm{(E-PAIR1)}}
-    \UnaryInfC{$\mathtt{\left\{t_{1}, t_{2}\right\}\rightarrow \left\{t'_{1},t_{2}\right\}}$}
-    \end{prooftree}
-    \begin{prooftree}
-        \AxiomC{$\mathtt{t_{2}\rightarrow t'_{2}}$}
-        \RightLabel{\tiny\rm{(E-PAIR2)}}
-        \UnaryInfC{$\mathtt{\left\{v_{1}, t_{2}\right\}\rightarrow \left\{v_{1},t'_{2}\right\}}$}
-        \end{prooftree}
-        \begin{prooftree}
-        \AxiomC{$\Gamma\vdash\mathtt{t_{1}:T_{1}}$}
-        \AxiomC{$\Gamma\vdash\mathtt{t_{2}:T_{2}}$}
-        \RightLabel{\tiny\rm{(T-PAIR)}}
-        \BinaryInfC{$\Gamma\vdash \mathtt{\left\{t_{1}, t_{2}\right\}:T_{1}\times T_{2}}$}
-        \end{prooftree}
-        \begin{prooftree}
-        \AxiomC{$\Gamma\vdash\mathtt{t_{1}:T_{1}\times T_{2}}$}
-        \RightLabel{\tiny\rm{T-PROJ1}}
-        \UnaryInfC{$\Gamma\vdash\mathtt{t_{1}.1:T_{1}}$}
-        \end{prooftree}
-        \begin{prooftree}
-            \AxiomC{$\Gamma\vdash\mathtt{t_{1}:T_{1}\times T_{2}}$}
-            \RightLabel{\tiny\rm{T-PROJ2}}
-            \UnaryInfC{$\Gamma\vdash\mathtt{t_{1}.2:T_{2}}$}
-            \end{prooftree}
-\end{column}
-\end{columns}
-\end{frame}
-\begin{frame}{\S11.7.組}
-\S11.6 を$n$項の直積に拡張する．$n$項の直積を，$\left\{\mathtt{t_{i}^{i\in 1\ldots n}}\right\}:\left\{\mathtt{T_{i}^{i\in 1\ldots n}}\right\}$と表わす．ただし$n = 0$の場合は空の組$\left\{\right\}$を表わし，射影は定義されない．構文，評価および型付けは以下の通り:\begin{alertblock}{Def.11.6.組}
-\begin{columns}
-\begin{column}{0.18\columnwidth}
-項:$\mathtt{t\Coloneq\ldots|\left\{t_{i}^{i\in 1\ldots n}\right\}|t.i}$
-
-値:$\mathtt{v\Coloneq\ldots|\left\{v_{i}^{i\in 1\ldots n}\right\}}$
-
-型:$\mathtt{T\Coloneq\ldots|\left\{T_{i}^{i \in 1\ldots n}\right\}}$
-
-評価規則:
-\begin{prooftree}
-\AxiomC{$\mathtt{\left\{v_{i}^{i\in 1\ldots n}\right\}.i\rightarrow v_{i}}$\tiny\rm{(E-PROJTUPLE)}}
-\end{prooftree}
-\end{column}
-\begin{column}{0.7\columnwidth}
-    \begin{prooftree}
-        \AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
-        \RightLabel{\tiny\rm{(E-PROJ)}}
-        \UnaryInfC{$\mathtt{t_{1}.i\rightarrow t'_{1}.i}$}
-        \end{prooftree}
-\begin{prooftree}
-\AxiomC{$\mathtt{t_{j}\rightarrow t'_{j}}$}
-\UnaryInfC{$\left\{t_{i}^{i\in 1\ldots j - 1}, t_{j}, t_{k}^{k\in j + 1\ldots n}\right\}\rightarrow\left\{t_{i}^{i\in 1\ldots j - 1}, t'_{j}, t_{k}^{k\in j + 1\ldots n}\right\}$}
-\end{prooftree}
-\begin{prooftree}
-\AxiomC{$\forall i\in\left\{1,\ldots, n\right\}, \Gamma\vdash\mathtt{t_{i}:T_{i}}$}
-\UnaryInfC{$\Gamma\vdash\mathtt{\left\{t_{i}^{i\in 1\ldots n}\right\}:\left\{T_{i}^{i\in 1\ldots n}\right\}}$}
-\end{prooftree}
-\begin{prooftree}
-\AxiomC{$\Gamma\vdash\mathtt{t_{1}:\left\{T_{i}^{i\in 1\ldots n}\right\}}$}
-\UnaryInfC{$\Gamma\vdash \mathtt{t_{1}.j : T_{j}}$}
-\end{prooftree}
+\begin{column}{0.5\columnwidth}
+\infrule[E-Tuple]{\mathtt{t_{j}\longrightarrow t'_{j}}}{\{\mathtt{v_{i}^{i\in1\ldots j-1}}, t_{j}, \mathtt{t_{k}^{k\in j+1\ldots n}}\}\\\longrightarrow \{\mathtt{v_{i}^{i\in1\ldots j- 1}},t'_{j},\mathtt{t_{k}^{k\in j + 1\ldots n}}\}}
 \end{column}
 \end{columns}
 \end{alertblock}
 \end{frame}
-\begin{frame}{\S11.8.レコード}
-\S11.7 を(ラベル付き)レコード型に拡張する．以下のように定めればよい:
-\begin{alertblock}{Def.11.7.}
-    \begin{columns}
-    \begin{column}{0.3\columnwidth}
-        項:$\mathtt{t\Coloneq\ldots|\left\{l_{i} = t_{i}^{i = 1\ldots n}\right\}|t.l}$
-        
-        値:$\mathtt{v\Coloneq\ldots|\left\{l_{i} = v_{i}^{i\in 1\ldots n}\right\}}$
-
-        型:$\mathtt{T\Coloneq\ldots|\left\{l_{i}:T_{i}^{i\in 1\ldots n}\right\}}$
-
-        評価規則:
-        \begin{prooftree}
-        \AxiomC{$\mathtt{\left\{l_{i} = v_{i}^{i\in 1\ldots n}\right\}.l_{j}\rightarrow v_{j}}$}
-        \end{prooftree}
-    \end{column}
-    \begin{column}{0.7\columnwidth}
-        \begin{prooftree}
-            \AxiomC{$\mathtt{t_{1}\rightarrow t'_{1}}$}
-            \RightLabel{\tiny\rm{(E-PROJ)}}
-            \UnaryInfC{$\mathtt{t_{1}.l\rightarrow t'_{1}.l}$}
-            \end{prooftree}
-    \begin{prooftree}
-    \AxiomC{$\mathtt{t_{j}\rightarrow t'_{j}}$}
-    \UnaryInfC{$\mathtt{\left\{l_{i} = t_{i}^{i <  j}, l_{j} = t_{j}, l_{k} = t_{k}^{j + 1\leq k \leq n}\right\}\rightarrow\left\{l_{i} = t_{i}^{i\in 1\ldots j - 1}, l_{j} = t'_{j}, l_{k} = t_{k}^{k\in j + 1\ldots n}\right\}}$}
-    \end{prooftree}
-    \begin{prooftree}
-    \AxiomC{$\forall i\in\left\{1,\ldots, n\right\}, \Gamma\vdash\mathtt{t_{i}:T_{i}}$}
-    \UnaryInfC{$\Gamma\vdash\mathtt{\left\{t_{i}^{i\in 1\ldots n}\right\}:\left\{T_{i}^{i\in 1\ldots n}\right\}}$}
-    \end{prooftree}
-    \begin{prooftree}
-    \AxiomC{$\Gamma\vdash\mathtt{t_{1}:\left\{T_{i}^{i\in 1\ldots n}\right\}}$}
-    \UnaryInfC{$\Gamma\vdash \mathtt{t_{1}.j : T_{j}}$}
-    \end{prooftree}
-    \end{column}
-    \end{columns}
+\begin{frame}{\S11.7.(つづき)}
+\begin{alertblock}{Def.$n$-tuple(つづき)}
+型付け規則は以下の 2 つ:
+\infrule[T-Tuple]{\forall i. \Gamma\vdash\mathtt{t_{i}:T_{i}}}{\Gamma\vdash\{\mathtt{t_{i}^{i\in1\ldots n}\}:\{T_{i}^{i\in1\ldots n}\}}}
+\infrule[T-Proj]{\Gamma\vdash\mathtt{t_{1}:\{T_{i}^{i\in1\ldots n}\}}}{\Gamma\vdash\mathtt{t_{1}.j:T_{j}}}
+\end{alertblock}
+\dnote{規則$\rn{E-ProjTuple}$は，次のように書き直せる:
+\infrule[E-ProjTuple]{1\leq j\leq n}{\mathtt{\{v_{i}^{i\in 1\ldots j - 1}, v_{j},v_{k}^{k\in j + 1\ldots n}\}.j\longrightarrow v_{j}}}}
+\end{frame}
+\begin{frame}{\S11.6.二つ組}
+型$\mathtt{T_{1}, T_{2}}$に対する直積型$\mathtt{T_{1}\times T_{2}}$と，直積型の項$\mathtt{t = \left\{t_{1},t_{2}\right\}:T_{1}\times T_{2}}$に対する射影演算子$\mathtt{t.1:T_{1}\times T_{2}\to T_{1}},\mathtt{t.2:T_{1}\times T_{2}\to T_{2}}$を導入する．
+\begin{alertblock}{Def.2-tuple}
+2 つ組の導入に伴う項，値および型の構文要素を次のように定める:\begin{enumerate}
+\item $\mathtt{t\Coloneq\ldots|\left\{t, t\right\}|t.1|t.2}$
+\item $\mathtt{v\Coloneq\ldots|\left\{v,v\right\}}$
+\item $\mathtt{T\Coloneq\ldots|T\times T}$
+\end{enumerate}
+評価規則を次のように定める．組は第一成分から評価を進める．
+\infax[E-PairBeta1]{\mathtt{\left\{v_{1},v_{2}\right\}.1\longrightarrow v_{1}}}
+\infax[E-PairBeta2]{\mathtt{\left\{v_{1}, v_{2}\right\}.2\longrightarrow v_{2}}}
+\end{alertblock}\end{frame}
+\begin{frame}{\S11.6}
+\begin{alertblock}{Def.2-tuple(続き)}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\infrule[E-Proj1]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{t_{1}.1\longrightarrow t'_{1}.1}}
+\infrule[E-Proj2]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{t_{1}.2\longrightarrow t'_{1}.2}}
+\infrule[E-Pair1]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{\left\{t_{1},t_{2}\right\}\longrightarrow \left\{t'_{1},t_{2}\right\}}}
+\infrule[E-Pair2]{\mathtt{t_{2}\longrightarrow t'_{2}}}{\mathtt{\left\{v_{1},t_{2}\right\}\longrightarrow \left\{v_{1},t'_{2}\right\}}}
+\end{column}
+\begin{column}{0.5\columnwidth}
+型付け規則
+\infrule[T-Pair]{\Gamma\vdash\mathtt{t_{1}:T_{1}}\andalso \Gamma\vdash\mathtt{t_{2}:T_{2}}}{\Gamma\vdash\mathtt{\left\{t_{1},t_{2}\right\}:T_{1}\times T_{2}}}
+\infrule[T-Proj1]{\Gamma\vdash\mathtt{t_{1}:T_{11}\times T_{12}}}{\Gamma\vdash\mathtt{t_{1}.1:T_{11}}}
+\infrule[T-Proj2]{\Gamma\vdash\mathtt{t_{1}:T_{11}\times T_{12}}}{\Gamma\vdash\mathtt{t_{1}.2:T_{12}}}
+\end{column}
+\end{columns}
 \end{alertblock}
 \end{frame}
-\begin{frame}{\S11.10.和}
-\begin{enumerate}
-\item 異種の値が混在したデータ構造を表わすことを考える．\begin{itemize}
-\item e.g.二分木，cons-list ，$\lambda$項の抽象構文木．
-\end{itemize}
-\item これらのデータ構造はバリアント型を用いて表わされる．\begin{itemize}\item 以降では，まず一般的なバリアント型について議論し，ついでより制限された項である直和型，オプション型や列挙型について議論する．\end{itemize}
-\end{enumerate}
-\end{frame}
-\begin{frame}{\S11.10.バリアント}
-ラベル付きのバリアントを導入する．たとえば，以下の型を用いて 2 種類のアドレス帳のレコードを表わしているとする:
-$\mathtt{PhysicalAddr = \left\{firstlast: String, addr:String\right\}}$
+\begin{frame}{\S11.6.コメント}
+評価規則により，二つ組は第一成分が値に評価されたのちに第二成分が評価される．たとえば，$\mathtt{t = \left\{pred\ 4,if\ true\ then\ false\ then\ false\right\}.1}$の簡約列は次のように定まる:
+\begin{align*}
+\mathtt{t}&\longrightarrow \mathtt{\left\{3, if\ true\ then\ true\ else\ false\right\}}.1\\
+  &\longrightarrow \mathtt{\left\{3, true\right\}.1}\longrightarrow 3
+\end{align*}
 
-$\mathtt{VirtualAddr = \left\{name:String, email:String\right\}}$
+値の構文を追加することで，関数の引数として渡された 2 つ組は本体の評価前に完全に評価される．
 \end{frame}
-\begin{frame}{ヴァリアント型の構文形式}
-ヴァリアントの構文形式として，次を導入する:\begin{enumerate}
-\item 項:$\mathtt{t\Coloneq\ldots|\left<l = t\right>\ as\ T|case\ t\ of\ \left<l_{i}=x_{i}\right>\Rightarrow t_{i}^{i\in1\ldots n}}$
-\item 値:$\mathtt{v\Coloneq\ldots|\left<l = v\right>\ as\ T}$
-\item 型:$\mathtt{T\Coloneq\ldots|\left<l_{i}:T_{i}^{i\in1\ldots n}\right>}$
+\begin{frame}{\S11.8.組}
+$n$-タプルに対し，各フィールド$\mathtt{t_{i}}$に集合$\mathscr{L}$から選んだラベル$\mathtt{l_{j}}$を注記することで，ラベル付きレコードに一般化する．次のように定義する:
+\begin{alertblock}{Def.レコード}
+新しい構文形式:\begin{enumerate}
+\item $\mathtt{t\Coloneq\ldots\{\l_{i}=t_{i}^{i\in1\ldots n}\}|t.l}$
+\item $\mathtt{v\Coloneq\ldots|\{\l_{i}=v_{i}^{i\in1\ldots n}\}}$
+\item $\mathtt{T\Coloneq\ldots|\{t_{i}:T_{i}^{i\in1\ldots n}\}}$
 \end{enumerate}
+\end{alertblock}
 \end{frame}
-\begin{frame}{\S11.10.バリアント型の評価および型付け規則}
-バリアント型の評価規則および型付け規則を次に示す．
-\infax[E-CaseVariant]{case(\left<l_{j} = v_{j}\right>\ as\ T)\ of\ <l_{i} =x_{i}> \Rightarrow t_{i}^{i\in1\ldots n}\\\longrightarrow \left[x_{j}\mapsto v_{j}\right]t_{j}}
-\infrule[E-Case]{t_{0}\rightarrow t'_{0}}{case\ t_{0}\ of \left<l_{i}=x_{i}\right>\Rightarrow t_{i}^{1\in1\ldots n}\\\longrightarrow case\ t'_{0}\ of\ \left<l_{i}=x_{i}\right>\Rightarrow t_{i}^{i\in1\ldots n}}
-\infrule[T-Variant]{\Gamma\vdash t_{j}:T_{j}}{\Gamma\vdash\left<l_{j}=t_{j}\right>\ as \left<l_{i}:T_{i}^{i\in1\ldots n}\right>:\left<l_{i}:T_{i}^{i\in1\ldots n}\right>}
-\infrule[T-Case]{\Gamma\vdash t_{0}:\left<l_{i}:T_{i}^{i\in1\ldots n}\right> \andalso \forall i. \Gamma, x_{i}:T_{i}\vdash t_{i}:T}{\Gamma\vdash case\ t_{0}\ of\ \left<l_{i}=x_{i}\right>\Rightarrow t_{i}^{i\in1\ldots n}:T}
+\begin{frame}{\S11.8.(つづき)}
+\begin{alertblock}{Def.レコード(つづき)}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+評価規則は以下の通り．
+\infax[E-ProjRcd]{\mathtt{\{l_{i}=v_{i}^{i\in1\ldots n}\}.l_{j}\longrightarrow v_{j}}}
+\infrule[E-Proj]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{t_{1}.l\longrightarrow t'_{1}.l}}
+\infrule[E-Rcd]{\mathtt{t_{j}\longrightarrow t'_{j}}}{\{\mathtt{l_{i}=v_{i}^{i\in1\ldots j- 1}, l_{j} = t_{j},l_{k}=t_{k}^{k\in j+1\ldots n}}\}\\\longrightarrow \{\mathtt{l_{i}=v_{i}^{i\in1\ldots j - 1}, l_{j} = t'_{j},l_{k}=t_{k}^{k\in j + 1\ldots n}}\}}
+
+\end{column}
+\begin{column}{0.5\columnwidth}
+型付け規則は次の通り.
+\infrule[T-Rcd]{\forall i, \Gamma\vdash\mathtt{t_{i}:T_{i}}}{\Gamma\vdash\{\mathtt{l_{i}=t_{i}^{i\in1\ldots n}}\}\{\mathtt{T_{i}^{i\in1\ldots n}}\}}
+\infrule[T-Proj]{\Gamma\vdash t_{1}:\{\mathtt{t_{i}:T_{i}^{i\in1\ldots n}}\}}{\Gamma\vdash\mathtt{t_{1}.l_{j}:T_{j}}}
+\end{column}
+\end{columns}
+\end{alertblock}
+\dnote{$\rn{E-ProjRcd}$は次のように書き直せる:\infrule[E-ProjRcd]{1\leq j \leq n \andalso \mathtt{l_{j}}\in\mathscr{L}}{\{\mathtt{l_{i}= v_{i}^{i\in1\ldots n}\}.l_{j}\longrightarrow v_{j}}}}
+\end{frame}
+\begin{frame}{\S11.8.レコードパターン}
+
+\end{frame}
+\begin{frame}{\S11.9.和}
+型$\mathtt{T_{1},T_{2}}$に対する(二項の)和型$\mathtt{T_{1}+T_{2}}$と，項$\mathtt{t_{1}:T_{1}}$($\mathtt{t_{2}:T_{2}}$)から$\mathtt{T_{1}+T_{2}}$の項を構成するタグ$\mathtt{inl}(\mathtt{inr})$，そして和型上のパターンマッチのための構文を導入する．\footnote{$\mathtt{inl,inr}$は関数でない．}
+\begin{alertblock}{Def.和型}
+新しい構文形式\begin{enumerate}
+\item (項)$\mathtt{t\Coloneq\ldots|inl\ t|inr\ t|case\ t\ of\ inl\ x\Rightarrow t|inr\ x\Rightarrow t}$
+\item (値)$\mathtt{v\Coloneq\ldots|inl\ v|inr\ v}$
+\item (型)$\mathtt{T\Coloneq\ldots|T+T}$
+\end{enumerate}
+評価規則を次のように定める:
+\infax[E-CaseInl]{\mathtt{case(inl\ v_{0})\ of\ inl\ x_{1}\Rightarrow t_{1}}\\\mathtt{|inr\ x_{2}\Rightarrow t_{2}}\\\longrightarrow \mathtt{[x_{1}\mapsto v_{0}]t_{1}}}
+\infax[E-CaseInr]{\mathtt{case(inr\ v_{0})\ of\ inl\ x_{1}\Rightarrow t_{1}}\\\mathtt{|inr\ x_{2}\Rightarrow t_{2}}\\\longrightarrow \mathtt{[x_{2}\mapsto v_{0}]t_{2}}}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S11.9}
+\begin{alertblock}{Def.和型}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\infrule[E-Case]{\mathtt{t_{0}\longrightarrow t'_{0}}}{\mathtt{case\ t_{0}\ of\ inl\ x_{1}\Rightarrow t_{1}|inr\ x_{2}\Rightarrow t_{2}}\\\longrightarrow \mathtt{case\ t'_{0}\ of\ inl\ x_{1}\Rightarrow t_{1}|inr\ x_{2}\Rightarrow t_{2}}}
+\infrule[E-Inl]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{inl\ t_{1}\longrightarrow inl\ t'_{1}}}
+\infrule[E-Inr]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{inr\ t_{1}\longrightarrow inr\ t'_{1}}}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\infrule[T-Inl]{\Gamma\vdash\mathtt{t_{1}:T_{1}}}{\Gamma\vdash\mathtt{inl\ t_{1}:T_{1}+T_{2}}}
+\infrule[T-inr]{\Gamma\vdash\mathtt{t_{1}:T_{2}}}{\Gamma\vdash\mathtt{inr\ t_{1}:T_{1}+T_{2}}}
+\end{column}
+\end{columns}
+\infrule[T-Case]{\Gamma\vdash\mathtt{t_{0}:T_{1}+T_{2}}\andalso \Gamma,\mathtt{x_{1}:T_{1}}\vdash\mathtt{t_{1}:T}\andalso \Gamma,\mathtt{x_{2}:T_{2}}\vdash\mathtt{t_{2}:T}}{\Gamma\vdash\mathtt{case\ t_{0}\ of\ inl\ x_{1}\Rightarrow t_{1}|inr\ x_{2}\Rightarrow t_{2}:T}}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S11.9.和と型の一意性}
+型付け規則$\rn{T-Inl}(\rn{T-Inr})$によれば，型導出の仮定に含まれない型には任意性がある．したがって，型の一意性(Thm.9.3.3)は成立しない．一意性を取り戻す方法としては，3 つ考えられる:\begin{enumerate}
+\item 型検査アルゴリズムに変更を加え，不定となっている型を推論させる(\S22 で扱う．)
+\item 型の言語を改良し，可能な全ての$\mathtt{T_{2}}$を統一的に表現できるようにする．部分型を用いる．
+\item 型注釈を付ける．今回はこちらを用いる．
+\end{enumerate}
+評価および型付け規則は，全頁に示した規則に加え，型注釈つきの和型に対する規則を加えればよい．
+\end{frame}
+\begin{frame}{\S11.9.}
+\begin{alertblock}{Def.和(一意型付け)}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+新しい構文形式\begin{enumerate}
+\item 項:$\mathtt{t\Coloneq\ldots|inl\ t\ as\ T|inr\ t\ as\ T}$
+\item 値:$\mathtt{v\Coloneq\ldots|inl\ v\ as\ T|inr\ v\ as\ T}$
+\end{enumerate}
+新しい評価規則
+\infax[E-CaseInl]{\mathtt{case\ (inl\ v_{0}\ as\ T_{0})\ of\ inl\ x_{1}\Rightarrow t_{1}}\\\mathtt{|inr\ x_{2}\Rightarrow t_{2}}\\\longrightarrow\mathtt{[x_{1}\mapsto v_{0}]t_{1}}}
+\infax[E-CaseInr]{\mathtt{case\ (inr\ v_{0}\ as\ T_{0})\ of\ inl\ x_{1}\Rightarrow t_{1}}\\\mathtt{|inr\ x_{2}\Rightarrow t_{2}}\\\longrightarrow\mathtt{[x_{2}\mapsto v_{0}]t_{2}}}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\infrule[E-Inl]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{inl\ t_{1}\ as\ T_{2}\longrightarrow inl\ t'_{1}\ as\ T_{2}}}
+\infrule[E-Inr]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{inr\ t_{1}\ as\ T_{2}\longrightarrow inr\ t'_{2}\ as\ T_{2}}}
+型付け規則
+\infrule[T-Inl]{\Gamma\vdash\mathtt{t_{1}:T_{1}}}{\Gamma\vdash\mathtt{inl\ t_{1}\ as\ T_{1}+T_{2}:T_{1}+T_{2}}}
+\infrule[T-Inr]{\Gamma\vdash\mathtt{t_{1}:T_{2}}}{\Gamma\vdash\mathtt{inr\ t_{1}\ as\ T_{1}+T_{2}:T_{1}+T_{2}}}
+\end{column}
+\end{columns}
+\end{alertblock}
 \end{frame}
 \end{document}

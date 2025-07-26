@@ -1,14 +1,15 @@
 # Fdb version 4
-["dvipdf"] 1752740255.28563 "ProT_notes.dvi" "ProT_notes.pdf" "ProT_notes" 1752740255.57447 0
-  "ProT_notes.dvi" 1752740255.24889 23132 38cb760b78e3ce98dbe9f77c29211c74 "latex"
+["dvipdf"] 1752932758.22349 "ProT_notes.dvi" "ProT_notes.pdf" "ProT_notes" 1752932758.52211 0
+  "ProT_notes.dvi" 1752932758.18657 52916 3d363554ee192ee20b1f5f71719e798e "latex"
   (generated)
   "ProT_notes.pdf"
   (rewritten before read)
-["latex"] 1752740254.63085 "/Users/reitomori/Documents/TaPL/ProT_notes.tex" "ProT_notes.dvi" "ProT_notes" 1752740255.57311 0
-  "/Users/reitomori/Documents/TaPL/ProT_notes.tex" 1752740251.01665 12459 6870eb0d3d506a55e0a0a38e95c94305 ""
+["latex"] 1752932757.59774 "/Users/reitomori/Documents/TaPL/ProT_notes.tex" "ProT_notes.dvi" "ProT_notes" 1752932758.52069 0
+  "/Users/reitomori/Documents/TaPL/ProT_notes.tex" 1752932756.74644 31944 e42dee5775166a7c92e6be3df8709145 ""
   "/Users/reitomori/Library/texlive/2023/texmf-var/web2c/euptex/platex.fmt" 1705120211 8156288 ce5f318a85b9e453b830bd48606e96dd ""
   "/usr/local/texlive/2023/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecbx1000.tfm" 1136768653 3584 2d666ecf6d466d8b007246bc2f94d9da ""
+  "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm0500.tfm" 1136768653 3584 178baad7ffca7f5d3428a83bd7cc64c3 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm0600.tfm" 1136768653 3584 291a5713401683441e0a8c8f4417b17b ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm0700.tfm" 1136768653 3584 cf973739aac7ab6247f9150296af7954 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm0800.tfm" 1136768653 3584 49064b465390a8e316a3c8417a050403 ""
@@ -16,6 +17,7 @@
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm1200.tfm" 1136768653 3584 f80ddd985bd00e29e9a6047ebd9d4781 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm1440.tfm" 1136768653 3584 3169d30142b88a27d4ab0e3468e963a2 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm1728.tfm" 1136768653 3584 3c76ccb63eda935a68ba65ba9da29f1a ""
+  "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecss1000.tfm" 1136768653 3584 ab55608ad377891510479d34d90acc46 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecss1200.tfm" 1136768653 3584 db562fb1d1c474cc55f0ce8a1dd94fe7 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecss1440.tfm" 1136768653 3584 861af00b50f6fb3ae4544a29a04a7577 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecti1000.tfm" 1136768653 3072 3bce340d4c075dffe6d4ec732b4c32fe ""
@@ -27,6 +29,7 @@
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/tcrm0800.tfm" 1136768653 1536 05df9db6aeccc4eea94fec15c9024f79 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/tcrm1000.tfm" 1136768653 1536 e07581a4bb3136ece9eeb4c3ffab8233 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/tcrm1200.tfm" 1136768653 1536 74b7293ec3713bb7fdca8dd1bd1f469c ""
+  "/usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/tcti1000.tfm" 1136768653 2048 3777f70f4372b17e2d3fda2b5684af05 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/ptex-fonts/jis/jis.tfm" 1463434352 468 53f854284f6afa6c36aaa2d1090ecc12 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/ptex-fonts/jis/jisg.tfm" 1463434352 468 53f854284f6afa6c36aaa2d1090ecc12 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/ptex-fonts/standard/tgoth10.tfm" 1463434352 856 7404843a5f798859944d7973a47821d5 ""
@@ -67,12 +70,14 @@
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmsy8.tfm" 1136768653 1120 8b7d695260f3cff42e636090a8002094 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmtt10.tfm" 1136768653 768 1321e9409b4137d6fb428ac9dc956269 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmtt8.tfm" 1136768653 768 d7b9a2629a0c353102ad947dc9221d49 ""
+  "/usr/local/texlive/2023/texmf-dist/fonts/tfm/public/knuth-lib/manfnt.tfm" 1392423549 1036 73d9d5ba136d873dfaadeb7edf63b66d ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/public/rsfs/rsfs10.tfm" 1229303445 688 37338d6ab346c2f1466b29e195316aa4 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/public/rsfs/rsfs5.tfm" 1229303445 684 3a51bd4fd9600428d5264cf25f04bb9a ""
   "/usr/local/texlive/2023/texmf-dist/fonts/tfm/public/rsfs/rsfs7.tfm" 1229303445 692 1b6510779f0f05e9cbf03e0f6c8361e6 ""
   "/usr/local/texlive/2023/texmf-dist/tex/generic/iftex/iftex.sty" 1644112042 7237 bdd120a32c8fdb4b433cf9ca2e7cd98a ""
   "/usr/local/texlive/2023/texmf-dist/tex/generic/infwarerr/infwarerr.sty" 1575499628 8356 7bbb2c2373aa810be568c29e333da8ed ""
   "/usr/local/texlive/2023/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty" 1701727651 17865 1a9bd36b4f98178fa551aca822290953 ""
+  "/usr/local/texlive/2023/texmf-dist/tex/generic/mathdots/mathdots.sty" 1403133166 3545 2e7fb9dbd038771232ff5a5db5f98d0d ""
   "/usr/local/texlive/2023/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty" 1593379760 20089 80423eac55aa175305d35b49e04fe23b ""
   "/usr/local/texlive/2023/texmf-dist/tex/generic/pgf/basiclayer/pgfcore.code.tex" 1673816307 1016 1c2b89187d12a2768764b83b4945667c ""
   "/usr/local/texlive/2023/texmf-dist/tex/generic/pgf/basiclayer/pgfcorearrows.code.tex" 1601326656 43820 1fef971b75380574ab35a0d37fd92608 ""
@@ -144,6 +149,7 @@
   "/usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmss.fd" 1686341992 2641 638ddbe214c47dfda2b97e60780ae6c5 ""
   "/usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd" 1686341992 2443 955a820f7890344dc6c6ca236a5c2990 ""
   "/usr/local/texlive/2023/texmf-dist/tex/latex/base/textcomp.sty" 1686341992 2894 3ac7bdb70dd9b75530be2ade2842c355 ""
+  "/usr/local/texlive/2023/texmf-dist/tex/latex/bussproofs/bussproofs.sty" 1345588239 39833 dfb882c5505ae6cfb61e51a89a37de88 ""
   "/usr/local/texlive/2023/texmf-dist/tex/latex/etoolbox/etoolbox.sty" 1601931149 46845 3b58f70c6e861a13d927bff09d35ecbc ""
   "/usr/local/texlive/2023/texmf-dist/tex/latex/float/float.sty" 1137110151 6749 16d2656a1984957e674b149555f1ea1d ""
   "/usr/local/texlive/2023/texmf-dist/tex/latex/graphics-cfg/color.cfg" 1459978653 1213 620bba36b25224fa9b7e1ccb4ecb76fd ""
@@ -193,8 +199,8 @@
   "/usr/local/texlive/2023/texmf-dist/tex/platex/jsclasses/jslogo.sty" 1601931076 5585 8e4615c54073c390d14154b29cee89cb ""
   "/usr/local/texlive/2023/texmf-dist/web2c/texmf.cnf" 1697057529 41009 84b61f42d16d06bedb915f57aa2374cf ""
   "/usr/local/texlive/2023/texmf.cnf" 1678822455 577 1b2b1af17af2508fb20dd85783af4050 ""
-  "ProT_notes.aux" 1752740255.24841 671 ef9dcb82e955dfa37c7d164161d91fd4 "latex"
-  "ProT_notes.tex" 1752740251.01665 12459 6870eb0d3d506a55e0a0a38e95c94305 ""
+  "ProT_notes.aux" 1752932758.18589 2411 ddec0337bb2a36d5baabe686333054ef "latex"
+  "ProT_notes.tex" 1752932756.74644 31944 e42dee5775166a7c92e6be3df8709145 ""
   (generated)
   "ProT_notes.aux"
   "ProT_notes.dvi"
