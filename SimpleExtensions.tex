@@ -88,18 +88,16 @@
     \end{tabular}%
     \par % ... and this too.
 }
-
 \everymath{\displaystyle}
-\title{Types and Programming Languages\\ Chapter 11-14}
+\title{Types and Programming Languages\\ Chapter 11-13}
 \author{Rei Tomori}
 \begin{document}
 \maketitle
 \begin{frame}{概要}
 	今回は以下の内容を扱う: \begin{enumerate}
-        \item \S 11. 単純な拡張(\S11.4-)
+        \item \S 11. 単純な拡張(\S11.4-):p.9 から
         \item \S 12. 正規化
         \item \S 13. 参照
-        \item \S14. 例外
     \end{enumerate}
 \end{frame}
 \section{\S11. 単純な拡張}
@@ -224,7 +222,7 @@ $(;)$の意味を直接表わす方法と，$(;)$を内部言語のある項の�
 \end{frame}
 \begin{frame}{Ex11.4.1.の解答}
 \begin{enumerate}
-\item $\mathtt{t\ as\ T}$の派生形式は$\mathtt{(\lambda x:T.x)\ t}$とすればよい．また，拡張された構文の項を拡張前の項に写す関数$e$を次のように定める:
+  \item $\mathtt{t\ as\ T}$の派生形式は$\mathtt{(\lambda x:T.x)\ t}$とすればよい．また，拡張された構文の項を内部言語の項に写す関数$e$を次のように定める:
 \begin{equation*}e(t) = \begin{cases}
 \mathtt{(\lambda x:T. x)\ t_{1}}& \text{$\mathtt{t}$が$\mathtt{t_{1}:T}$の形のとき} \\
 \mathtt{t} & \text{otherwise}
@@ -248,7 +246,7 @@ $\Gamma\vdash\mathtt{e(t\ as\ T):T}$に至る導出木は，$\Gamma\vdash\mathtt
 \BinaryInfC{$\Gamma\vdash \mathtt{e(t\ as\ T) = (\lambda x:T.x)\ t:T}$}
 \end{prooftree}
 
-逆向きの主張は，上の導出木の部分木で$\Gamma\vdash\mathtt{t:T}$が成立していることから，$\tiny\rm{T-ASCRIBE}$を用いて示せる．
+逆向きの主張は，上の導出木の部分木で$\Gamma\vdash\mathtt{t:T}$が成立していることから，$\tiny\rn{T-Ascribe}$を用いて示せる．
 \end{enumerate}
 \end{frame}
 \begin{frame}{Ex11.4.1(2)}
@@ -286,7 +284,7 @@ $\Gamma\vdash\mathtt{e(t\ as\ T):T}$に至る導出木は，$\Gamma\vdash\mathtt
 \UnaryInfC{$\Gamma\vdash\mathtt{t_{1}:T_{1}}$}
 \BinaryInfC{$\Gamma\vdash\mathtt{(\lambda x:T_{1}.t_{2})t_{1}:T_{2}}$}
 \end{prooftree}に写す変換とみなす必要がある．
-\item また，今後$\mathtt{let}$多相を導入するさいに問題が生じる(後述).
+\item また，今後$\mathtt{let}$多相を導入するさいに問題が生じる(後述).$\mathtt{let}$は型検査器によって多相的な定義を一般化する(i.e.全称量化子で束縛する)ように扱われるため．
 \end{itemize}
 \end{enumerate}
 \end{frame}
@@ -388,7 +386,32 @@ $n$-タプルに対し，各フィールド$\mathtt{t_{i}}$に集合$\mathscr{L}
 \dnote{$\rn{E-ProjRcd}$は次のように書き直せる:\infrule[E-ProjRcd]{1\leq j \leq n \andalso \mathtt{l_{j}}\in\mathscr{L}}{\{\mathtt{l_{i}= v_{i}^{i\in1\ldots n}\}.l_{j}\longrightarrow v_{j}}}}
 \end{frame}
 \begin{frame}{\S11.8.レコードパターン}
-
+射影操作を用いずにフィールドを取り出す方法としてパターンマッチがある．STLC 上では次のように定義できる(Ex.11.8.2)
+\begin{alertblock}{Def.レコードパターン}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+新しい構文形式.$\mathtt{p}$を変数パターンとする:\begin{align*}
+\mathtt{p}&\Coloneq \mathtt{x|\{l_{i}=p_{i}^{{i\in1\ldots n}}\}}\\
+\mathtt{t}&\Coloneq\ldots\mathtt{let\ p=t\ in\ t}\\
+\end{align*}
+パターンマッチの規則．
+\infax[M-Var]{\mathtt{match\ (x, v)=[x\mapsto v]}}
+\infrule[M-Rcd]{\forall i.\mathtt{match\ (p_{i}, v_{i})}=\sigma_{i}}{\mathtt{match(\{l_{i}=p_{i}^{i\in1\ldots n}\},\{l_{i}=v_{i}^{i=1\ldots n}\})}\\= \sigma_{i}\circ\cdots\circ\sigma_{n}}
+\end{column}
+\begin{column}{0.5\columnwidth}
+パターン型付け規則:
+\infax[P-Var]{\vdash\mathtt{x:T\Rightarrow x:T}}
+\infrule[P-Rcd]{\forall i.\mathtt{\vdash p_{i}:T_{i}}\Rightarrow \Delta_{i}}{\vdash\mathtt{\{l_{i}= p_{i}^{i\in1\ldots n}\}:\{k_{j}:T_{j}^{j\in1\ldots m}}\\\Rightarrow \Delta_{i},\ldots \Delta_{n}}
+型付け規則:
+\infrule[T-Let]{\Gamma\vdash\mathtt{t_{1}:T_{1}}\andalso \vdash\mathtt{p:T_{1}}\Rightarrow \Delta\\\andalso \Gamma,\Delta\vdash\vdash\mathtt{t_{2}:T_{2}}}{\Gamma\vdash\mathtt{let\ p=t_{1}\ in\ t_{2}:T_{2}}}
+\end{column}
+\end{columns}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S11.8.レコードパターン}
+評価規則:
+\infax[E-LetV]{\mathtt{let\ p=v_{1}\ in\ t_{2}}\longrightarrow \mathtt{match(p, v_{1})\ t_{2}}}
+\infrule[E-Let]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{let\ p=t_{1}\ in\ t_{2}}\longrightarrow\mathtt{let\ p=t'_{1}\ in\ t_{2}}}
 \end{frame}
 \begin{frame}{\S11.9.和}
 型$\mathtt{T_{1},T_{2}}$に対する(二項の)和型$\mathtt{T_{1}+T_{2}}$と，項$\mathtt{t_{1}:T_{1}}$($\mathtt{t_{2}:T_{2}}$)から$\mathtt{T_{1}+T_{2}}$の項を構成するタグ$\mathtt{inl}(\mathtt{inr})$，そして和型上のパターンマッチのための構文を導入する．\footnote{$\mathtt{inl,inr}$は関数でない．}
@@ -431,10 +454,10 @@ $n$-タプルに対し，各フィールド$\mathtt{t_{i}}$に集合$\mathscr{L}
 \begin{alertblock}{Def.和(一意型付け)}
 \begin{columns}
 \begin{column}{0.5\columnwidth}
-新しい構文形式\begin{enumerate}
+新しい構文形式\begin{itemize}
 \item 項:$\mathtt{t\Coloneq\ldots|inl\ t\ as\ T|inr\ t\ as\ T}$
 \item 値:$\mathtt{v\Coloneq\ldots|inl\ v\ as\ T|inr\ v\ as\ T}$
-\end{enumerate}
+\end{itemize}
 新しい評価規則
 \infax[E-CaseInl]{\mathtt{case\ (inl\ v_{0}\ as\ T_{0})\ of\ inl\ x_{1}\Rightarrow t_{1}}\\\mathtt{|inr\ x_{2}\Rightarrow t_{2}}\\\longrightarrow\mathtt{[x_{1}\mapsto v_{0}]t_{1}}}
 \infax[E-CaseInr]{\mathtt{case\ (inr\ v_{0}\ as\ T_{0})\ of\ inl\ x_{1}\Rightarrow t_{1}}\\\mathtt{|inr\ x_{2}\Rightarrow t_{2}}\\\longrightarrow\mathtt{[x_{2}\mapsto v_{0}]t_{2}}}
@@ -448,5 +471,331 @@ $n$-タプルに対し，各フィールド$\mathtt{t_{i}}$に集合$\mathscr{L}
 \end{column}
 \end{columns}
 \end{alertblock}
+\end{frame}
+\begin{frame}{\S11.10.バリアント}
+二項の和型を一般化するとラベル付きバリアントを得る．構文，評価および型付け規則は型指定付きの和型を拡張し，次のように定める．\begin{alertblock}{Def.バリアント}
+新しい構文形式:\begin{align*}
+\mathtt{t}\Coloneq&\mathtt{\ldots|\langle l=t\rangle\ as\ T|case\ t\ of\ \langle l_{i}=x_{i}\rangle\Rightarrow t_{i}^{i\in1\ldots n}}\\
+\mathtt{v}&\Coloneq\mathtt{\ldots|\langle l=v\rangle\ as\ T}\\
+\mathtt{T}&\Coloneq\mathtt{\ldots|\langle l_{i}:T_{i}^{i\in1\ldots n}\rangle}\\
+\end{align*}
+評価規則を次のように定める:
+\infax[E-CaseVariant]{\mathtt{case\ (\langle l_{j}=v_{j}\rangle as\ T)\ of\ \langle l_{i}=x_{i}\rangle\Rightarrow t_{i}^{i\in1\ldots n}}\\\longrightarrow \mathtt{[x_{j}\mapsto v_{j}]t_{j}}}
+\infrule[E-Case]{\mathtt{t_{0}\longrightarrow t'_{0}}}{\mathtt{case\ t_{0}\ of\ \langle l_{i} =x_{i}\rangle\Rightarrow t_{i}^{i\in1\ldots n}}\\\longrightarrow\mathtt{case\ t'_{0}\ of\ \langle l_{i}=x_{i}\rangle\Rightarrow t_{i}^{i\in1\ldots n}}}
+\infrule[E-Variant]{\mathtt{t_{i}\longrightarrow t'_{i}}}{\mathtt{<l_{i}=t_{i}>\ as\ T\longrightarrow <l_{i}=t'_{i}>\ as\ T}}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S11.10}
+\begin{alertblock}{}
+型付け規則を次のように定める:
+\infrule[T-Variant]{\Gamma\vdash\mathtt{t_{j}:T_{j}}}{\Gamma\vdash\mathtt{\langle l_{j}=t_{j}\rangle\ as\ \langle l_{i}:T_{i}^{i\in1\ldots n}\rangle:\langle l_{i}:T_{i}^{i\in1\ldots n}\rangle}}
+\infrule[T-Case]{\Gamma\vdash\mathtt{t_{0}:\langle l_{i}:T_{i}^{i\in1\ldots n}\rangle}\\\andalso \forall i. \Gamma,\mathtt{x_{i}:T_{i}}\vdash\mathtt{t_{i}:T}}{\Gamma\vdash\mathtt{case\ t_{0}\ of\ \langle l_{i}=x_{i}\rangle\Rightarrow t_{i}^{i\in1\ldots n}:T}}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S11.10.}
+ヴァリアント型の特殊なケースとして，オプション型，列挙型および単一フィールドのヴァリアント型を考えよう．
+\begin{enumerate}
+\item オプション値．ML 系言語の$\mathtt{option}$や$\mathtt{Maybe}$型に対応し，各データ型に特別な値$\mathtt{none}$を追加する.\begin{itemize}\item $\mathtt{nat\ option}$型と同型な$\mathtt{OptionalNat}$は$\mathtt{OptionalNat = \langle none:Unit, some:Nat\rangle}$と書ける．型コンストラクタ$\mathtt{option}$は，$\mathtt{option(T) = \langle none:Unit, some:T\rangle}$と定義すればよい．
+\item C 系言語の$\mathtt{null}$値もオプションと見做せるが，$\mathtt{null}$値は参照型をもつので，$\mathtt{Ref(Option(T))}$なる型を持つ．
+\end{itemize}
+\item 列挙型は，各フィールドの型が$\mathtt{Unit}$型である，いわば退化したヴァリアント型である．\begin{itemize}
+\item OCaml などではフィールドの型は省略できる．
+\end{itemize}
+\item 単一フィールドのヴァリアントは通常の型($\mathtt{Float}$など)をラップする．\footnote{Haskell における$\mathtt{newtype}$宣言など．}値に対して何らかの制約を課したい場合に使われる.\begin{itemize}
+\item 値を単一フィールドのヴァリアントとすることで，たとえばユーロからドルに換算するプログラムが単位ユーロの値のみを取るようにできる($\mathtt{Float}$を$\mathtt{EuroAmount =\langle euros:Float\rangle}$のように包むことで)
+\end{itemize}
+\end{enumerate}
+\end{frame}
+\begin{frame}{\S11.10.ヴァリアント型の拡張}
+この他にも，ヴァリアント型にいくつかの拡張を施したものが使われている．
+\begin{enumerate}
+\item 再帰データ型．列挙型のフィールドに定義されている型が出現を持つ．具体例には自然数のリスト型$\mathtt{type\ NatList= Nil|Cons\ of\ Nat\ *\ NatList}$がある．
+\item パラメータ化されたデータ型．たとえば，(多相的)リスト型$\mathtt{type\ 'a\ List = nil|cons\ of\ 'a\ *\ 'a\ List}$など．$\mathtt{List}$は各型$\mathtt{T}$を($\mathtt{'a}$を$\mathtt{T}$に具体化した)型$\mathtt{T\ List}$に写すので，型演算子と呼ばれる．
+\end{enumerate}
+\end{frame}
+\begin{frame}{\S11.12.リスト}
+新たな型構築子として，型$\mathtt{T}$の要素からなる有限長のリストを表わる型$\mathtt{List\ T}$を追加する．構文，意味論および型付けを次のように定める．\begin{alertblock}{Def.リスト}
+構文形式:
+\begin{equation*}\mathtt{T\Coloneq\ldots|nil[T]|cons[T]\ t\ t|isnil[T]\ t|head[T]\ t|tail[T]\ t}
+\end{equation*}
+\begin{equation*}\mathtt{v\Coloneq\ldots|nil[T]|cons[T]\ v\ v}
+\end{equation*}
+\begin{equation*}\mathtt{T\Coloneq\ldots|List\ T}
+\end{equation*}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S11.12.}
+\begin{alertblock}{}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+評価規則は次の通り．
+\infrule[E-Cons1]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{cons[T]\ t_{1}\ t_{2}\longrightarrow cons[T]\ t'_{1}\ t_{2}}}
+\infrule[E-Cons2]{\mathtt{t_{2}\longrightarrow t'_{2}}}{\mathtt{cons[T]\ v_{1}\ t_{2}\longrightarrow cons[T]\ v_{1}\ t'_{2}}}
+\infax[E-IsNilNil]{\mathtt{isnil[S](nil[T])\longrightarrow false}}
+\infax[E-IsNilCons]{\mathtt{isnil[S](cons[T]\ v_{1}\ v_{2})\longrightarrow false}}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\infrule[E-IsNil]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{isnil[T]\ t_{1}\longrightarrow isnil[T]\ t'_{1}}}
+\infax[E-HeadCons]{\mathtt{head[S](cons[T]\ v_{1}\ v_{2})\longrightarrow v_{1}}}
+\infrule[E-Head]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{head[T]\ t_{1}\longrightarrow head[T]\ t'_{1}}}
+\infax[E-TailCons]{\mathtt{tail[S]\ (cons[T]\ v_{1}\ v_{2})\longrightarrow v_{2}}}
+\infrule[E-Tail]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{tail[T]\ t_{1}\longrightarrow tail[T]\ t'_{1}}}
+\end{column}
+\end{columns}\end{alertblock}
+\end{frame}
+\begin{frame}{\S11.12}
+\begin{alertblock}{Def.リスト型の型付け規則．}
+\infax[T-Nil]{\Gamma\vdash\mathtt{nil[T_{1}]:List\ T_{1}}}
+\infrule[T-Cons]{\Gamma\vdash\mathtt{t_{1}:T_{1}}\andalso \Gamma\vdash\mathtt{t_{2}:List\ T_{1}}}{\Gamma\vdash\mathtt{cons[T_{1}]\ t_{1} \ t_{2}:List\ T_{1}}}
+\infrule[T-Head]{\Gamma\vdash\mathtt{t_{1}:List\ T_{11}}}{\Gamma\vdash\mathtt{head[T_{11}]\ t_{1}:T_{11}}}
+\infrule[T-Tail]{\Gamma\vdash\mathtt{t_{1}:List\ T_{11}}}{\Gamma\vdash\mathtt{tail[T_{11}]\ t_{1}:List\ T_{11}}}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S11.10.$\mathtt{Dynamic}$型}
+型がコンパイル時にわからないデータを扱う場合がある．この場合は値$\mathtt{v}$と型タグ$\mathtt{T}$(ただし$\mathtt{v:T}$)の組を値とする$\mathtt{Dynamic}$型を用いる．
+\end{frame}
+\begin{frame}{\S11.11.一般的再帰}
+STLC を拡張し，再帰関数を定義できるようにしよう．STLC では$\mathtt{fix}$コンビネータ自体を定義できない\footnote{$\mathtt{f:T_{1}\to T_{1}}$のもとで不動点コンビネータ$\mathtt{fix=\lambda f.(\lambda x. f\ (\lambda y. x\ x\ y))(\lambda x.f\ (\lambda y. x\ x\ y))}$が型付けできたとすると，基底型を持つはずの$\mathtt{x}$が同時に関数型を持つことになるため．}が，以下のプリミティブ$\mathtt{fix}$および略記法$\mathtt{letrec}$
+を導入することで再帰関数を定義できる．\footnote{この時点で強正規化性は失われる．後述}
+\begin{alertblock}{Def.一般的再帰}
+新しい構文形式:
+\begin{equation*}
+\mathtt{t\Coloneq\ldots|fix\ t}
+\end{equation*}\begin{columns}
+\begin{column}{0.5\columnwidth}
+評価規則を次のように定める:
+\infax[E-FixBeta]{\mathtt{fix\ (\lambda x:T_{1}.t_{2})}\\\longrightarrow\mathtt{[x\mapsto (fix\ (\lambda x:T_{1}.t_{2})]t_{2}}}
+\infrule[E-Fix]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{fix\ t_{1}\longrightarrow fix\ t'_{1}}}
+\end{column}
+\begin{column}{0.5\columnwidth}
+型付け規則を次のように定める:
+\infrule[T-Fix]{\Gamma\vdash\mathtt{t_{1}:T_{1}\to T_{1}}}{\Gamma\vdash\mathtt{fix\ t_{1}:T_{1}}}
+
+また，派生形式$\mathtt{letrec}$は次の通り:
+\infax{\mathtt{letrec\ x:T_{1}=t_{1}\ in\ t_{2}}\stackrel{def}{=}\\\mathtt{let\ x\ =\ fix\ (\lambda x:T_{1}.t_{1})\ in\ t_{2}}}
+\end{column}
+\end{columns}
+\end{alertblock}
+\end{frame}
+\begin{frame}{\S11.11.具体例}
+偶数ならば$\mathtt{true}$を，そうでないなら$\mathtt{false}$を返す関数$\mathtt{iseven:Nat\to Bool}$は以下の$\mathtt{ff:(Nat\to Bool)\to Nat\to Bool}$を用いて$\mathtt{iszero = fix\ ff}$と定義される:\begin{align*}
+\mathtt{ff}= \mathtt{\lambda ie:Nat\to Bool.}&\mathtt{\lambda x:Nat. if\ iszero\ x\ then\ true}\\
+  &\mathtt{else\ if\ iszero(pred\ x)\ then\ false}\\
+&\mathtt{else\ ie\ (pred(pred\ x))}
+\end{align*}
+ここで，$\mathtt{ff}$は$\mathtt{iseven}$関数の生成子と見做せる．\begin{itemize}
+\item $\mathtt{ff}$が$n$以下の自然数に対して$\mathtt{iseven}$を近似する関数$\mathtt{ie}$に適用されると，$\mathtt{ff}$は$n +2$まで$\mathtt{iseven}$を近似する関数を返す．
+\item $\mathtt{fix}$を$\mathtt{ff}$に適用することで，生成子の不動点が返される\footnote{関数上に適切な半順序を定めれば，この不動点が順序関係の上限であることがわかる．また，証明はしないが，この不動点は最小不動点である．}
+                                                                \end{itemize}
+\end{frame}
+\begin{frame}{\S11.11.コメント}
+\begin{itemize}
+\item STLC に数と再帰を追加した言語を PCF という．
+\item 型付け規則$\rn{T-Fix}$における生成子の型は任意なので，生成子をレコード上の関数とすれば相互再帰を実現できる．
+\item また，規則$\rn{T-Fix}$から，任意の型$\mathtt{T}$に対して$\mathtt{T\to T}$型の関数の不動点が取れる．\begin{itemize}
+\item ここから，任意の型$\mathtt{T}$は inhabited であることが従う．各型$\mathtt{T}$に対して，関数$\mathtt{diverge}_{T}:\mathtt{Unit\to T}$を$\mathtt{diverge}_{T} = \mathtt{\lambda \_:Unit.fix\ (\lambda x:T. x)}$が定まる．これを$\mathtt{unit}$に適用すると発散する．
+\end{itemize}
+\end{itemize}
+\end{frame}
+\section{\S12.正規化}
+\begin{frame}{\S12.正規化}
+この章では，任意の正しく型付けされた STLC の項が正規化可能であることを示す．\footnote{ここでは値呼び戦略のみ考えるが，より強い主張である強正規化性も示せる．}
+\begin{itemize}
+\item 正規化可能性は一般に成り立つ性質ではない．STLC に一般的再帰や再帰型を追加して拡張した場合，評価(型チェック)が停止しない項を構成できるから．
+\item ただし，高階$\lambda$計算の体系である System $F_{\omega}$の型検査の停止性を議論する際，型言語が STLC と等価であることを用いる．
+\end{itemize}
+はじめに基本型として$A$のみを持つ STLC について議論し，その後ブール値と直積で拡張した体系に対して議論する．
+\end{frame}
+\begin{frame}{\S12.1.単純型の正規化}
+\begin{alertblock}{Thm.正規化定理}
+任意の正しく型付けされた STLC の項の評価は正規化可能である．
+\end{alertblock}
+まずは今までの道具で証明できないか考える．たとえば，well-typed な項のサイズに関する帰納法で証明してみる．\begin{itemize}
+\item well-typed な$\mathtt{t}$が，正規形でない項$\mathtt{t_{1}.t_{2}}$により$\mathtt{t_{1}\ t_{2}}$と書ける場合．
+\begin{itemize}
+\item (IH)より$\mathtt{t_{1},t_{2}}$の nf として$\mathtt{v_{1},v_{2}}$が存在する．型付けの逆転補題により$\mathtt{t_{1}:T_{1}\to T_{2}, t_{2}:T_{1}}$なる型$\mathtt{T_{1},T_{2}}$が取れる．
+\item したがって$\mathtt{v_{1}}$は関数型を持つので，$\mathtt{v_{1}}$は$\mathtt{v_{1}=\lambda x:T_{1}.t_{12}}$の形．
+\item よって$\mathtt{t_{1}\ t_{2}}$は$\mathtt{v_{1}\ v_{2} = (\lambda x:T_{1}.t_{12})v_{2}}$まで簡約されるが，これは正規形でない.
+\item IH がこの項が正規化可能であることを示すほど強くない．たとえば$\mathtt{t_{12} = \lambda y:T_{2}\to T_{2}\to T_{2}. \lambda z:T_{2}\to T_{2}. y\ x\ (z\ y)}$の形の場合，項のサイズは明らかに$\mathtt{t}$より大きい．
+\end{itemize}
+\end{itemize}
+\end{frame}
+\begin{frame}{\S12.1.飽和集合}
+induction の仮定を強めよう．そのために，各型$\mathtt{T}$に対し，型$\mathtt{T}$の閉じた項からなる集合$R_{\mathtt{T}}$を定める．この集合を飽和集合と呼ぶことにする．また，閉項$\mathtt{t:T}$が$\mathtt{t}\in R_{\mathtt{T}}$なるとき，単に$R_{\mathtt{T}}(\mathtt{t})$と書くことにする．
+\begin{alertblock}{Def.飽和集合}
+型$\mathtt{T}$の閉項からなる集合$R_{\mathtt{T}}$を次のように定める:\begin{itemize}
+\item $R_{\mathtt{A}}(\mathtt{t})\Leftrightarrow\mathtt{t}$が停止
+\item $R_{\mathtt{T_{1}\to T_{2}}}(t)\Leftrightarrow\mathtt{t}$が停止し，任意の$\mathtt{s}\in R_{\mathtt{T_{1}}}$に対し$R_{\mathtt{T_{2}}}(\mathtt{t\ s})$．
+\end{itemize}
+\end{alertblock}
+飽和集合を用いることで，閉項の強正規化可能性を示すのに十分強い仮定が得られる．\begin{itemize}
+\item 閉項は関数型の部分項を持ちうるので，その情報も必要である．
+\item 部分項の正規化可能性では不十分で，関数適用後の正規化可能性も示す必要がある．正規形の関数に正規形の引数を適用した代入したのち，さらに評価が進む可能性があるため．
+\end{itemize}
+\end{frame}
+\begin{frame}{\S12.1.証明の概略}
+飽和集合を用いた強正規化性の証明は次のように進む．型に関する induction で進める:\begin{enumerate}
+\item 型$\mathtt{A}$の任意の項は正規化可能．
+                                                                                  \item 任意の型$\mathtt{T_{1}, T_{2}}$と任意の項$\mathtt{t:T_{1}\to T_{2}}$に対し，$\mathtt{t}$は強正規化可能性を保つ．つまり，$\mathtt{t}$は正規化可能，かつ任意の正規化可能な$\mathtt{s:T_{1}}$に対し，$\mathtt{t\ s}$は正規化可能．
+\end{enumerate}
+それぞれ分けて証明する(Lem.12.1.3, Lem.12.1.4, Lem.12.1.5)．
+\end{frame}
+\begin{frame}{Lem.12.1.3, Lem.12.1.4 の証明}
+\begin{alertblock}{Lem.12.1.3}
+任意の$R_{\mathtt{T}}(\mathtt{t})$なる$\mathtt{t}$に対して，$\mathtt{t}$は停止する．
+\end{alertblock}これは定義から明らか．次に，項$\mathtt{t}$が$R_{\mathtt{T}}$に属することは評価に対して不変であることを示す．
+\begin{alertblock}{Lem.12.1.4}
+$\mathtt{t:T}\land \mathtt{t\to t'}$ならば$R_{\mathtt{T}}(\mathtt{t})\Leftrightarrow R_{\mathtt{T}}(\mathtt{t'})$
+\end{alertblock}
+\begin{proof}
+$\mathtt{T}$の構造帰納法で示す．\begin{itemize}\item $\mathtt{T}$が基本型の場合は明らか．
+\item $\mathtt{T}$が関数型，つまりある$\mathtt{T_{1}, T_{2}}$により$\mathtt{T = T_{1}\to T_{2}}$と書ける場合．\begin{enumerate}
+\item $(\Rightarrow)$.定義より，$\mathtt{t}$は正規化可能かつ$\forall \mathtt{s}\in R_{\mathtt{T_{1}}}.R_{\mathtt{T_{2}}}(\mathtt{t\ s})$.よって$\mathtt{t'}$も正規化可能．また，各$\mathtt{s}\in R_{\mathtt{T_{1}}}$に対し$\mathtt{t\ s}\longrightarrow\mathtt{t'\ s}$より，(IH)から$\mathtt{t'\ s}\in R_{\mathtt{T_{2}}}$．ゆえに$R_{{\mathtt{T_{1}\to T_{2}}}}(\mathtt{t'})$.
+\item $(\Leftarrow)$.$\mathtt{t'}\in R_{{\mathtt{T_{1}\to T_{2}}}}$より，$\mathtt{t'}$は正規化可能かつ$\forall \mathtt{s}\in R_{\mathtt{T_{1}}}.R_{\mathtt{T_{2}}}(\mathtt{t'\ s})$.仮定より$\mathtt{t\longrightarrow t'}$なので$\mathtt{t}$は正規化可能．また，各$\mathtt{s'}\in R_{\mathtt{T_{1}}}$に対し，$\mathtt{t\ s}\stackrel{\rn{E-App1}}{\longrightarrow}\mathtt{t'\ s}$なので$R_{\mathtt{T_{2}}}(\mathtt{t\ s})$.ゆえに$R_{\mathtt{T_{1}\to T_{2}}}(\mathtt{t})$
+\end{enumerate}
+\end{itemize}
+\end{proof}
+\end{frame}
+\begin{frame}{Lem.12.1.6 の証明}
+Lem.12.1.3.より，正規化定理を論理関係を用いて証明するには，型$\mathtt{t}$の全ての項が飽和集合$R_{\mathtt{T}}$に属することをいえばよい:
+\begin{alertblock}{Thm.12.1.6[正規化]}
+$\vdash\mathtt{t:T}$ならば，$\mathtt{t}\in R_{\mathtt{T}}$
+\end{alertblock}証明は型付け導出に関する induction に依る．
+閉じた項$\mathtt{t}$が型付け可能とする．最後に使われた型付け規則で分ける.
+\begin{itemize}
+\item $\rn{T-Var}$のとき．不可能．
+\item $\rn{T-App}$のとき．逆転補題および帰納法の仮定から，$\mathtt{t_{1}:T_{1}\to T, t_{2}:T_{1}}$かつ$\mathtt{R_{\mathtt{T_{1}}}(t_{1}), R_{\mathtt{T_{1}\to T}}(t_{2})}$なる$\mathtt{t_{1}, t_{2}}$により$\mathtt{t = t_{1}\ t_{2}}$と書ける．$\mathtt{R_{\mathtt{T_{1}\to T}}}$の定義より，$\forall\mathtt{s}\in R_{\mathtt{T_{1}}}.R_{\mathtt{T}}(\mathtt{t_{1}\ s})$を用いれば，$\mathtt{t}\in R_{\mathtt{T}}$は即座に従う．
+\item $\rn{T-Abs}$のとき．項$\mathtt{t_{2}}$，変数$\mathtt{x}\in FV(\mathtt{t_{2}})$
+と$\mathtt{x:T_{1}}\vdash \mathtt{t_{2}:T_{2}}$なる$\mathtt{T_{2}}$が存在して$\mathtt{t = \lambda x:T_{1}.t_{2}}$.このとき$\mathtt{T= T_{1}\to T_{2}}$である．$\mathtt{t_{2}}$は閉項ではないので，次頁の Lem.12.1.5.を用いて$R_{\mathtt{T_{2}}}(\mathtt{t_{2}})$なることを示す．
+\end{itemize}
+\end{frame}
+\begin{frame}{Lem.12.1.5.}
+\begin{alertblock}{Lem.12.1.5}
+$\mathtt{x_{1}:T_{1},\ldots x_{n}:T_{n}\vdash\mathtt{t:T}}$かつ$\mathtt{v_{1}:T_{1},\ldots v_{n}:T_{n}}$が閉項で，かつ任意の$\mathtt{i}$に対して$R_{\mathtt{T_{i}}}(\mathtt{v_{i}})$ならば，$R_{\mathtt{T}}(\mathtt{[x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}]t})$
+\end{alertblock}
+証明は型付け導出の induction による．各$i$について$R_{\mathtt{T_{i}}}(\mathtt{v_{i}})$を満たす閉じた項$\mathtt{v_{1}:T_{1},\ldots v_{n}:T_{n}}$を任意に取る．以下場合分け．\begin{enumerate}
+\item $\rn{T-Var}$のときは$\exists i.\mathtt{t = x_{i}:T_{i}}$であり明らか．
+\item $\rn{T-App}$のとき．\begin{itemize}
+\item $\mathtt{t = t_{1}\ t_{2}}$．
+\item 帰納法の仮定より\begin{itemize}
+\item $(IHt_{1}): \mathtt{x_{1}:T_{1},\ldots x_{n}:T_{n}\vdash t_{1}:T_{11}\to T_{12}\Rightarrow R_{T_{11}\to T_{12}}(\mathtt{[x_{1}\mapsto v_{1}]\ldots [x_{n}\mapsto v_{n}]t_{1}})}$
+\item $(IHt_{2}): \mathtt{x_{1}:T_{1},\ldots x_{n}:T_{n}\vdash t_{2}:T_{11}\Rightarrow R_{\mathtt{T_{11}}}(\mathtt{[x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}]t_{2}})}$
+\end{itemize}
+\item $\mathtt{x_{1}:T_{1},\ldots x_{n}:T_{n}\vdash t_{1}: T_{11}\to T_{12}, t_{2}:T_{11}}$が成り立つので，$R_{\mathtt{T_{11}\to T_{12}}}(\mathtt{[x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}]t_{1}}), R_{\mathtt{T_{11}}}(\mathtt{[x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}]t_{2}})$
+\item $R_{\mathtt{T_{11}\to T_{12}}}(\_)$の定義より，題意が従う．
+\end{itemize}
+\end{enumerate}
+\end{frame}
+\begin{frame}{Lem.12.1.5}
+\begin{enumerate}\setcounter{enumi}{2}
+        \item $\rn{T-Abs}$の場合．\begin{itemize}
+\item 次が成り立つ:\begin{itemize}
+\item $\mathtt{t = \lambda x:S_{1}.s_{2}:S_{1}\to S_{2}}$
+\item $\mathtt{x_{1}:T_{1},\ldots x_{n}:T_{n}, x:S_{1}\vdash s_{2}:S_{2}}$
+\item $\mathtt{T = S_{1}\to S_{2}}$
+\end{itemize}
+\item 帰納法の仮定$(IH): \forall\mathtt{v}\in R_{\mathtt{S_{1}}}. \mathtt{x_{1}:T_{1}\ldots x_{n}:T_{n}, x:S_{1}\vdash s_{2}:S_{2}}\Rightarrow R_{\mathtt{S_{2}}}(\mathtt{[x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}][x\mapsto v]s_{2}})$
+\item $\mathtt{t}$は値，ひいては$\mathtt{[x_{1}\mapsto v_{1}]\ldots [x_{n}\mapsto v_{n}]t}$は値だから停止性が従う．
+\item $\forall \mathtt{s}\in R_{\mathtt{S_{1}}}.R_{S_{2}}(\mathtt{([x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}]t)\ s})$を示す．\begin{itemize}
+\item $\mathtt{s}\in R_{\mathtt{S_{1}}}$を任意に取る．
+\item Lem.12.1.3.より$\mathtt{s}$は正規化可能 i.e.$\mathtt{s\longrightarrow^{*}v}$なる正規形$\mathtt{v}$が取れる．
+\item Lem.12.1.4 の系より$\mathtt{s\longrightarrow^{*}v}, R_{\mathtt{S_{1}}}(\mathtt{s})\Rightarrow R_{\mathtt{S_{1}}}(\mathtt{v})$．よって
+$R_{\mathtt{S_{1}}}(\mathtt{v})$.
+\item (IH)より，$R_{\mathtt{S_{2}}}(\mathtt{[x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}][x\mapsto v]s_{2}})$
+\item いま，$\mathtt{(\lambda x:S_{1}.[x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}]s_{2})\ s\longrightarrow^{*}[x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}][x\mapsto v] s}$
+\item 再び Lem.12.1.4 の系および$\mathtt{(\lambda x:S_{1}.[x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}]s_{2})v\longrightarrow [x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}][x\mapsto v]s_{2}}$により，$R_{\mathtt{S_{2}}}(([x_{1}\mapsto v_{1}]\ldots[x_{n}\mapsto v_{n}]t) s)$が従う．$\mathtt{s}$は任意なので示される．
+\end{itemize}
+\end{itemize}
+\end{enumerate}
+\end{frame}
+\begin{frame}{Thm.12.1.6.の証明のつづき}
+\begin{itemize}
+\item $\rn{T-Abs}$のとき．項$\mathtt{t_{2}}$，変数$\mathtt{x}$と$\mathtt{x:T_{1}\vdash t_{2}:T_{2}}$なる項$\mathtt{t_{2}}$が存在して$\mathtt{t = \lambda x:T_{1}.t_{2}}$．任意に$\mathtt{s}\in R_{\mathtt{T_{1}}}$を取ると，Lem.12.1.5.より$R_{\mathtt{T_{2}}}(\mathtt{[x\mapsto s]t_{2}})$．$\rn{E-AppAbs}$と Lem.12.1.4 の系より$R_{\mathtt{T_{2}}}(\mathtt{t\ s})$が従うのでこの場合も成立する．
+\end{itemize}
+以上より，$\vdash\mathtt{t:T}\Rightarrow R_{\mathtt{T}}(\mathtt{t})$．ゆえに Lem.12.1.3.から, $\vdash\mathtt{t:T}$ならば$\mathtt{t}$が停止することが従う．
+\end{frame}
+\begin{frame}{演習 12.1.7.}
+\begin{alertblock}{演習 12.1.7.[推奨]}
+本章の証明を拡張し，STLC がブール値と直積で拡張されても正規化できることを示せ．
+\end{alertblock}
+ただし，ブール値と直積の評価および型付け規則は以下の通り:\begin{columns}\begin{column}{0.5\columnwidth}
+ブール式:
+\infax[E-IfTrue]{\mathtt{if\ true\ then\ t_{2}\ else\ t_{3}\longrightarrow t_{2}}}
+\infax[E-IfFalse]{\mathtt{if\ false\ then\ t_{2}\ else\ t_{3}\longrightarrow t_{3}}}
+\infrule[E-If]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}}\\\longrightarrow\mathtt{if\ t'_{1}\ then\ t_{2}\ else\ t_{3}}}
+\infax[T-True]{\mathtt{true:Bool}}
+\infax[T-False]{\mathtt{false:Bool}}
+\end{column}\begin{column}{0.5\columnwidth}
+\infrule[T-If]{\mathtt{t_{1}:Bool} \andalso \mathtt{t_{2}:T}\andalso \mathtt{t_{3}:T}}{\mathtt{if\ t_{1}\ then\ t_{2}\ else\ t_{3}:Bool}}
+\infax[E-PairBeta1]{\mathtt{\{v_{1},v_{2}\}.1\longrightarrow v_{1}}}
+\infax[E-PairBeta2]{\mathtt{\{v_{1},v_{2}\}.2\longrightarrow v_{2}}}
+\infrule[E-Proj1]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{t_{1}.1\longrightarrow t'_{1}.1}}
+\infrule[E-Proj2]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{t_{1}.2\longrightarrow t'_{1}.2}}
+\end{column}
+\end{columns}
+\end{frame}
+\begin{frame}{Ex.12.1.7}\begin{columns}
+\begin{column}{0.5\columnwidth}\infrule[Pair1]{\mathtt{t_{1}\longrightarrow t'_{1}}}{\mathtt{\{t_{1}, t_{2}\}\longrightarrow\{t'_{1}, t_{2}\}}}
+\infrule[E-Pair2]{\mathtt{t_{2}\longrightarrow t'_{2}}}{\mathtt{\{v_{1}, t_{2}\}\longrightarrow\{v_{1}, t'_{2}\}}}
+\infrule[T-Pair]{\Gamma\vdash\mathtt{t_{1}:T_{1}}\andalso \Gamma\vdash\mathtt{t_{2}:T_{2}}}{\Gamma\vdash\mathtt{\{t_{1},t_{2}\}:T_{1}\times T_{2}}}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\infrule[T-Proj1]{\Gamma\vdash\mathtt{t_{1}:T_{11}\times T_{12}}}{\Gamma\vdash\mathtt{t_{1}.1:T_{11}}}
+\infrule[T-Proj2]{\Gamma\vdash\mathtt{t_{1}:T_{11}\times T_{12}}}{\Gamma\vdash\mathtt{t_{1}.2:T_{12}}}
+\end{column}
+\end{columns}
+\begin{proof}
+Def.12.1.2 の定義および Lem12.1.4 と Lem12.1.5.の証明の修正点を示す．\begin{itemize}
+\item Def.12.1.2:ブール型と直積型の節を追加する． ブール型の場合は基本型同様．$R_{\mathtt{T_{1}\times T_{2}}}(\mathtt{t})\Leftrightarrow \mathtt{t}$が正規化可能$\land R_{\mathtt{T_{1}}}(\mathtt{t}.1)$$\land R_{\mathtt{T_{2}}}(\mathtt{t}.2)$
+\end{itemize}
+\end{proof}
+\end{frame}
+\begin{frame}{Ex.12.1.7}
+\begin{proof}[Proof(cont'd)]
+\begin{itemize}
+\item Lem12.1.4:ブール型の場合は直積型と同様．直積型の節を追加する．\begin{itemize}
+\item ある$\mathtt{T_{1},T_{2}}$により$\mathtt{T= T_{1}\times T_{2}}$となる場合を考える．$\mathtt{t\longrightarrow t'}$を仮定する．\begin{itemize}
+\item $R_{\mathtt{T_{1}\times T_{2}}}(\mathtt{t})$のとき．$\mathtt{t'}$が正規化可能であることは，$\mathtt{t}$の正規形に至る簡約列が$\mathtt{t\longrightarrow t'\longrightarrow\cdots}$の形をしていることから．$R_{\mathtt{T_{1}}}(\mathtt{t.1})$($R_\mathtt{T_{2}}(\mathtt{t.2})$)は，$\rn{E-Proj1}(\rn{E-Proj2})$および帰納法の仮定より．
+\item 逆向きも全く同様．
+\end{itemize}
+\end{itemize}
+\item Lem12.1.5.項$\mathtt{t}$に対して最後に使われた型付け規則について確かめる．追加された規則について考える．$\forall i, R_{\mathtt{T_{i}}}(\mathtt{v_{i}})$なる正規形$\mathtt{v_{1}:T_{i},\ldots,v_{i}:T_{i}}$を任意に取り，各$\mathtt{x_{i}}$に$\mathtt{v_{i}}$に代入する操作を$\sigma$，文脈を$\Gamma$で表わす．
+\begin{itemize}
+\item $\rn{T-True},\rn{T-False}$のとき．定数に代入はできないので明らか．
+\item $\rn{T-If}$のとき．$\mathtt{t}$は$\mathtt{t = if\ t_{1}\ then\ t_{2}\ else\ t_{3}:T}$の形である．示すべきは$\mathtt{t}$が正規形に評価できること．
+\begin{itemize}
+\item 逆転補題より$\mathtt{x_{1},\ldots, x_{n}\vdash t_{1}:Bool, t_{2}:T, t_{3}:T}$
+\item (IH1):$\Gamma\vdash \mathtt{t_{1}:Bool}\Rightarrow R_{\mathtt{Bool}}(\sigma(\mathtt{t_{1}}))$
+\item (IH2):$\Gamma\vdash\mathtt{t_{2}:T}\Rightarrow R_{\mathtt{T}}(\sigma(\mathtt{t_{2}}))$
+\item (IH3):$\Gamma\vdash\mathtt{t_{3}:T}\Rightarrow R_{\mathtt{T}}(\sigma(\mathtt{t_{3}}))$
+\item (IH1)より$\mathtt{\sigma(t_{1})}$は評価が停止していずれかのブール値になり，ブール値によって$\mathtt{\sigma(t_{2})}(\mathtt{\sigma(t_{3})})$が評価されるが，帰納法の仮定より停止性が従う．
+\end{itemize}
+\item 直積に関する型付け規則も同様．
+\end{itemize}
+\end{itemize}
+\end{proof}
+\end{frame}
+\section{\S13.参照}
+\begin{frame}{\S13.概要}
+これまで扱ってきた言語機能，たとえば関数抽象，基本型やレコードなどの構造化された型は全て純粋なものだった．しかし，プログラム言語の機能には純粋でなく計算的作用を伴うもの，たとえば破壊的代入や入出力，例外や継続による非局所的な移動などが多く含まれている．
+
+本章では，計算的作用の一つである可変参照\footnote{Java などの言語では，セルは値$\mathtt{null}$を持ちうる．したがって，$\mathtt{Ref(Option\ T)}$型を持つとみなせる．}をこれまでの計算体系に加える方法を考える．
+\end{frame}
+\begin{frame}{\S13.1}
+\begin{alertblock}{参照への基本的操作}
+参照に関して，以下 3 つの操作を考える:\begin{enumerate}
+\item 確保．$\mathtt{ref}$演算子に初期値を与え，参照を確保する．参照の型は，初期値の型を$\mathtt{T}$とすると$\mathtt{Ref\ T}$型である．
+\item 値の取り出し．セルの現在の値を演算子$\mathtt{!:Ref\ T\to T}$により読み出す．
+\item 破壊的代入．セルに保存された値を変えるために，演算子$\mathtt{(:=):Ref\ T\to Unit}$を用いる．
+\end{enumerate}
+破壊的代入操作は$\mathtt{Unit}$型を持つので，代入後の値を読みだす操作は逐次実行により書ける．
+\end{alertblock}
+
+\end{frame}
+\begin{frame}{\S13.1.共有状態}
+\begin{itemize}
+\item 別名付けが存在する可能性がある場合，たとえば$\mathtt{(r:=1\; r:=!s)}$を考える．
+\item これは，$\mathtt{r,s}$が同一のセルに対する別名である場合は$\mathtt{r:=!s}$と等価でない．
+\end{itemize}
 \end{frame}
 \end{document}
